@@ -25,14 +25,14 @@ def print_progress(current,total,bar_length=60):
 
 
 def pre_process(textline):
-    string = re.sub('<add>(.*?)</add>', u"\g<1>", textline)
+    textline = re.sub('<add>(.*?)</add>', u"\g<1>", textline)
     textline = re.sub('<doc>(.*?)</doc>', u"\g<1>", textline)
-    textline = re.sub('<add>|<doc>|</doc>|</add>', "", textline)
     textline = re.sub('<field name=\"articulo\">(.*?)</field>', u"\g<1>", textline) # Obtener texto
     textline = re.sub('<field .*?>.*?</field>', "", textline) # El resto no me importa 
     textline = re.sub('[{}]'.format(punctuation), "", textline)
     textline = re.sub('\n|\r', "", textline)
     textline = re.sub('\s+',' ',textline)
+    textline = re.sub('<add>|<doc>|</doc>|</add>', "", textline)
     textline = textline.lower()
     return textline
 
@@ -144,7 +144,7 @@ if __name__ == '__main__':
     model.save(filename+'.txt')
     
     print "\nUsing Word2Vect"
-    filename = "CLDAS.Word2Vect.%i" % size
+    filename = "CLDAS.Word2Vec.%i" % size
     model = Modelo(corpus,w2v=True)
 #     model.fit()
     model.fit(save_as=filename+".model",size=size)
