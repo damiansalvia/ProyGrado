@@ -1,0 +1,8 @@
+{
+  "workspace": "/dua/corpus_test/",
+  "max_acceptable_length": 300000,
+  "outputdir": "/dua/dictionaries/",
+  "rename": false,
+  "summarize": false,
+  "top": 3
+}

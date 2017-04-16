@@ -1,0 +1,8 @@
+7c7
+< PYTHONVER = python3.4
+---
+> PYTHONVER = python2.7
+16c16
+< 	swig -python -py3 -c++ -o freeling_pythonAPI.cxx freeling_pythonAPI.i
+---
+> 	swig -python -c++ -o freeling_pythonAPI.cxx freeling_pythonAPI.i
