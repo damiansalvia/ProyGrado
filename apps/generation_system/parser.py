@@ -1,11 +1,9 @@
 # -*- coding: utf-8 -*-
 
 import time
-import xml.etree.ElementTree as xmlreader
 import nltk
 import codecs
 import json
-import glob
 import collections
 
 from printHelper import *
@@ -24,12 +22,13 @@ max_acceptable_length = None
 top= None
 summarize = None
 rename = None
+lematize = True
 
 if args.json:
     inputdir, outputdir, logdir , max_acceptable_length, top, summarize, rename = load(
         args.json)
 
-inputdir  = args.input or inputdir or 'corpus/corpus_cine/corpus_test/'
+inputdir  = args.input or inputdir or 'apps/dictionaries/'
 outputdir = args.output or outputdir or  'apps/outputs/'
 logdir    = args.log or logdir or 'apps/log/'
 
@@ -37,11 +36,6 @@ max_acceptable_length = args.limite or max_acceptable_length or 300000
 top = args.top or top or 3
 summarize = args.resumen or summarize or False
 rename = args.renombrar or rename or False
-
-
-def extract(xml):
-    # extract the information from the file (film - text - rank )
-    return xml.get("title"), xml.find("summary" if summarize else "body").text, int(xml.get("rank"))
 
 
 def replace_film_name(text, film):
@@ -74,33 +68,32 @@ def is_length_acceptable(text, statistics):
 
 log = Log(logdir)
 start_time = time.time()
-statistics = {'corpus_length': 0,
-              'largest_review': 0,
-              'shortest_review': 0,
-              'average_review': 0,
-              'top_frecuent_words': [],
-              'top_positive': [],
-              'top_negative': [],
-              }
+statistics = {
+    'corpus_length': 0,
+    'largest_review': 0,
+    'shortest_review': 0,
+    'average_review': 0,
+    'top_frecuent_words': [],
+    'top_positive': [],
+    'top_negative': [],
+}
+
 occurrences = {}
-files = glob.glob(inputdir + '*.xml')
-statistics['corpus_length'] = len(files)
-for idx, file in enumerate(files):
-    with open(file) as xml_file:
-        data = xml_file.read().decode('cp1252').encode('utf8')
-        try:
-        	xml = xmlreader.fromstring(magic + data)
-        except Exception as e:
-        	log("error con el archivo: " + file + " " + str(e), 'warning' )
-        	continue
-        if is_valid_file(data):
-            film, text, rank, = extract(xml)
-            if rename:
-                text = replace_film_name(text)
-            if is_length_acceptable(text, statistics):
-                [add_word_to_dic(occurrences, x.lower(), rank) for
-                 x in nltk.word_tokenize(text) if is_valid_word(x)]
-    progressive_bar("Reading files:     ", statistics['corpus_length'], idx)
+
+with codecs.open(inputdir + "reviews.json", "r", "utf-8") as f:
+    reviews = json.load(f)
+
+statistics['corpus_length'] = len(reviews)
+for idx, rev in enumerate(reviews):
+    subject  = rev['subject']
+    review  = rev['review']
+    rank  = rev['rank']
+    if rename:
+        review = replace_film_name(review, subject)
+    if is_length_acceptable(review, statistics):
+        [add_word_to_dic(occurrences, x.lower(), rank) for
+         x in nltk.word_tokenize(review) if is_valid_word(x)]
+    progressive_bar("Reading reviews:    ", statistics['corpus_length'], idx)
 sys.stdout.write('\n')
 sys.stdout.flush()
 

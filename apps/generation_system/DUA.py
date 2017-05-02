@@ -32,9 +32,9 @@ def polarity(vector):
     # TODO -- Normalizar
     average = sum([x * (idx + 1)
                    for idx, x in enumerate(vector)]) / float(sum(vector))
-    if average < 2:
+    if average < 3:
         return '- ' + str(average)
-    elif average > 3:
+    elif average > 4:
         return '+ ' + str(average)
     else:
         return '0 ' + str(average)
