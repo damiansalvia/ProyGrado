@@ -88,7 +88,7 @@ statistics = {
 
 occurrences = {}
 
-with codecs.open(inputdir + "reviews.json", "r", "utf-8") as f:
+with codecs.open(inputdir + "corpus_cine.json", "r", "utf-8") as f:
     reviews = json.load(f)
 
 statistics['corpus_length'] = len(reviews)
