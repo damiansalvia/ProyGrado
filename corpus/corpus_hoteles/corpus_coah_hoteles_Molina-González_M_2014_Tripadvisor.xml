@@ -5,9 +5,9 @@
         <coah:rank>5</coah:rank>
         <coah:abstract>Un hotel digno de mención!</coah:abstract>
         <coah:review>Como bien les comenté a los propietarios a la hora de abandonar el hotel, no dudaré un momento en recomendar una y otra vez el Hotel Albero de Granada. Su situación respecto del centro de Granada no es la mejor, pero para nuestros propósitos era perfecto (escapada de fin de semana con visita a la Alhambra). Se encuentra en la carretera de paso a Sierra Nevada y muy cercano a la Alhambra. Por la zona se puede encontrar aparcamiento y este se encuentra en una zona segura y tranquila. Los parkings del centro de Granada que nos recomendaron en el hotel fueron lo que nos dijeron (nada caros) y pudimos movernos por el centro perfectamente desde allí. Las habitaciones muy limpias y las camas confortables. El desayuno fue espectacular. Ya teníamos buenas referencias de este maravilloso hotel de una estrella (que para mí que viajo constantemente son más) pero ha superado con creces nuestras expectativas. Si vuelvo a Granada no dudaré en hospedarme en el mismo hotel. Muchas gracias por todo!!
-</coah:review>
+        </coah:review>
     </coah:hotel_review>
-    <coah:hotel_review xmlns:coah="http://sinai.ujaen.es/coah">
+<coah:hotel_review xmlns:coah="http://sinai.ujaen.es/coah">
         <coah:id>2</coah:id>
         <coah:rank>4</coah:rank>
         <coah:abstract>Recomendable 100%, sin lujos pero todo perfecto.</coah:abstract>

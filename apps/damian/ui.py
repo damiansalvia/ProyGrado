@@ -1,15 +1,7 @@
 # -*- coding: utf-8 -*-
 
-import math
-import sys
-import os
+import math, sys, os, inspect
 from time import gmtime, strftime
-import inspect
-
-_, width = os.popen('stty size', 'r').read().split()
-width = int(width) - 30
-
-
 
 def matrix_to_string(dict):
     # To visualize the distribution  matrix
@@ -35,11 +27,11 @@ def matrix_to_string(dict):
     dict_s += h_bar
     return dict_s
 
-
-def progressive_bar(promt, max, i):
-    # FIXME -- Falla aveces!
-    pos = int(math.ceil((i + 1) * (float(width) / max)))
-    print "\r%s [%s%s] %d%%" % (promt, '#'* pos,'-'*(width - pos), pos*100/float(width)),
+def progress(prompt,current,total,bar_length=80):
+    percent = float(current) / total
+    hashes = '#' * int(round(percent * bar_length))
+    spaces = ' ' * (bar_length - len(hashes))
+    print "\r{0} [{1}] {2}%".format(prompt,hashes + spaces, round(percent * 100,2)),
 
 class Log:
     def __init__(self,file):
