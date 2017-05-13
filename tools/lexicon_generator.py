@@ -4,59 +4,57 @@ import time
 import nltk
 import codecs
 import json
+import glob
 
 from printHelper import *
 from utils import *
 
 inputdir  = 'apps/dictionaries/'
-outputdir = 'apps/outputs/'
+outputdir = 'apps/outputs/static_lexicons/single_corpus_lexicon/'
 logdir    = 'apps/log/'
-
-max_acceptable_length  = 300000
-
-def is_length_acceptable(text):
-    try:
-        if len(nltk.word_tokenize(text)) < max_acceptable_length:
-            return True
-        return False
-    except Exception as e:
-        log(str(e))
-        return False
-
 
 def get_tokens(review):
     return nltk.word_tokenize(review)
 
-# Main
+def add_word_to_dic(occurrences, word, rank):
+    if not occurrences.get(word):
+        occurrences[word] = []
+    occurrences[word].append(rank)
 
+def get_polarity(list):
+    val = reduce(lambda x,y:x+y,list)/len(list)
+    if val < 40:
+        return '-'
+    elif val > 60:
+        return '+'
+    else:
+        return '0'
+
+# Main
 log = Log(logdir)
 start_time = time.time()
 
-occurrences = []
+files = glob.glob(inputdir + 'corpus*.json')
 
-with codecs.open(inputdir + "reviews.json", "r", "utf-8") as f:
-    reviews = json.load(f)
-
-corpus_length = len(reviews)
-
-for idx, rev in enumerate(reviews):
-    subject  = rev['subject']
-    review  = rev['review']
-    rank  = rev['rank']
-
-    if is_length_acceptable(review):
-        [occurrences.append((x.lower(), rank)) for x in get_tokens(review) if is_valid_word(x)]
-
-    progressive_bar("Reading reviews:    ", corpus_length, idx)
-
-sys.stdout.write('\n')
-sys.stdout.flush()
-
-
-print occurrences
-# with codecs.open(outputdir + "absolute_polarities.json", "w", "utf-8") as f:
-#     json.dump(polarities, f, ensure_ascii=False)
+for file in files:
+    file_name = file.split('/')[-1]
+    occurrences = {}
+    with codecs.open(file, "r", "utf-8") as f:
+        reviews = json.load(f)
+    corpus_length = len(reviews)
+    for idx, rev in enumerate(reviews):
+        subject  = rev['subject']
+        review  = rev['review']
+        rank  = rev['rank']
+        [add_word_to_dic(occurrences, x.lower(), rank) for x in get_tokens(review) if is_valid_word(x)]
+        progressive_bar( 'Processing ' + file_name.replace('.json', '').replace('_', ' ') + " : ", corpus_length, idx)
+    sys.stdout.write('\n')
+    sys.stdout.flush()
+    polarities = {key:get_polarity(value) for key, value in occurrences.iteritems()}
+    with codecs.open(outputdir +    file_name.replace('corpus', 'polarities'), "w", "utf-8") as f:
+        json.dump(polarities, f, ensure_ascii=False)
 
 sys.stdout.write('Elapsed time: %.2f Sec' % (time.time() - start_time))
 sys.stdout.write('\n')
 sys.stdout.flush()
+

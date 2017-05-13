@@ -7,7 +7,7 @@ from time import gmtime, strftime
 import inspect
 
 _, width = os.popen('stty size', 'r').read().split()
-width = int(width) - 30
+width = int(width)
 
 
 
@@ -36,11 +36,12 @@ def matrix_to_string(dict):
     return dict_s
 
 
-def progressive_bar(promt, max, i):
+def progressive_bar(prompt, max, i):
     # FIXME -- Falla aveces!
-    pos = int(math.ceil((i + 1) * (float(width) / max)))
+    fixed_width = width - (len(prompt) + 9)
+    pos = int(math.ceil((i + 1) * (float(fixed_width) / max)))
     sys.stdout.write("\r%s [%s%s] %d%%" %
-                     (promt, '#'* pos,'-'*(width - pos), pos*100/float(width)))
+                     (prompt, '#'* pos,'-'*(fixed_width - pos), pos*100/float(fixed_width)))
     sys.stdout.flush()
 
 class Log:
