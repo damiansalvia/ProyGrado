@@ -42,7 +42,7 @@ dep=freeling.dep_txala(DATA+LANG+"/dep_txala/dependences.dat", parser.get_start_
 
 # process input text
 
-lin= u"Esto es una explicación.".encode('UTF-8').decode('latin-1')
+lin= u"Esto es una explicación.".encode('utf-8') #.encode('iso-8859-1')
 #print  "Text language is: "+la.identify_language(lin,["es","ca","en","it"])+"\n" 
 l = tk.tokenize(lin);
 ls = sp.split(sid,l,False);
@@ -61,3 +61,11 @@ for s in ls :
     
 # clean up       
 sp.close_session(sid);
+
+# Spanish uses a number of non-ASCII characters, such as á, é, ñ, etc. These characters can come in different encodings. 
+# To be able to correctly analyze text with these characters, Freeling analyzer should receive the input in ISO encoding.
+# Thus, the input text needs an additional preprocessing stage to be converted into this encoding.
+# Though this might look as a minor technical issue, guessing the original encoding becomes a significant problem when working with texts from arbitrary sources on the Web. We discuss encoding related issues in Section 4.2.
+
+# http://acl2014.org/acl2014/P14-3/pdf/P14-3011.pdf
+# pagina 80

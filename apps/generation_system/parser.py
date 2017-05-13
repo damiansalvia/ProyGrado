@@ -22,7 +22,7 @@ max_acceptable_length = None
 top= None
 summarize = None
 rename = None
-lematize = True
+lematize = False
 
 if args.json:
     inputdir, outputdir, logdir , max_acceptable_length, top, summarize, rename = load(
@@ -64,6 +64,14 @@ def is_length_acceptable(text, statistics):
 		log(str(e))
 		return False
 
+
+def get_tokens(review):
+    if lematize:
+        return nltk.word_tokenize(review)
+    else:
+        return nltk.word_tokenize(review)
+
+
 # Main
 
 log = Log(logdir)
@@ -92,7 +100,7 @@ for idx, rev in enumerate(reviews):
         review = replace_film_name(review, subject)
     if is_length_acceptable(review, statistics):
         [add_word_to_dic(occurrences, x.lower(), rank) for
-         x in nltk.word_tokenize(review) if is_valid_word(x)]
+         x in get_tokens(review) if is_valid_word(x)]
     progressive_bar("Reading reviews:    ", statistics['corpus_length'], idx)
 sys.stdout.write('\n')
 sys.stdout.flush()

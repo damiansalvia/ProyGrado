@@ -72,6 +72,16 @@ RUN mkdir ProyGrado
 ADD apps ProyGrado/apps 
 ADD tools ProyGrado/tools
 ADD corpus ProyGrado/corpus
+
+
+
+###################### For DEV ######################
+RUN apt update && apt install -y \
+    vim \
+    tmux
+###################### For DEV ######################
+
+
 # CMD: Run command when the container is created.
 
 # Run bash

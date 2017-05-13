@@ -16,6 +16,10 @@ magic = '''<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
 
 summarize = False
 
+def get_normalized_rank(rank):
+    return (rank -1) * 25
+
+
 def extract(xml):
     # extract the information from the file (film - text - rank )
     return xml.get("title"), xml.find("summary" if summarize else "body").text, int(xml.get("rank"))
@@ -36,7 +40,7 @@ for idx, file in enumerate(files):
             continue
         if is_valid_file(data):
             film, text, rank, = extract(xml)
-            reviews.append({'subject': film, 'review': text, 'rank':rank })
+            reviews.append({'subject': film, 'review': text, 'rank': get_normalized_rank(rank) })
     progressive_bar("Reading files:     ", total, idx)
 sys.stdout.write('\n')
 sys.stdout.flush()
