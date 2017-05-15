@@ -1,15 +1,12 @@
 # -*- coding: utf-8 -*-
 
 import math
-import sys
 import os
 from time import gmtime, strftime
 import inspect
 
-_, width = os.popen('stty size', 'r').read().split()
-width = int(width) - 30
-
-
+tmp = os.popen('stty size', 'r').read().split()
+width = int(tmp[1]) if tmp else 100
 
 def matrix_to_string(dict):
     # To visualize the distribution  matrix
@@ -30,16 +27,16 @@ def matrix_to_string(dict):
                 int(math.ceil(spaces / 2.0)) + "|"
         dict_s += string + '\n'
         progressive_bar("Generating matrix: ", coutn_dict, idx)
-    sys.stdout.write('\n')
-    sys.stdout.flush()
     dict_s += h_bar
     return dict_s
 
 
-def progressive_bar(promt, max, i):
-    # FIXME -- Falla aveces!
-    pos = int(math.ceil((i + 1) * (float(width) / max)))
-    print "\r%s [%s%s] %d%%" % (promt, '#'* pos,'-'*(width - pos), pos*100/float(width)),
+def progressive_bar(prompt, total, current):
+    bar_length = 100-len(prompt)
+    percent = float(current) / total
+    hashes = '#' * int(round(percent * bar_length))
+    spaces = ' ' * (bar_length - len(hashes))
+    print "\r{0} [{1}] {2}%".format(prompt,hashes + spaces, round(percent * 100,2)),
 
 class Log:
     def __init__(self,file):
