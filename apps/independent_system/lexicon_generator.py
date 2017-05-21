@@ -6,8 +6,7 @@ import codecs
 import json
 import glob
 from collections import defaultdict
-from printHelper import *
-from utils import *
+from apps.utilities.printHelper import *
 
 
 inputdir  = 'outputs/corpus/'
@@ -56,7 +55,9 @@ for file in files:
     progressive_bar( 'Processing ' + file_name.replace('.json', '').replace('_', ' ') + " : ", corpus_length, idx+1)
     print
     polarities = {key:get_polarity(value) for key, value in occurrences.iteritems()}
-    with codecs.open(outputdir +    file_name.replace('corpus', 'polarities'), "w", "utf-8") as f:
+    print outputdir 
+    print file_name.replace('corpus', 'polarities')
+    with codecs.open(outputdir + file_name.replace('corpus', 'polarities'), "w", "utf-8") as f:
         json.dump(polarities, f,indent=4,sort_keys=True,ensure_ascii=False)
 
 print '\nElapsed time: %.2f Sec' % (time.time() - start_time)

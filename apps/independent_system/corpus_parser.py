@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from ParseStrategy import *
+from corpus_parser_strategies import *
 import json, io
 
 #=====================================================================

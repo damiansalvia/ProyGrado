@@ -4,6 +4,7 @@ from printHelper import *
 import glob
 import csv, json
 import xml.etree.ElementTree as xmlreader
+from apps.utilities.printHelper import *
 
 magic = '''<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
             "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd" [
@@ -196,7 +197,7 @@ def corpus_variado_sfu(cdir):
 				'rank'  : val[rank] 
 			})	
 		except Exception as e:
-			log(str(e) + "\n" + content)
+			log(str(e) + "\n" + items[idx])
 			fails += 1
 			continue
 	progressive_bar(name,idx+1,total)
@@ -223,7 +224,7 @@ def corpus_apps_android(cdir):
 				'rank'  : val[rank] 
 			})	
 		except Exception as e:
-			log(str(e) + "\n" + content)
+			log(str(e) + "\n" + items[idx])
 			fails += 1
 			continue
 	progressive_bar(name,idx+1,total)
