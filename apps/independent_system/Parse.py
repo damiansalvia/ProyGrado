@@ -1,11 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from ParseStrategy import corpus_cine
-from ParseStrategy import corpus_hoteles
-from ParseStrategy import corpus_prensa_uy
-from ParseStrategy import corpus_tweets
-from ParseStrategy import corpus_variado_sfu
-from ParseStrategy import corpus_apps_android
+from ParseStrategy import *
 import json, io
 
 #=====================================================================
@@ -19,8 +14,8 @@ class ParseCorpus:
 	def parse(self):
 		self.revs = self.alg(self.dir)
 		
-	def save(self):
-		cdir = "%s/%s.json" % (self.dir,self.name)
+	def save(self,dest='outputs/corpus'):
+		cdir = "%s/%s.json" % (dest,self.name)
 		with io.open(cdir, "w", encoding='utf8') as ofile:
 			content = json.dumps(self.revs,indent=4,sort_keys=True,ensure_ascii=False)
 			if not isinstance(content, unicode):

@@ -14,7 +14,10 @@ def is_valid_file(data):
 
 def is_valid_word(word):
     # return true if the word is valid
-    return True if re.match(word_pattern, word) else False
+    try:
+        return True if re.match(word_pattern, word) else False
+    except:
+        return False
 
 
 def load(json_file):

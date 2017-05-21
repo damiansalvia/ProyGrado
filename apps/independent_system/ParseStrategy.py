@@ -70,7 +70,7 @@ def corpus_cine(cdir):
 			item = xmlreader.fromstring(magic+content)
 			rank = item.attrib['rank']
 			for child in item:
-				if child.tag == 'body':
+				if child.tag == 'body' and child.text is not None:
 					rev = child.text
 					revs.append({
 						'review': rev, 
