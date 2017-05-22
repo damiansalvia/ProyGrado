@@ -31,12 +31,13 @@ def matrix_to_string(dict):
     return dict_s
 
 
-def progressive_bar(prompt, total, current):
-    bar_length = 100-len(prompt)
+def progressive_bar(prompt, total, current, width=width):
+    bar_length = width-len(prompt)
     percent = float(current) / total
     hashes = '#' * int(round(percent * bar_length))
     spaces = ' ' * (bar_length - len(hashes))
     print "\r{0} [{1}] {2}%".format(prompt,hashes + spaces, round(percent * 100,2)),
+    if current==total: print
 
 class Log:
     def __init__(self,file):

@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 
-from printHelper import *
+import sys
+sys.path.append('../utilities') # To import 'utilities' modules
+
 import glob
-import csv, json
+import csv, json, re
 import xml.etree.ElementTree as xmlreader
-from apps.utilities.printHelper import *
+from printHelper import *
 
 magic = '''<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
             "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd" [
@@ -30,14 +32,14 @@ log = Log('../../apps/log/')
 '''
 ############################### TEMPLATE ###############################
 def <nombre_directorio_corpus>(cdir):
-	name  = "Corpus: <NOMBRE_CORPUS>, Author: <nombre_autor>"
+	print "Corpus: <NOMBRE_CORPUS>, Author: <nombre_autor>"
 	val   = {'<cat1>':<val1>,'<cat2>':<val2>,...}
 	items = <mechanism to get all items of the corpus in a list>
 	total = len(items)
 	revs  = []
 	fails = 0
 	for idx,item in enumerate(items):
-		progressive_bar(name,total,idx)
+		progressive_bar("Parsing",total,idx)
 		try:	
 			<business logic to get review and polarity from an corpus item>	
 			<sometime in the code must appear the following sentence>
@@ -49,22 +51,22 @@ def <nombre_directorio_corpus>(cdir):
 			log(str(e) + "\n" + content)
 			fails += 1
 			continue
-	progressive_bar(name,idx+1,total)
-	print "\n%i of %i items have failed" % (fails,total)
+	progressive_bar("Parsing",total,idx+1)
+	print "%i of %i items have failed" % (fails,total)
 	return revs
 '''
 
 #=====================================================================
 
 def corpus_cine(cdir):
-	name  = "Corpus: MUCHOCINE, Author: Ivan Sainz-Pardo"
+	print "Corpus: MUCHOCINE, Author: Ivan Sainz-Pardo"
 	val   = {'1':0,'2':25,'3':50,'4':75,'5':100}
 	items = glob.glob(cdir + '/*.xml')
 	total = len(items)
 	revs  = []
 	fails = 0
 	for idx,item in enumerate(items):
-		progressive_bar(name,total,idx)
+		progressive_bar("Parsing",total,idx)
 		try:	
 			with open(item) as fp:
 				content = fp.read().decode('cp1252').encode('utf8')
@@ -81,14 +83,14 @@ def corpus_cine(cdir):
 			log(str(e) + "\n" + str(item))
 			fails += 1
 			continue
-	progressive_bar(name,idx+1,total)
-	print "\n%i of %i items have failed" % (fails,total)
+	progressive_bar("Parsing",total,idx+1)
+	print "%i of %i items have failed" % (fails,total)
 	return revs
 
 #=====================================================================
 
 def corpus_hoteles(cdir):
-	name  = "Corpus: COAH, Author: Molina Gonzalez"
+	print "Corpus: COAH, Author: Molina Gonzalez"
 	val   = {'1':0,'2':25,'3':50,'4':75,'5':100}
 	with open(glob.glob(cdir + '/*.xml')[0]) as fp:
 		content = fp.read()
@@ -97,7 +99,7 @@ def corpus_hoteles(cdir):
 	revs  = []
 	fails = 0
 	for idx,item in enumerate(items):
-		progressive_bar(name,total,idx)
+		progressive_bar("Parsing",total,idx)
 		try:
 			for elem in item:
 				if elem.tag == '{http://sinai.ujaen.es/coah}rank':
@@ -112,14 +114,14 @@ def corpus_hoteles(cdir):
 			log(str(e) + "\n" + str(item))
 			fails += 1
 			continue
-	progressive_bar(name,idx+1,total)
-	print "\n%i of %i items have failed" % (fails,total)
+	progressive_bar("Parsing",total,idx+1)
+	print "%i of %i items have failed" % (fails,total)
 	return revs
 
 #=====================================================================
 
 def corpus_prensa_uy(cdir):
-	name  = "Corpus: CORPUS PRENSA, Author: Estudiantes FIng"
+	print "Corpus: CORPUS PRENSA, Author: Estudiantes FIng"
 	val   = {'NEG':0,'NEU':50,'POS':100}
 	with open(cdir + '/train.csv') as csv_file:
 		content = list(csv.reader(csv_file))
@@ -129,7 +131,7 @@ def corpus_prensa_uy(cdir):
 	revs  = []
 	fails = 0
 	for idx,item in enumerate(items):
-		progressive_bar(name,total,idx)
+		progressive_bar("Parsing",total,idx)
 		try:
 			rev  = item[columns['rev']]
 			rank = item[columns['rank']]
@@ -141,14 +143,14 @@ def corpus_prensa_uy(cdir):
 			log(str(e) + "\n" + str(item))
 			fails += 1
 			continue
-	progressive_bar(name,idx+1,total)
-	print "\n%i of %i items have failed" % (fails,total)
+	progressive_bar("Parsing",total,idx+1)
+	print "%i of %i items have failed" % (fails,total)
 	return revs
 
 #=====================================================================
 
 def corpus_tweets(cdir):
-	name  = "Corpus: SPANISH TWITTER, Author: David Villares"
+	print "Corpus: SPANISH TWITTER, Author: David Villares"
 	# val   = {'NEG':0,'NEU':50,'POS':100}
 	with open(glob.glob(cdir + '/*.tsv')[0]) as tsv_file:
 		content = list(csv.DictReader(tsv_file, delimiter='\t'))
@@ -157,7 +159,7 @@ def corpus_tweets(cdir):
 	revs  = []
 	fails = 0
 	for idx,item in enumerate(items):
-		progressive_bar(name,total,idx)
+		progressive_bar("Parsing",total,idx)
 		try:	
 			rev  = item['Comment (All)']
 			rank = (int(item['mean pos']) - int(item['mean neg']) + 5)*10
@@ -169,21 +171,21 @@ def corpus_tweets(cdir):
 			log(str(e) + "\n" + item['Comment (All)'])
 			fails += 1
 			continue
-	progressive_bar(name,idx+1,total)
-	print "\n%i of %i items have failed" % (fails,total)
+	progressive_bar("Parsing",total,idx+1)
+	print "%i of %i items have failed" % (fails,total)
 	return revs
 
 #=====================================================================
 
 def corpus_variado_sfu(cdir):
-	name  = "Corpus: SFU VARIADO, Author: J.Brooke, M. Taboada"
+	print "Corpus: SFU VARIADO, Author: J.Brooke, M. Taboada"
 	val   = {'NEG':0,'POS':100}
 	items = glob.glob(cdir + '/*/*.txt')
 	total = len(items)
 	revs  = []
 	fails = 0
 	for idx,item in enumerate(items):
-		progressive_bar(name,total,idx)
+		progressive_bar("Parsing",total,idx)
 		try:	
 			fname = item.replace('\\','/').split('/')[-1]
 			if fname[:2] == 'no':
@@ -200,14 +202,14 @@ def corpus_variado_sfu(cdir):
 			log(str(e) + "\n" + items[idx])
 			fails += 1
 			continue
-	progressive_bar(name,idx+1,total)
-	print "\n%i of %i items have failed" % (fails,total)
+	progressive_bar("Parsing",total,idx+1)
+	print "%i of %i items have failed" % (fails,total)
 	return revs
 
 #=====================================================================
 
 def corpus_apps_android(cdir):
-	name  = "Corpus: ANDROIDAPPS-REVIEW-DATASET, Author: ldubiau"
+	print "Corpus: ANDROIDAPPS-REVIEW-DATASET, Author: ldubiau"
 	val   = {'NEG':0,'POS':100}
 	paths = glob.glob(cdir + '/*/*.json')
 	items = [(rev,path) for path in paths for rev in json.load(open(path))]
@@ -215,7 +217,7 @@ def corpus_apps_android(cdir):
 	revs  = []
 	fails = 0
 	for idx,item in enumerate(items):
-		progressive_bar(name,total,idx)
+		progressive_bar("Parsing",total,idx)
 		try:
 			rank  = item[1].replace('\\','/').split('/')[-2].upper()
 			rev   = item[0]
@@ -227,6 +229,6 @@ def corpus_apps_android(cdir):
 			log(str(e) + "\n" + items[idx])
 			fails += 1
 			continue
-	progressive_bar(name,idx+1,total)
-	print "\n%i of %i items have failed" % (fails,total)
+	progressive_bar("Parsing",total,idx+1)
+	print "%i of %i items have failed" % (fails,total)
 	return revs
