@@ -152,7 +152,7 @@ def corpus_prensa_uy(cdir):
 def corpus_tweets(cdir):
 	print "Corpus: SPANISH TWITTER, Author: David Villares"
 	# val   = {'NEG':0,'NEU':50,'POS':100}
-	with open(glob.glob(cdir + '/*.tsv')[0]) as tsv_file:
+	with open(glob.glob(cdir + '/*.tsv')[0],'r') as tsv_file:
 		content = list(csv.DictReader(tsv_file, delimiter='\t'))
 	items = content
 	total = len(items)
@@ -161,7 +161,7 @@ def corpus_tweets(cdir):
 	for idx,item in enumerate(items):
 		progressive_bar("Parsing",total,idx)
 		try:	
-			rev  = item['Comment (All)']
+			rev  = item['Comment (All)'].encode('utf8')
 			rank = (int(item['mean pos']) - int(item['mean neg']) + 5)*10
 			revs.append({
 				'review': rev, 
