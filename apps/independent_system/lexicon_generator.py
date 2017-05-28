@@ -20,8 +20,8 @@ log = Log(logdir)
 
 MAX_RANK = 100
 
-WINDOW_LEFT   = 0
-WINDOW_RIGHT = 0
+WINDOW_LEFT  = 2
+WINDOW_RIGHT = 1
 
 class IndependentLexiconGenerator:
 
@@ -41,14 +41,17 @@ class IndependentLexiconGenerator:
             # obtain a list of words from a text
             return nltk.word_tokenize(review)
 
-        def get_polarity(list):
-            val = sum(list)/len(list)
+        def get_polarity(val):
             if val < 40:
                 return '-'
             elif val > 60:
                 return '+'
             else:
                 return '0'
+
+        def get_list_polarity(list):
+            val = sum(list)/len(list)
+            return get_polarity(val)
 
         def get_negation_indexes(word_list):
             # returns the indexes of the negators words in a secuence
@@ -65,6 +68,7 @@ class IndependentLexiconGenerator:
         # #------- Execute Function -------#
         for file in self.files:
             file_name = file.split('/')[-1]
+            file_statistics = defaultdict(int)
             occurrences = defaultdict(list)
             with codecs.open(file, "r", "utf-8") as f:
                 reviews = json.load(f)
@@ -75,27 +79,50 @@ class IndependentLexiconGenerator:
                     review  = rev['review']
                     rank    = rev['rank']
                     tokens  = get_tokens(review)
+                    file_statistics['rev_' + get_polarity(rank)] += 1
                     negations_indexes = get_negation_indexes(tokens)
+                    file_statistics['negators'] += len(negations_indexes)
+
                     for tx_idx,token in enumerate(tokens):
                         if not tx_idx in negations_indexes:
                             token = token.lower()
                             # The negators shouldn't have polarities by themselves (this should be discussed)
                             if is_negated(tx_idx,negations_indexes):
                                 occurrences[token].append(inverse(rank)) 
+                                file_statistics['neg_word'] += 1
                             else: 
                                 occurrences[token].append(rank) 
                 except Exception as e:
                     log(str(e))
                     raise e
+
+            self.polarities[file_name] = {}         
+            file_polarities = { 
+                word: {
+                    'polarity'             : get_list_polarity(rank),
+                    'positives_ocurrences' : len(filter(lambda val: get_polarity(val) == "+", rank)),
+                    'negatives_ocurrences' : len(filter(lambda val: get_polarity(val) == "-", rank)),
+                    'neutral_ocurrences'   : len(filter(lambda val: get_polarity(val) == "0", rank)),
+                    'total_ocurrences'     : len(rank)
+                } for word, rank in occurrences.iteritems() 
+            }
+            self.polarities[file_name]['words'] = file_polarities
+            self.polarities[file_name]['analytics'] = {
+                "positive_reviews"     : file_statistics['rev_+'],
+                "negative_reviews"     : file_statistics['rev_-'],
+                "neutral_reviews"      : file_statistics['rev_0'],
+                "total_reviews"        : file_statistics['rev_+'] + file_statistics['rev_-'] + file_statistics['rev_0'],
+                "positive_words"       : len(filter(lambda word: file_polarities[word]['polarity'] == "+", file_polarities.keys())),
+                "negative_words"       : len(filter(lambda word: file_polarities[word]['polarity'] == "-", file_polarities.keys())),
+                "neutral_words"        : len(filter(lambda word: file_polarities[word]['polarity'] == "0", file_polarities.keys())),
+                "total_words"          : len(file_polarities),
+                "negators"             : file_statistics['negators'],
+                "negated_words"        : file_statistics['neg_word']
+            }
+
+
             progressive_bar( 'Processing ' + file_name.replace('.json', '').replace('_', ' ') + " : ", corpus_length, idx + 1)
             print
-        self.polarities[file_name] = {
-            key:{
-                "polarity":get_polarity(value),
-                "frequency":len(value)
-            }
-            for key, value in occurrences.iteritems()
-        }
 
     def get_polarities(self):
         return self.polarities
