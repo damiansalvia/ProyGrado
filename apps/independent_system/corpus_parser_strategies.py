@@ -27,11 +27,9 @@ magic = '''<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
             <!ENTITY ccedil 'ç'><!ENTITY Ccedil 'Ç'>
             ]>''' 
 
-log = Log('../../apps/log/')
-
 '''
 ############################### TEMPLATE ###############################
-def <nombre_directorio_corpus>(cdir):
+def <nombre_directorio_corpus>(cdir,log):
 	print "Corpus: <NOMBRE_CORPUS>, Author: <nombre_autor>"
 	val   = {'<cat1>':<val1>,'<cat2>':<val2>,...}
 	items = <mechanism to get all items of the corpus in a list>
@@ -58,7 +56,7 @@ def <nombre_directorio_corpus>(cdir):
 
 #=====================================================================
 
-def corpus_cine(cdir):
+def corpus_cine(cdir,log):
 	print "Corpus: MUCHOCINE, Author: Ivan Sainz-Pardo"
 	val   = {'1':0,'2':25,'3':50,'4':75,'5':100}
 	items = glob.glob(cdir + '/*.xml')
@@ -89,7 +87,7 @@ def corpus_cine(cdir):
 
 #=====================================================================
 
-def corpus_hoteles(cdir):
+def corpus_hoteles(cdir,log):
 	print "Corpus: COAH, Author: Molina Gonzalez"
 	val   = {'1':0,'2':25,'3':50,'4':75,'5':100}
 	with open(glob.glob(cdir + '/*.xml')[0]) as fp:
@@ -120,7 +118,7 @@ def corpus_hoteles(cdir):
 
 #=====================================================================
 
-def corpus_prensa_uy(cdir):
+def corpus_prensa_uy(cdir,log):
 	print "Corpus: CORPUS PRENSA, Author: Estudiantes FIng"
 	val   = {'NEG':0,'NEU':50,'POS':100}
 	with open(cdir + '/train.csv') as csv_file:
@@ -149,7 +147,7 @@ def corpus_prensa_uy(cdir):
 
 #=====================================================================
 
-def corpus_tweets(cdir):
+def corpus_tweets(cdir,log):
 	print "Corpus: SPANISH TWITTER, Author: David Villares"
 	# val   = {'NEG':0,'NEU':50,'POS':100}
 	with open(glob.glob(cdir + '/*.tsv')[0],'r') as tsv_file:
@@ -177,7 +175,7 @@ def corpus_tweets(cdir):
 
 #=====================================================================
 
-def corpus_variado_sfu(cdir):
+def corpus_variado_sfu(cdir,log):
 	print "Corpus: SFU VARIADO, Author: J.Brooke, M. Taboada"
 	val   = {'NEG':0,'POS':100}
 	items = glob.glob(cdir + '/*/*.txt')
@@ -208,7 +206,7 @@ def corpus_variado_sfu(cdir):
 
 #=====================================================================
 
-def corpus_apps_android(cdir):
+def corpus_apps_android(cdir,log):
 	print "Corpus: ANDROIDAPPS-REVIEW-DATASET, Author: ldubiau"
 	val   = {'NEG':0,'POS':100}
 	paths = glob.glob(cdir + '/*/*.json')

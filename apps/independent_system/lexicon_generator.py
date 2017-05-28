@@ -4,6 +4,7 @@ import sys
 sys.path.append('../utilities') # To import 'utilities' modules
 
 import time
+import os
 import nltk
 import codecs
 import json
@@ -13,27 +14,32 @@ from printHelper import *
 
 inputdir    = 'outputs/corpus/'
 outputdir   = 'outputs/lexicons/single_corpus_lexicon/'
-negatorsdir = 'negators_list.txt'
-logdir      = '../log/'
-
-log = Log(logdir)
 
 MAX_RANK = 100
 
 WINDOW_LEFT  = 2
 WINDOW_RIGHT = 1
 
+negators_list = [
+    "aunque", "denegar", u"jamás", "nada", "nadie", "negar", 
+    "negativa", "ni", "ninguna", "ninguno", u"ningún", 
+    "no", "nunca", "pero", u"rehúso", "tampoco"
+]
+
 class IndependentLexiconGenerator:
 
-    def __init__(self, input_dir=inputdir, negators_dir=negatorsdir, window_left=WINDOW_LEFT, window_right=WINDOW_RIGHT, max_rank=MAX_RANK):
+    def __init__(self, input_dir=inputdir, negators_list=negators_list, 
+                 window_left=WINDOW_LEFT, window_right=WINDOW_RIGHT, max_rank=MAX_RANK,
+                 ldir='./'):
+        if not os.path.isdir(ldir): os.makedirs(ldir)
+        self.log = Log(ldir)
         input_dir = input_dir if input_dir[-1] != "/" else input_dir[:-1]
         self.files        = glob.glob(input_dir + '/corpus*.json')
         self.polarities   = {}
         self.window_right = window_right
         self.window_size  = window_left + window_right
         self.max_rank     = max_rank
-        with codecs.open(negators_dir, "r", "utf-8") as f:
-            self.negators =  [x.strip() for x in f.readlines()]  
+        self.negators     = [negator.encode('utf8') for negator in negators_list]   
     
     def generate(self):
 
@@ -93,7 +99,7 @@ class IndependentLexiconGenerator:
                             else: 
                                 occurrences[token].append(rank) 
                 except Exception as e:
-                    log(str(e))
+                    self.log(str(e))
                     raise e
 
             self.polarities[file_name] = {}         
@@ -128,6 +134,7 @@ class IndependentLexiconGenerator:
         return self.polarities
 
     def save(self, output_dir = outputdir):
+        if not os.path.isdir(output_dir): os.makedirs(output_dir)
         for (file_name, pol) in self.polarities.iteritems():
             cdir = output_dir + file_name.replace('corpus', 'polarities')
             with codecs.open(cdir, "w", "utf-8") as f:

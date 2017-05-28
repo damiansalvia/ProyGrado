@@ -7,6 +7,8 @@ import sys # Para ver UTF8 en consola
 reload(sys)
 sys.setdefaultencoding('utf-8')
 
+import os
+
 #=====================================================================
 
 alphabet = "abcdefghijklmnñopqrstuvwxyzáéíóúü¿?¡!(),.:;'"
@@ -58,23 +60,27 @@ def correct(lst):
     return ret
 
 #=====================================================================
-class ParseCorpus:
-    def __init__(self,cdir):
+class CorpusParser:
+    
+    def __init__(self,cdir,ldir='./'):
+        if not os.path.isdir(ldir): os.makedirs(ldir)
+        self.log  = Log(ldir)
         self.res  = []
         self.dir  = cdir if cdir[-1] != "/" else cdir[:-1]
         self.name = cdir.split("/")[-1]
         self.alg  = globals()[self.name]
 
     def parse(self):
-        self.res = self.alg(self.dir)
+        self.res = self.alg(self.dir,self.log)
         self.res = correct(self.res)
         return self.res
     
     def get_parsed(self):
         return self.res
         
-    def save(self,dest='outputs/corpus'):
-        cdir = "%s/%s.json" % (dest,self.name)
+    def save(self,output_dir='outputs/corpus'):
+        if not os.path.isdir(output_dir): os.makedirs(output_dir)
+        cdir = "%s/%s.json" % (output_dir,self.name)
         with io.open(cdir,"w",encoding='utf8') as ofile:
             content = json.dumps(self.res,indent=4,ensure_ascii=False)
             if not isinstance(content, unicode):
@@ -92,37 +98,37 @@ if __name__ == "__main__":
     print ret
     print ret[0]['review']#.decode('utf8')
     
-    parser = ParseCorpus("../../corpus/corpus_cine")
+    parser = CorpusParser("../../corpus/corpus_cine")
     parser.parse()
     res = parser.get_parsed()
     print "%i retrived" % len(res), type(res[0]['review'])
     parser.save()    
            
-    parser = ParseCorpus("../../corpus/corpus_hoteles")
+    parser = CorpusParser("../../corpus/corpus_hoteles")
     parser.parse()
     res = parser.get_parsed()
     print "%i retrived" % len(res), type(res[0]['review'])
     parser.save()
           
-    parser = ParseCorpus("../../corpus/corpus_prensa_uy")
+    parser = CorpusParser("../../corpus/corpus_prensa_uy")
     parser.parse()
     res = parser.get_parsed()
     print "%i retrived" % len(res), type(res[0]['review'])
     parser.save()
         
-    parser = ParseCorpus("../../corpus/corpus_tweets")
+    parser = CorpusParser("../../corpus/corpus_tweets")
     parser.parse()
     res = parser.get_parsed()
     print "%i retrived" % len(res), type(res[0]['review'])
     parser.save()
        
-    parser = ParseCorpus("../../corpus/corpus_variado_sfu")
+    parser = CorpusParser("../../corpus/corpus_variado_sfu")
     parser.parse()
     res = parser.get_parsed()
     print "%i retrived" % len(res), type(res[0]['review'])
     parser.save()
          
-    parser = ParseCorpus("../../corpus/corpus_apps_android")
+    parser = CorpusParser("../../corpus/corpus_apps_android")
     parser.parse()
     res = parser.get_parsed()
     print "%i retrived" % len(res), type(res[0]['review'])

@@ -3,10 +3,8 @@
 import sys
 sys.path.append('../utilities') # To import 'utilities' modules
 
-import time
-import codecs
-import json
-import glob
+import time, os, codecs
+import glob, json
 from collections import defaultdict
 from printHelper import *
 from utils import *
@@ -14,13 +12,12 @@ from utils import *
 inputdir  = 'outputs/lexicons/single_corpus_lexicon/'
 outputdir = 'outputs/lexicons/'
 
-logdir    = '../log/'
-log = Log(logdir)
-
 class IndependentLexiconIntersector:
    
 
-    def __init__(self,tolerance=0.0,input_dir=inputdir):
+    def __init__(self,tolerance=0.0,input_dir=inputdir,ldir="'./'"):
+        if not os.path.isdir(ldir): os.makedirs(ldir)
+        self.log = Log(ldir)
         input_dir = input_dir if input_dir[-1] != "/" else input_dir[:-1]
         self.files       = glob.glob(input_dir + '/polarities*.json')
         self.polarities  = defaultdict(list)
@@ -49,7 +46,7 @@ class IndependentLexiconIntersector:
                         corpus_polarities['words'][word]['polarity'])
                     progressive_bar( 'Processing ' + file_name.replace('.json', '').replace('_', ' ') + " : ", words_count, idx)
             except Exception as e:
-                log(str(e))
+                self.log(str(e))
                 raise e
             progressive_bar( 'Processing ' + file_name.replace('.json', '').replace('_', ' ') + " : ", words_count, idx+1)
             print 
@@ -76,7 +73,8 @@ class IndependentLexiconIntersector:
         self.lexicon['words'] = words_polarities;
 
     def save(self, output_dir = outputdir):
-        cdir = "%s/independen_lexicon_(MATCHES_%i_of_%i).json" % (outputdir, self.min_matches, len(self.files))
+        if not os.path.isdir(output_dir): os.makedirs(output_dir)
+        cdir = "%s/independen_lexicon_(MATCHES_%i_of_%i).json" % (output_dir, self.min_matches, len(self.files))
         with codecs.open(cdir , "w", "utf-8") as f:
             json.dump(self.lexicon, f, indent=4, ensure_ascii=False)
         print "Result was saved in %s\n" % cdir

@@ -40,8 +40,9 @@ def progressive_bar(prompt, total, current, width=width):
     if current==total: print
 
 class Log:
-    def __init__(self,file):
-        self.log = open(file + "error_log", 'w')
+    def __init__(self,ldir):
+        if not os.path.isdir(ldir): os.makedirs(ldir)
+        self.log = open(ldir + "/error_log", 'w')
 
     def __call__(self,error, level='error'):
         time = strftime("%Y-%m-%d %H:%M:%S", gmtime())
