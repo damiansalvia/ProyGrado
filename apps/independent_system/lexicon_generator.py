@@ -33,6 +33,7 @@ class IndependentLexiconGenerator:
                  ldir='./'):
         if not os.path.isdir(ldir): os.makedirs(ldir)
         self.log = Log(ldir)
+        input_dir = input_dir.replace("\\","/")
         input_dir = input_dir if input_dir[-1] != "/" else input_dir[:-1]
         self.files        = glob.glob(input_dir + '/corpus*.json')
         self.polarities   = {}
@@ -73,7 +74,7 @@ class IndependentLexiconGenerator:
 
         # #------- Execute Function -------#
         for file in self.files:
-            file_name = file.split('/')[-1]
+            file_name = file.replace("\\","/").split('/')[-1]
             file_statistics = defaultdict(int)
             occurrences = defaultdict(list)
             with codecs.open(file, "r", "utf-8") as f:
@@ -136,7 +137,7 @@ class IndependentLexiconGenerator:
     def save(self, output_dir = outputdir):
         if not os.path.isdir(output_dir): os.makedirs(output_dir)
         for (file_name, pol) in self.polarities.iteritems():
-            cdir = output_dir + file_name.replace('corpus', 'polarities')
+            cdir = "%s/%s" % (output_dir,file_name.replace('corpus', 'polarities'))
             with codecs.open(cdir, "w", "utf-8") as f:
                 json.dump(pol, f,indent=4,sort_keys=True,ensure_ascii=False)
             print "Result was saved in %s\n" % cdir

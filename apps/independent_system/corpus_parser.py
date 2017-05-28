@@ -62,11 +62,12 @@ def correct(lst):
 #=====================================================================
 class CorpusParser:
     
-    def __init__(self,cdir,ldir='./'):
+    def __init__(self,input_dir,ldir='./'):
         if not os.path.isdir(ldir): os.makedirs(ldir)
         self.log  = Log(ldir)
         self.res  = []
-        self.dir  = cdir if cdir[-1] != "/" else cdir[:-1]
+        input_dir = input_dir.replace("\\","/")
+        self.dir  = input_dir if input_dir[-1] != "/" else input_dir[:-1]
         self.name = cdir.split("/")[-1]
         self.alg  = globals()[self.name]
 

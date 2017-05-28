@@ -24,33 +24,38 @@ corpus_sources = [
     "../corpus/corpus_variado_sfu"
 ]
 
-for source_file in corpus_sources:
-    parser = CorpusParser(cdir=source_file,ldir="./log/")
-    parser.parse()
-    parser.save("./tmp/corpus")
-
-win_sizes = zip(range(4),range(2))
-
-for source_file in glob.glob("./tmp/corpus/*.json"):
-    for (win_left,win_right) in win_sizes:
-        generator = IndependentLexiconGenerator(
-                        input_dir=source_file, 
-                        negators_list=negators_list,
-                        window_left=win_left, 
-                        window_right=win_right,
-                        ldir='./log/'
-                    )
-        generator.generate()
-        generator.save("./tmp/polarities_win_%i_%i" % (win_left,win_right))
+# for source_file in corpus_sources:
+#     parser = CorpusParser(cdir=source_file,ldir="./log/")
+#     parser.parse()
+#     parser.save("./tmp/corpus")
+# 
+win_sizes = [
+    (0,0),(1,0),(2,0),(3,0),
+    (0,1),(1,1),(2,1),(3,1)
+]
+ 
+# processed_sources = glob.glob("./tmp/corpus/*.json")
+# for source_file in processed_sources:
+#     for (win_left,win_right) in win_sizes:
+#         generator = IndependentLexiconGenerator(
+#                         input_dir=source_file, 
+#                         negators_list=negators_list,
+#                         window_left=win_left, 
+#                         window_right=win_right,
+#                         ldir='./log/'
+#                     )
+#         generator.generate()
+#         generator.save("./tmp/polarities/win_%i_%i" % (win_left,win_right))
  
 for (win_left,win_right) in win_sizes:
-    polarity_sources = glob.glob("./tmp/polarities_win_%i_%i" % (win_left,win_right))
+    polarity_sources = glob.glob("./tmp/polarities/win_%i_%i/*.json" % (win_left,win_right))
     total = len(polarity_sources)
-    for source_file in polarity_sources:
-        for cantidad in range(total):
-            intersector =   IndependentLexiconIntersector(
-                                input_dir = source_file,
-                                tolerance = cantidad/total
-                            )
-            intersector.intersect_corpus()
-            intersector.save("./tmp/lexicon")
+    for cantidad in range(total+1):
+        tolerance = round(1.0*cantidad/total,3)
+        intersector =   IndependentLexiconIntersector(
+                            input_dir = "./tmp/polarities/win_%i_%i" % (win_left,win_right),
+                            tolerance = tolerance
+                        )
+        intersector.intersect_corpus()
+        intersector.save("./tmp/lexicon", file_name="independen_lexicon_%i_%i" % (win_left,win_right))
+        

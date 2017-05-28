@@ -15,13 +15,14 @@ outputdir = 'outputs/lexicons/'
 class IndependentLexiconIntersector:
    
 
-    def __init__(self,tolerance=0.0,input_dir=inputdir,ldir="'./'"):
+    def __init__(self,tolerance=0.0,input_dir=inputdir,ldir="./'"):
         if not os.path.isdir(ldir): os.makedirs(ldir)
         self.log = Log(ldir)
+        input_dir = input_dir.replace("\\","/")
         input_dir = input_dir if input_dir[-1] != "/" else input_dir[:-1]
         self.files       = glob.glob(input_dir + '/polarities*.json')
         self.polarities  = defaultdict(list)
-        self.min_matches = int(round(len(self.files)*(1-tolerance),0))
+        self.min_matches = int(round(len(self.files)*(1.0-tolerance),0))
         self.lexicon = {}
 
     def intersect_corpus(self):
@@ -34,6 +35,7 @@ class IndependentLexiconIntersector:
 
         for file in self.files:
             try:
+                file = file.replace("\\","/")
                 file_name = file.split('/')[-1]
                 with codecs.open(file, "r", "utf-8") as f:
                     corpus_polarities = json.load(f)
@@ -72,9 +74,10 @@ class IndependentLexiconIntersector:
 
         self.lexicon['words'] = words_polarities;
 
-    def save(self, output_dir = outputdir):
+    def save(self, output_dir = outputdir, file_name = "independen_lexicon"):
+        output_dir = output_dir.replace("\\","/")
         if not os.path.isdir(output_dir): os.makedirs(output_dir)
-        cdir = "%s/independen_lexicon_(MATCHES_%i_of_%i).json" % (output_dir, self.min_matches, len(self.files))
+        cdir = "%s/%s_(MATCHES_%i_of_%i).json" % (output_dir, file_name, self.min_matches, len(self.files))
         with codecs.open(cdir , "w", "utf-8") as f:
             json.dump(self.lexicon, f, indent=4, ensure_ascii=False)
         print "Result was saved in %s\n" % cdir
