@@ -41,22 +41,36 @@ parser= freeling.chart_parser(DATA+LANG+"/chunker/grammar-chunk.dat");
 dep=freeling.dep_txala(DATA+LANG+"/dep_txala/dependences.dat", parser.get_start_symbol());
 
 # process input text
+import sys
 
-lin= u"Esto es una explicación.".encode('utf-8') #.encode('iso-8859-1')
-#print  "Text language is: "+la.identify_language(lin,["es","ca","en","it"])+"\n" 
-l = tk.tokenize(lin);
-ls = sp.split(sid,l,False);
+lin = True
 
-ls = mf.analyze(ls);
-ls = tg.analyze(ls);
+while lin:
 
-## output results
-for s in ls :
-   ws = s.get_words();
-   print "-----";
-   for w in ws :
-      print w.get_form()+" "+w.get_lemma()+" "+w.get_tag()
-   print "-----";
+  lin = unicode(sys.stdin.readline(), 'utf8')
+  #lin= u"Esto es una explicación." #.encode('utf-8') #.encode('iso-8859-1')
+  #print  "Text language is: "+la.identify_language(lin,["es","ca","en","it"])+"\n" 
+  l = tk.tokenize(lin);
+  ls = sp.split(sid,l,False);
+
+  ls = mf.analyze(ls);
+  ls = tg.analyze(ls);
+
+  ## output results
+
+  for s in ls :
+     ws = s.get_words();
+     print "-----";
+     sent = []
+     for w in ws :
+        print  w.get_form().encode('utf8') + " - ",
+        print w.get_lemma().encode('utf8')  + " ",
+        print  w.get_tag()
+        sent.append(tuple( (w.get_form().encode('utf8'), w.get_lemma().encode('utf8'), w.get_tag()) ))
+
+     print sent
+
+     print "-----";
 
     
 # clean up       
