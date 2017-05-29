@@ -68,7 +68,7 @@ class CorpusParser:
         self.res  = []
         input_dir = input_dir.replace("\\","/")
         self.dir  = input_dir if input_dir[-1] != "/" else input_dir[:-1]
-        self.name = cdir.split("/")[-1]
+        self.name = input_dir.split("/")[-1]
         self.alg  = globals()[self.name]
 
     def parse(self):

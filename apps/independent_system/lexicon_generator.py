@@ -73,6 +73,7 @@ class IndependentLexiconGenerator:
             return self.max_rank - rank
 
         # #------- Execute Function -------#
+        negated_count = defaultdict(int)
         for file in self.files:
             file_name = file.replace("\\","/").split('/')[-1]
             file_statistics = defaultdict(int)
@@ -89,7 +90,6 @@ class IndependentLexiconGenerator:
                     file_statistics['rev_' + get_polarity(rank)] += 1
                     negations_indexes = get_negation_indexes(tokens)
                     file_statistics['negators'] += len(negations_indexes)
-
                     for tx_idx,token in enumerate(tokens):
                         if not tx_idx in negations_indexes:
                             token = token.lower()
@@ -97,6 +97,7 @@ class IndependentLexiconGenerator:
                             if is_negated(tx_idx,negations_indexes):
                                 occurrences[token].append(inverse(rank)) 
                                 file_statistics['neg_word'] += 1
+                                negated_count[token] += 1
                             else: 
                                 occurrences[token].append(rank) 
                 except Exception as e:
@@ -110,7 +111,8 @@ class IndependentLexiconGenerator:
                     'positives_ocurrences' : len(filter(lambda val: get_polarity(val) == "+", rank)),
                     'negatives_ocurrences' : len(filter(lambda val: get_polarity(val) == "-", rank)),
                     'neutral_ocurrences'   : len(filter(lambda val: get_polarity(val) == "0", rank)),
-                    'total_ocurrences'     : len(rank)
+                    'total_ocurrences'     : len(rank),
+                    'negated_ocurrences'   : negated_count[word]
                 } for word, rank in occurrences.iteritems() 
             }
             self.polarities[file_name]['words'] = file_polarities
@@ -122,7 +124,7 @@ class IndependentLexiconGenerator:
                 "positive_words"       : len(filter(lambda word: file_polarities[word]['polarity'] == "+", file_polarities.keys())),
                 "negative_words"       : len(filter(lambda word: file_polarities[word]['polarity'] == "-", file_polarities.keys())),
                 "neutral_words"        : len(filter(lambda word: file_polarities[word]['polarity'] == "0", file_polarities.keys())),
-                "total_words"          : len(file_polarities),
+                "vocabulaty_size"      : len(file_polarities),
                 "negators"             : file_statistics['negators'],
                 "negated_words"        : file_statistics['neg_word']
             }

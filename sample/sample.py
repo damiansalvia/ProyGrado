@@ -24,28 +24,26 @@ corpus_sources = [
     "../corpus/corpus_variado_sfu"
 ]
 
-# for source_file in corpus_sources:
-#     parser = CorpusParser(cdir=source_file,ldir="./log/")
-#     parser.parse()
-#     parser.save("./tmp/corpus")
-# 
+for source_file in corpus_sources:
+    parser = CorpusParser(input_dir=source_file,ldir="./log/")
+    parser.parse()
+    parser.save("./tmp/corpus")
+
 win_sizes = [
     (0,0),(1,0),(2,0),(3,0),
     (0,1),(1,1),(2,1),(3,1)
 ]
  
-# processed_sources = glob.glob("./tmp/corpus/*.json")
-# for source_file in processed_sources:
-#     for (win_left,win_right) in win_sizes:
-#         generator = IndependentLexiconGenerator(
-#                         input_dir=source_file, 
-#                         negators_list=negators_list,
-#                         window_left=win_left, 
-#                         window_right=win_right,
-#                         ldir='./log/'
-#                     )
-#         generator.generate()
-#         generator.save("./tmp/polarities/win_%i_%i" % (win_left,win_right))
+for (win_left,win_right) in win_sizes:
+    generator = IndependentLexiconGenerator(
+                    input_dir="./tmp/corpus", 
+                    negators_list=negators_list,
+                    window_left=win_left, 
+                    window_right=win_right,
+                    ldir='./log/'
+                )
+    generator.generate()
+    generator.save("./tmp/polarities/win_%i_%i" % (win_left,win_right))
  
 for (win_left,win_right) in win_sizes:
     polarity_sources = glob.glob("./tmp/polarities/win_%i_%i/*.json" % (win_left,win_right))
