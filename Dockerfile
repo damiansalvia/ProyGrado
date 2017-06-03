@@ -60,8 +60,6 @@ RUN apt update && apt install -y \
 RUN python -c 'import nltk; nltk.download("wordnet")'
 RUN python -c 'import nltk; nltk.download("punkt")'
 
-RUN export PYTHONPATH=/ProyGrado/apps/utilities/
-
 ## No estoy seguro de que lo necesitemos ##
 RUN apt install locales
 RUN locale-gen "en_US.UTF-8"
