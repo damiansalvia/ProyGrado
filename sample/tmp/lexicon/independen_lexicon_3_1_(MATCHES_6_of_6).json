@@ -1,0 +1,355 @@
+{
+    "analytics": {
+        "positive_words": 0, 
+        "total_words": 43, 
+        "negative_words": 0, 
+        "neutral_words": 43, 
+        "parsed_corpus": 6
+    }, 
+    "words": {
+        "el": {
+            "polarity": "0", 
+            "neutral_ocurrences": 16172, 
+            "matches": 6, 
+            "negatives_ocurrences": 19324, 
+            "total_ocurrences": 62452, 
+            "positives_ocurrences": 26956
+        }, 
+        "fuera": {
+            "polarity": "0", 
+            "neutral_ocurrences": 186, 
+            "matches": 6, 
+            "negatives_ocurrences": 284, 
+            "total_ocurrences": 786, 
+            "positives_ocurrences": 316
+        }, 
+        "estar": {
+            "polarity": "0", 
+            "neutral_ocurrences": 231, 
+            "matches": 6, 
+            "negatives_ocurrences": 313, 
+            "total_ocurrences": 932, 
+            "positives_ocurrences": 388
+        }, 
+        "cuando": {
+            "polarity": "0", 
+            "neutral_ocurrences": 919, 
+            "matches": 6, 
+            "negatives_ocurrences": 1508, 
+            "total_ocurrences": 4048, 
+            "positives_ocurrences": 1621
+        }, 
+        "tengo": {
+            "polarity": "0", 
+            "neutral_ocurrences": 168, 
+            "matches": 6, 
+            "negatives_ocurrences": 414, 
+            "total_ocurrences": 975, 
+            "positives_ocurrences": 393
+        }, 
+        "sea": {
+            "polarity": "0", 
+            "neutral_ocurrences": 481, 
+            "matches": 6, 
+            "negatives_ocurrences": 708, 
+            "total_ocurrences": 1940, 
+            "positives_ocurrences": 751
+        }, 
+        "tal": {
+            "polarity": "0", 
+            "neutral_ocurrences": 294, 
+            "matches": 6, 
+            "negatives_ocurrences": 397, 
+            "total_ocurrences": 1204, 
+            "positives_ocurrences": 513
+        }, 
+        "hace": {
+            "polarity": "0", 
+            "neutral_ocurrences": 869, 
+            "matches": 6, 
+            "negatives_ocurrences": 1155, 
+            "total_ocurrences": 3492, 
+            "positives_ocurrences": 1468
+        }, 
+        "tenga": {
+            "polarity": "0", 
+            "neutral_ocurrences": 81, 
+            "matches": 6, 
+            "negatives_ocurrences": 141, 
+            "total_ocurrences": 336, 
+            "positives_ocurrences": 114
+        }, 
+        "sólo": {
+            "polarity": "0", 
+            "neutral_ocurrences": 506, 
+            "matches": 6, 
+            "negatives_ocurrences": 874, 
+            "total_ocurrences": 2208, 
+            "positives_ocurrences": 828
+        }, 
+        "resulta": {
+            "polarity": "0", 
+            "neutral_ocurrences": 306, 
+            "matches": 6, 
+            "negatives_ocurrences": 359, 
+            "total_ocurrences": 1004, 
+            "positives_ocurrences": 339
+        }, 
+        "tiene": {
+            "polarity": "0", 
+            "neutral_ocurrences": 1207, 
+            "matches": 6, 
+            "negatives_ocurrences": 1542, 
+            "total_ocurrences": 4732, 
+            "positives_ocurrences": 1983
+        }, 
+        "hasta": {
+            "polarity": "0", 
+            "neutral_ocurrences": 756, 
+            "matches": 6, 
+            "negatives_ocurrences": 1020, 
+            "total_ocurrences": 3047, 
+            "positives_ocurrences": 1271
+        }, 
+        "quieren": {
+            "polarity": "0", 
+            "neutral_ocurrences": 67, 
+            "matches": 6, 
+            "negatives_ocurrences": 109, 
+            "total_ocurrences": 259, 
+            "positives_ocurrences": 83
+        }, 
+        "han": {
+            "polarity": "0", 
+            "neutral_ocurrences": 504, 
+            "matches": 6, 
+            "negatives_ocurrences": 751, 
+            "total_ocurrences": 2005, 
+            "positives_ocurrences": 750
+        }, 
+        "pasan": {
+            "polarity": "0", 
+            "neutral_ocurrences": 58, 
+            "matches": 6, 
+            "negatives_ocurrences": 73, 
+            "total_ocurrences": 218, 
+            "positives_ocurrences": 87
+        }, 
+        "hay": {
+            "polarity": "0", 
+            "neutral_ocurrences": 1178, 
+            "matches": 6, 
+            "negatives_ocurrences": 1564, 
+            "total_ocurrences": 4636, 
+            "positives_ocurrences": 1894
+        }, 
+        "ese": {
+            "polarity": "0", 
+            "neutral_ocurrences": 672, 
+            "matches": 6, 
+            "negatives_ocurrences": 721, 
+            "total_ocurrences": 2368, 
+            "positives_ocurrences": 975
+        }, 
+        "2": {
+            "polarity": "0", 
+            "neutral_ocurrences": 222, 
+            "matches": 6, 
+            "negatives_ocurrences": 479, 
+            "total_ocurrences": 1113, 
+            "positives_ocurrences": 412
+        }, 
+        "empresas": {
+            "polarity": "0", 
+            "neutral_ocurrences": 8, 
+            "matches": 6, 
+            "negatives_ocurrences": 10, 
+            "total_ocurrences": 31, 
+            "positives_ocurrences": 13
+        }, 
+        "esa": {
+            "polarity": "0", 
+            "neutral_ocurrences": 521, 
+            "matches": 6, 
+            "negatives_ocurrences": 527, 
+            "total_ocurrences": 1868, 
+            "positives_ocurrences": 820
+        }, 
+        "6": {
+            "polarity": "0", 
+            "neutral_ocurrences": 65, 
+            "matches": 6, 
+            "negatives_ocurrences": 99, 
+            "total_ocurrences": 250, 
+            "positives_ocurrences": 86
+        }, 
+        "8": {
+            "polarity": "0", 
+            "neutral_ocurrences": 30, 
+            "matches": 6, 
+            "negatives_ocurrences": 68, 
+            "total_ocurrences": 203, 
+            "positives_ocurrences": 105
+        }, 
+        "hoy": {
+            "polarity": "0", 
+            "neutral_ocurrences": 180, 
+            "matches": 6, 
+            "negatives_ocurrences": 233, 
+            "total_ocurrences": 703, 
+            "positives_ocurrences": 290
+        }, 
+        "porque": {
+            "polarity": "0", 
+            "neutral_ocurrences": 748, 
+            "matches": 6, 
+            "negatives_ocurrences": 1387, 
+            "total_ocurrences": 3534, 
+            "positives_ocurrences": 1399
+        }, 
+        "tiempo": {
+            "polarity": "0", 
+            "neutral_ocurrences": 431, 
+            "matches": 6, 
+            "negatives_ocurrences": 589, 
+            "total_ocurrences": 1926, 
+            "positives_ocurrences": 906
+        }, 
+        "misma": {
+            "polarity": "0", 
+            "neutral_ocurrences": 266, 
+            "matches": 6, 
+            "negatives_ocurrences": 331, 
+            "total_ocurrences": 1021, 
+            "positives_ocurrences": 424
+        }, 
+        "ya": {
+            "polarity": "0", 
+            "neutral_ocurrences": 1533, 
+            "matches": 6, 
+            "negatives_ocurrences": 2239, 
+            "total_ocurrences": 6307, 
+            "positives_ocurrences": 2535
+        }, 
+        "por": {
+            "polarity": "0", 
+            "neutral_ocurrences": 6360, 
+            "matches": 6, 
+            "negatives_ocurrences": 7659, 
+            "total_ocurrences": 23854, 
+            "positives_ocurrences": 9835
+        }, 
+        "creo": {
+            "polarity": "0", 
+            "neutral_ocurrences": 261, 
+            "matches": 6, 
+            "negatives_ocurrences": 408, 
+            "total_ocurrences": 1124, 
+            "positives_ocurrences": 455
+        }, 
+        "tuvo": {
+            "polarity": "0", 
+            "neutral_ocurrences": 64, 
+            "matches": 6, 
+            "negatives_ocurrences": 61, 
+            "total_ocurrences": 216, 
+            "positives_ocurrences": 91
+        }, 
+        "que": {
+            "polarity": "0", 
+            "neutral_ocurrences": 25055, 
+            "matches": 6, 
+            "negatives_ocurrences": 32507, 
+            "total_ocurrences": 96522, 
+            "positives_ocurrences": 38960
+        }, 
+        "como": {
+            "polarity": "0", 
+            "neutral_ocurrences": 4087, 
+            "matches": 6, 
+            "negatives_ocurrences": 4859, 
+            "total_ocurrences": 15659, 
+            "positives_ocurrences": 6713
+        }, 
+        "grupo": {
+            "polarity": "0", 
+            "neutral_ocurrences": 149, 
+            "matches": 6, 
+            "negatives_ocurrences": 196, 
+            "total_ocurrences": 590, 
+            "positives_ocurrences": 245
+        }, 
+        "a": {
+            "polarity": "0", 
+            "neutral_ocurrences": 13013, 
+            "matches": 6, 
+            "negatives_ocurrences": 15634, 
+            "total_ocurrences": 49409, 
+            "positives_ocurrences": 20762
+        }, 
+        "ellos": {
+            "polarity": "0", 
+            "neutral_ocurrences": 282, 
+            "matches": 6, 
+            "negatives_ocurrences": 348, 
+            "total_ocurrences": 1132, 
+            "positives_ocurrences": 502
+        }, 
+        "mi": {
+            "polarity": "0", 
+            "neutral_ocurrences": 777, 
+            "matches": 6, 
+            "negatives_ocurrences": 1594, 
+            "total_ocurrences": 4212, 
+            "positives_ocurrences": 1841
+        }, 
+        "partir": {
+            "polarity": "0", 
+            "neutral_ocurrences": 96, 
+            "matches": 6, 
+            "negatives_ocurrences": 134, 
+            "total_ocurrences": 391, 
+            "positives_ocurrences": 161
+        }, 
+        "una": {
+            "polarity": "0", 
+            "neutral_ocurrences": 7786, 
+            "matches": 6, 
+            "negatives_ocurrences": 9616, 
+            "total_ocurrences": 30311, 
+            "positives_ocurrences": 12909
+        }, 
+        "si": {
+            "polarity": "0", 
+            "neutral_ocurrences": 1782, 
+            "matches": 6, 
+            "negatives_ocurrences": 3018, 
+            "total_ocurrences": 7849, 
+            "positives_ocurrences": 3049
+        }, 
+        "cambio": {
+            "polarity": "0", 
+            "neutral_ocurrences": 129, 
+            "matches": 6, 
+            "negatives_ocurrences": 159, 
+            "total_ocurrences": 471, 
+            "positives_ocurrences": 183
+        }, 
+        "sí": {
+            "polarity": "0", 
+            "neutral_ocurrences": 550, 
+            "matches": 6, 
+            "negatives_ocurrences": 655, 
+            "total_ocurrences": 1925, 
+            "positives_ocurrences": 720
+        }, 
+        "se": {
+            "polarity": "0", 
+            "neutral_ocurrences": 7016, 
+            "matches": 6, 
+            "negatives_ocurrences": 9418, 
+            "total_ocurrences": 27332, 
+            "positives_ocurrences": 10898
+        }
+    }
+}

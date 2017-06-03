@@ -15,12 +15,12 @@ from lexicon_generator import IndependentLexiconGenerator
 from lexicon_intersector import IndependentLexiconIntersector
 
 corpus_sources = [
-    #"../../corpus/corpus_cine",
-    #"../../corpus/corpus_tweets",
-    #"../../corpus/corpus_hoteles",
-    #"../../corpus/corpus_prensa_uy",
+    "../../corpus/corpus_cine",
+    "../../corpus/corpus_tweets",
+    "../../corpus/corpus_hoteles",
+    "../../corpus/corpus_prensa_uy",
     "../../corpus/corpus_apps_android",
-    #"../../corpus/corpus_variado_sfu"
+    "../../corpus/corpus_variado_sfu"
 ]
 
 negators_list = [

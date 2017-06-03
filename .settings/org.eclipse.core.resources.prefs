@@ -1,0 +1,9 @@
+eclipse.preferences.version=1
+encoding//apps/independent_system/corpus_parser.py=utf-8
+encoding//apps/independent_system/corpus_parser_strategies.py=utf-8
+encoding//apps/independent_system/lexicon_evaluation.py=utf-8
+encoding//apps/independent_system/lexicon_generator.py=utf-8
+encoding//apps/independent_system/lexicon_intersector.py=utf-8
+encoding//apps/utilities/printHelper.py=utf-8
+encoding//apps/utilities/utils.py=utf-8
+encoding//sample/sample.py=utf-8

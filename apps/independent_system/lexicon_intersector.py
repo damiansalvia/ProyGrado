@@ -5,7 +5,7 @@ sys.path.append('../utilities') # To import 'utilities' modules
 
 import time, os, codecs
 import glob, json
-from collections import defaultdict
+from collections import defaultdict, Counter
 from printHelper import *
 from utils import *
 
@@ -42,23 +42,26 @@ class IndependentLexiconIntersector:
 
         polarities = defaultdict(list)
         word_statistics = defaultdict(lambda : defaultdict(int))
+        word_postags = defaultdict(lambda : defaultdict(Counter))
 
         for _from,corpus_polarities in self.reviews.iteritems():
             try:
                 words_count = len(corpus_polarities['words'])
                 for idx, word in enumerate(corpus_polarities['words']):
-                    progressive_bar('Intersecting %s :' % _from, words_count, idx)
+                    progressive_bar('Considering %s for intersection :' % _from, words_count, idx)
                     word_statistics[word]['pos'] += corpus_polarities['words'][word]['positives_ocurrences']
                     word_statistics[word]['neg'] += corpus_polarities['words'][word]['negatives_ocurrences']
                     word_statistics[word]['neu'] += corpus_polarities['words'][word]['neutral_ocurrences']
+                    word_postags[word]['POS'] += Counter(corpus_polarities['words'][word]['POS'])
                     polarities[word].append(corpus_polarities['words'][word]['polarity'])
             except Exception as e:
                 self.log(str(e))
                 raise e
-            progressive_bar('Intersecting %s :' % _from , words_count, idx+1)
+            progressive_bar('Considering %s for intersection :' % _from , words_count, idx+1)
         
         words_polarities = {
             word: {
+                'POS'                    : dict(word_postags[word]['POS']),
                 'polarity'               : polarities[word][0],
                 'matches'                : len(polarities[word]),
                 'positives_ocurrences'   : word_statistics[word]['pos'],
@@ -96,7 +99,7 @@ if __name__ == "__main__":
 
     start_time = time.time()
 
-    intersector = IndependentLexiconIntersector(tolerance=1)
+    intersector = IndependentLexiconIntersector(tolerance=0.2)
     intersector.intersect_corpus()
     intersector.save()
 
