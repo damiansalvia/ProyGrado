@@ -79,10 +79,13 @@ class IndependentLexiconIntersector:
 
         self.lexicon['words'] = words_polarities;
 
+    def get_lexicon(self):
+        return self.lexicon
+    
     def save(self, output_dir = outputdir, file_name = "independen_lexicon"):
         output_dir = output_dir.replace("\\","/")
         if not os.path.isdir(output_dir): os.makedirs(output_dir)
-        cdir = "%s/%s_(MATCHES_%i_of_%i).json" % (output_dir, file_name, self.min_matches, len(self.reviews))
+        cdir = "%s/%s_match_%i_of_%i.json" % (output_dir, file_name, self.min_matches, len(self.reviews))
         with codecs.open(cdir , "w", "utf-8") as f:
             json.dump(self.lexicon, f, indent=4, ensure_ascii=False)
         print "Result was saved in %s\n" % cdir
