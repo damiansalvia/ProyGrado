@@ -21,21 +21,31 @@ WINDOW_LEFT  = 2
 WINDOW_RIGHT = 1
 
 negators_list = [
-    "aunque", "denegar", u"jamás", "nada", "nadie", "negar", 
-    "negativa", "ni", "ninguna", "ninguno", u"ningún", 
-    "no", "nunca", "pero", u"rehúso", "tampoco"
+    u"aunque", u"denegar", u"jamás", u"nada", u"nadie", u"negar", 
+    u"negativa", u"ni", u"ninguna", u"ninguno", u"ningún", 
+    u"no", u"nunca", u"pero", u"rehúso", u"tampoco"
 ]
 
 class IndependentLexiconGenerator:
 
-    def __init__(self, input_dir=inputdir, negators_list=negators_list, 
+    def __init__(self, reviews=None, input_dir=inputdir, negators_list=negators_list, 
                  window_left=WINDOW_LEFT, window_right=WINDOW_RIGHT, max_rank=MAX_RANK,
                  ldir='./'):
+        # reviews[from][text|rank]
         if not os.path.isdir(ldir): os.makedirs(ldir)
         self.log = Log(ldir)
-        input_dir = input_dir.replace("\\","/")
-        input_dir = input_dir if input_dir[-1] != "/" else input_dir[:-1]
-        self.files        = glob.glob(input_dir + '/corpus*.json')
+        if reviews:
+            self.reviews = reviews
+        elif input_dir:
+            self.reviews = defaultdict(list)
+            input_dir = input_dir.replace("\\","/")
+            input_dir = input_dir if input_dir[-1] != "/" else input_dir[:-1]
+            for file in glob.glob(input_dir + '/corpus*.json'):
+                file_name = file.replace("\\","/").split('/')[-1]
+                with codecs.open(file, "r", "utf-8") as f:
+                    self.reviews[file_name] = json.load(f)
+        else:
+            raise "No review source found"
         self.polarities   = {}
         self.window_right = window_right
         self.window_size  = window_left + window_right
@@ -73,16 +83,13 @@ class IndependentLexiconGenerator:
             return self.max_rank - rank
 
         # #------- Execute Function -------#
-        negated_count = defaultdict(int)
-        for file in self.files:
-            file_name = file.replace("\\","/").split('/')[-1]
+        for item,content in self.reviews.iteritems():
             file_statistics = defaultdict(int)
             occurrences = defaultdict(list)
-            with codecs.open(file, "r", "utf-8") as f:
-                reviews = json.load(f)
-            corpus_length = len(reviews)
-            for idx, rev in enumerate(reviews):
-                progressive_bar( 'Processing ' + file_name.replace('.json', '').replace('_', ' ') + " : ", corpus_length, idx)
+            negated_count = defaultdict(int)
+            corpus_length = len(content)
+            for idx, rev in enumerate(content):
+                progressive_bar( "Generating  : ", corpus_length, idx)
                 try:
                     review  = rev['review']
                     rank    = rev['rank']
@@ -103,7 +110,10 @@ class IndependentLexiconGenerator:
                 except Exception as e:
                     self.log(str(e))
                     raise e
-
+            progressive_bar( "Generating : ", corpus_length, idx + 1)
+            print
+                
+            file_name = item
             self.polarities[file_name] = {}         
             file_polarities = { 
                 word: {
@@ -128,10 +138,6 @@ class IndependentLexiconGenerator:
                 "negators"             : file_statistics['negators'],
                 "negated_words"        : file_statistics['neg_word']
             }
-
-
-            progressive_bar( 'Processing ' + file_name.replace('.json', '').replace('_', ' ') + " : ", corpus_length, idx + 1)
-            print
 
     def get_polarities(self):
         return self.polarities
