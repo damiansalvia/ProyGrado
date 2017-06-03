@@ -83,13 +83,13 @@ class IndependentLexiconGenerator:
             return self.max_rank - rank
 
         # #------- Execute Function -------#
-        for item,content in self.reviews.iteritems():
+        for _from,content in self.reviews.iteritems():
             file_statistics = defaultdict(int)
             occurrences = defaultdict(list)
             negated_count = defaultdict(int)
             corpus_length = len(content)
             for idx, rev in enumerate(content):
-                progressive_bar( "Generating  : ", corpus_length, idx)
+                progressive_bar( "Generating from %s: " % _from, corpus_length, idx)
                 try:
                     review  = rev['review']
                     rank    = rev['rank']
@@ -110,10 +110,10 @@ class IndependentLexiconGenerator:
                 except Exception as e:
                     self.log(str(e))
                     raise e
-            progressive_bar( "Generating : ", corpus_length, idx + 1)
+            progressive_bar( "Generating from %s: " % _from, corpus_length, idx + 1)
             print
                 
-            file_name = item
+            file_name = _from
             self.polarities[file_name] = {}         
             file_polarities = { 
                 word: {
