@@ -5,15 +5,18 @@ sys.path.append('../utilities') # To import 'utilities' modules
 
 import time
 import os
-import nltk
+# import nltk
 import codecs
 import json
 import glob
+import freeling_analyzer
 from collections import defaultdict
 from printHelper import *
 
 inputdir    = 'outputs/corpus/'
 outputdir   = 'outputs/lexicons/single_corpus_lexicon/'
+
+
 
 MAX_RANK = 100
 
@@ -51,12 +54,14 @@ class IndependentLexiconGenerator:
         self.window_size  = window_left + window_right
         self.max_rank     = max_rank
         self.negators     = [negator.encode('utf8') for negator in negators_list]   
+        self.analyzer = freeling_analyzer.Analyzer()
     
     def generate(self):
 
         def get_tokens(review):
             # obtain a list of words from a text
-            return nltk.word_tokenize(review)
+            return self.analyzer.analyze(review)
+            # return nltk.word_tokenize(review)
 
         def get_polarity(val):
             if val < 40:
@@ -70,9 +75,9 @@ class IndependentLexiconGenerator:
             val = sum(list)/len(list)
             return get_polarity(val)
 
-        def get_negation_indexes(word_list):
+        def get_negation_indexes(token_list):
             # returns the indexes of the negators words in a secuence
-            return [ idx for idx, word in enumerate(word_list) if word in self.negators ]
+            return [ idx for idx, token in enumerate(token_list) if token['form'] in self.negators ]
             
         def is_negated(idx, negations_indexes):
             # chek if a word is affected by any existent negators
@@ -83,11 +88,16 @@ class IndependentLexiconGenerator:
             return self.max_rank - rank
 
         # #------- Execute Function -------#
+
         for _from,content in self.reviews.iteritems():
+
             file_statistics = defaultdict(int)
             occurrences = defaultdict(list)
             negated_count = defaultdict(int)
             corpus_length = len(content)
+
+            postags = defaultdict(lambda : defaultdict(int))
+
             for idx, rev in enumerate(content):
                 progressive_bar( "Generating from %s: " % _from, corpus_length, idx)
                 try:
@@ -99,14 +109,15 @@ class IndependentLexiconGenerator:
                     file_statistics['negators'] += len(negations_indexes)
                     for tx_idx,token in enumerate(tokens):
                         if not tx_idx in negations_indexes:
-                            token = token.lower()
+                            lemma = token['lemma']
+                            postags[lemma][token['tag']] += 1
                             # The negators shouldn't have polarities by themselves (this should be discussed)
                             if is_negated(tx_idx,negations_indexes):
-                                occurrences[token].append(inverse(rank)) 
+                                occurrences[lemma].append(inverse(rank)) 
                                 file_statistics['neg_word'] += 1
-                                negated_count[token] += 1
+                                negated_count[lemma] += 1
                             else: 
-                                occurrences[token].append(rank) 
+                                occurrences[lemma].append(rank) 
                 except Exception as e:
                     self.log(str(e))
                     raise e
@@ -116,14 +127,15 @@ class IndependentLexiconGenerator:
             file_name = _from
             self.polarities[file_name] = {}         
             file_polarities = { 
-                word: {
+                lemma: {
+                    'POS'                  : postags[lemma],
                     'polarity'             : get_list_polarity(rank),
                     'positives_ocurrences' : len(filter(lambda val: get_polarity(val) == "+", rank)),
                     'negatives_ocurrences' : len(filter(lambda val: get_polarity(val) == "-", rank)),
                     'neutral_ocurrences'   : len(filter(lambda val: get_polarity(val) == "0", rank)),
                     'total_ocurrences'     : len(rank),
-                    'negated_ocurrences'   : negated_count[word]
-                } for word, rank in occurrences.iteritems() 
+                    'negated_ocurrences'   : negated_count[lemma]
+                } for lemma, rank in occurrences.iteritems() 
             }
             self.polarities[file_name]['words'] = file_polarities
             self.polarities[file_name]['analytics'] = {

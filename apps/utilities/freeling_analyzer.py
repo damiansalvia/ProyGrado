@@ -47,7 +47,9 @@ class Analyzer:
 
     def analyze(self,text):
         sid =self.sp.open_session();
-        l  = self.tk.tokenize(unicode(text, 'utf8'));
+        if not isinstance(text, unicode):
+            text = unicode(text, 'utf8')
+        l  = self.tk.tokenize(text);
         ls = self.sp.split(self.sid,l,False);
 
         ls = self.mf.analyze(ls);
@@ -59,7 +61,11 @@ class Analyzer:
         for s in ls :
             ws = s.get_words();
             for w in ws :
-                sent.append(tuple( (w.get_form().encode('utf8'), w.get_lemma().encode('utf8'), w.get_tag().encode('utf8')) ))
+                sent.append({
+                    "form"  : w.get_form(),
+                    "lemma" : w.get_lemma(), 
+                    "tag"   : w.get_tag()
+                })
 
         self.sp.close_session(sid);
         return sent
