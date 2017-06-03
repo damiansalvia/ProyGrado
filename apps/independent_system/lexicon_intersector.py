@@ -47,7 +47,7 @@ class IndependentLexiconIntersector:
             try:
                 words_count = len(corpus_polarities['words'])
                 for idx, word in enumerate(corpus_polarities['words']):
-                    progressive_bar('Considering %s for intersection :' % _from, words_count, idx)
+                    progressive_bar('Intersecting %s :' % _from, words_count, idx)
                     word_statistics[word]['pos'] += corpus_polarities['words'][word]['positives_ocurrences']
                     word_statistics[word]['neg'] += corpus_polarities['words'][word]['negatives_ocurrences']
                     word_statistics[word]['neu'] += corpus_polarities['words'][word]['neutral_ocurrences']
@@ -55,8 +55,7 @@ class IndependentLexiconIntersector:
             except Exception as e:
                 self.log(str(e))
                 raise e
-            progressive_bar('Considering %s for intersection :' % _from , words_count, idx+1)
-            print 
+            progressive_bar('Intersecting %s :' % _from , words_count, idx+1)
         
         words_polarities = {
             word: {
