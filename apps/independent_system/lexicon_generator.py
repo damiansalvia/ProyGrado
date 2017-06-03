@@ -30,7 +30,7 @@ class IndependentLexiconGenerator:
 
     def __init__(self, reviews=None, input_dir=inputdir, negators_list=negators_list, 
                  window_left=WINDOW_LEFT, window_right=WINDOW_RIGHT, max_rank=MAX_RANK,
-                 ldir='./'):
+                 ldir='./'): 
         # reviews[from][text|rank]
         if not os.path.isdir(ldir): os.makedirs(ldir)
         self.log = Log(ldir)
