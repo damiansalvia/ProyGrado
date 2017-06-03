@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+ # -*- coding: utf-8 -*-
 
 import sys
 sys.path.append('../utilities') # To import 'utilities' modules
@@ -122,7 +122,6 @@ class IndependentLexiconGenerator:
                     self.log(str(e))
                     raise e
             progressive_bar( "Generating from %s: " % _from, corpus_length, idx + 1)
-            print
                 
             file_name = _from
             self.polarities[file_name] = {}         
