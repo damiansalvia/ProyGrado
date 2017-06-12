@@ -6,7 +6,7 @@ from time import gmtime, strftime
 import inspect
 
 tmp = os.popen('stty size', 'r').read().split()
-width = int(tmp[1]) if tmp else 100
+width = int(tmp[1])-15 if tmp else 100
 
 def matrix_to_string(dict):
     # To visualize the distribution  matrix
