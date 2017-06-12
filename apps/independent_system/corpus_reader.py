@@ -300,7 +300,7 @@ if __name__=="__main__":
    
     corpus = CorpusReader(
         "../../corpus/corpus_variado_sfu",
-        "*/*.txt",
+        "*/*.txt", 
         "(.*)\s",
         "(.*?)_",
         "PATH",

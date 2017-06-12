@@ -25,7 +25,7 @@ def matrix_to_string(dict):
             string += " " * \
                 math.trunc(spaces / 2.0) + s_val + " " * \
                 int(math.ceil(spaces / 2.0)) + "|"
-        dict_s += string + '\n'
+        dict_s += string + '\n' 
         progressive_bar("Generating matrix: ", coutn_dict, idx)
     dict_s += h_bar
     return dict_s
