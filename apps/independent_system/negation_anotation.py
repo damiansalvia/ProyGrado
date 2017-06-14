@@ -40,16 +40,18 @@ def chunkstring(string, length):
     return (string[0+i:length+i] for i in range(0, len(string), length))
 
 def DisplayAnnotated(result,width=WIDTH):
-    template = "%-7s | %-"+str(WIDTH-10)+"s"
-    print template % ("ID","ANNOTATION")
-    line = "%-7s-+-%-"+str(WIDTH-10)+"s"
-    print line % ("-"*7,"-"*100)
+    width = width-10
+    row   = "%-7s | %-"+str(width)+"s"
+    line  = "%-7s-+-%-"+str(width)+"s"
+    print row% ("ID","ANNOTATION")
+    print line % ("-"*7,"-"*width)
     for item in result:
         chunks = chunkstring(item['annotation'], width)
         chunks = list(chunks)
-        print template % (str(item['id']),chunks[0])
+        print row % (str(item['id']),chunks[0])
         for chunk in chunks[1:]:
-            print template % ("",chunk)
+            print row % ("",chunk)
+        print line % ("-"*7,"-"*width)
 
 def ViewSave(result):
     os.system('clear')
@@ -106,12 +108,19 @@ def Main():
             op = ""
             while not op.isdigit():
                 op = raw_input("\nHow many? > ")
-            left = int(op)
+            op = int(op)
+            left = op
             
             # Get the reviews an shuffle them for pick random reviews
             reviews = list(enumerate(corpus.get_opinions()))
             random.shuffle(reviews)
-            for id,review in reviews:
+            while left != 0:
+                os.system('clear')
+                print "\033[0;36;40mLeft %i\033[00m. Are you ready for the next? Enter to continue..." % left
+                raw_input()
+                
+                # Start
+                id,review = reviews[left]
                 words = review.split(' ')
                 total = len(words)
                 cats = ['' for _ in range(total)]
@@ -142,13 +151,13 @@ def Main():
                     "annotation" : ' '.join(word.lower()+"/"+cat for word,cat in zip(words,cats))
                 })
                 
-                # Check end condition
+                # Update
                 left -= 1
-                if left == 0:
-                    ViewSave(result)
-                    break
-                print "Result added. Are you ready for the next? (left %i)" % left   
-
+                   
+            # View and save results
+            if op == 0: continue
+            ViewSave(result)
+            
 # Call to main program
 Main()                        
             
