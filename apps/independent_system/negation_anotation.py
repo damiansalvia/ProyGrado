@@ -26,7 +26,8 @@ def DisplayMenu():
     print "6. Corpus SFU"
     return 
  
-def DisplayStatus(idx,total,words,cats):
+def DisplayReview(idx,total,words,cats):
+    print "\"",
     for i in range(total):
         if i < idx:
             print words[i]+"\033[93m/"+cats[i]+"\033[0m",
@@ -34,7 +35,7 @@ def DisplayStatus(idx,total,words,cats):
             print words[i],
         else:
             print "\033[92m\033[4m"+words[i]+"\033[0m\033[0m",
-    print
+    print "\""
     
 def chunkstring(string, length):
     return (string[0+i:length+i] for i in range(0, len(string), length))
@@ -53,7 +54,7 @@ def DisplayAnnotated(result,width=WIDTH):
             print row % ("",chunk)
         print line % ("-"*7,"-"*width)
 
-def ViewSave(result):
+def ViewSave(result,name):
     os.system('clear')
     op = raw_input("Done! View result? (y/n) > ")
     # Ask for display
@@ -75,7 +76,6 @@ def ViewSave(result):
         f.write(content) 
 
 def Main():
-    result = []     
     while True:
         # Display menu options
         os.system('clear')
@@ -114,6 +114,7 @@ def Main():
             # Get the reviews an shuffle them for pick random reviews
             reviews = list(enumerate(corpus.get_opinions()))
             random.shuffle(reviews)
+            result = []
             while left != 0:
                 os.system('clear')
                 print "\033[0;36;40mLeft %i\033[00m. Are you ready for the next? Enter to continue..." % left
@@ -129,7 +130,7 @@ def Main():
                 idx = 0
                 while idx != total:
                     os.system('clear') 
-                    DisplayStatus(idx,total,words,cats)
+                    DisplayReview(idx,total,words,cats)
                     cat = raw_input("N(ormal), I(nverted) or B(ack)? > ")
                     cat = cat.upper()
                     if not cat or cat not in 'NIBnib':
@@ -156,7 +157,7 @@ def Main():
                    
             # View and save results
             if op == 0: continue
-            ViewSave(result)
+            ViewSave(result,name)
             
 # Call to main program
 Main()                        
