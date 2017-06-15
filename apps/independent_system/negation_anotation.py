@@ -110,54 +110,57 @@ def Main():
                 op = raw_input("\nHow many? > ")
             op = int(op)
             left = op
+            try:     
+                # Get the reviews an shuffle them for pick random reviews
+                reviews = list(enumerate(corpus.get_opinions()))
+                random.shuffle(reviews)
+                result = []
+                while left != 0:
+                    os.system('clear')
+                    print "\033[0;36;40mLeft %i\033[00m. Are you ready for the next? Enter to continue..." % left
+                    raw_input()
+                    
+                    # Start
+                    id,review = reviews[left]
+                    words = review.split(' ')
+                    total = len(words)
+                    cats = ['' for _ in range(total)]
+                    
+                    # For each word annotate with (N) or (I) and give the possibility of back by pressing (B)
+                    idx = 0
+                    while idx != total:
+                        os.system('clear') 
+                        DisplayReview(idx,total,words,cats)
+                        cat = raw_input("[%i] N(ormal), I(nverted) or B(ack)? > "%id)
+                        cat = cat.upper()
+                        if not cat or cat not in 'NIBnib':
+                            print "Option",cat,"is not correct." ;raw_input()
+                            continue
+                        if cat == 'B':
+                            # Back
+                            idx = idx - 1 if idx != 0 else 0
+                            cats[idx] = ''
+                        else:
+                            # Associate the category
+                            cats[idx] = cat
+                            idx = idx + 1
+                            
+                    # Save the result as two list: words and its respective category for each one 
+                    result.append({
+                        "id" : id+1,
+                        "from" : name,
+                        "annotation" : ' '.join(word.lower()+"/"+cat for word,cat in zip(words,cats))
+                    })
+                    
+                    # Update
+                    left -= 1
+                       
+                # View and save results
+                if op == 0: continue
+                ViewSave(result,name)
             
-            # Get the reviews an shuffle them for pick random reviews
-            reviews = list(enumerate(corpus.get_opinions()))
-            random.shuffle(reviews)
-            result = []
-            while left != 0:
-                os.system('clear')
-                print "\033[0;36;40mLeft %i\033[00m. Are you ready for the next? Enter to continue..." % left
-                raw_input()
-                
-                # Start
-                id,review = reviews[left]
-                words = review.split(' ')
-                total = len(words)
-                cats = ['' for _ in range(total)]
-                
-                # For each word annotate with (N) or (I) and give the possibility of back by pressing (B)
-                idx = 0
-                while idx != total:
-                    os.system('clear') 
-                    DisplayReview(idx,total,words,cats)
-                    cat = raw_input("N(ormal), I(nverted) or B(ack)? > ")
-                    cat = cat.upper()
-                    if not cat or cat not in 'NIBnib':
-                        print "Option",cat,"is not correct." ;raw_input()
-                        continue
-                    if cat == 'B':
-                        # Back
-                        idx = idx - 1 if idx != 0 else 0
-                        cats[idx] = ''
-                    else:
-                        # Associate the category
-                        cats[idx] = cat
-                        idx = idx + 1
-                        
-                # Save the result as two list: words and its respective category for each one 
-                result.append({
-                    "id" : id+1,
-                    "from" : name,
-                    "annotation" : ' '.join(word.lower()+"/"+cat for word,cat in zip(words,cats))
-                })
-                
-                # Update
-                left -= 1
-                   
-            # View and save results
-            if op == 0: continue
-            ViewSave(result,name)
+            except Exception as e:
+                print "[ERROR] Corpus:%s, Review:%i, Description:%s" % (name,id,str(e))
             
 # Call to main program
 Main()                        
