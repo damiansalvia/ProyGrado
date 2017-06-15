@@ -160,7 +160,12 @@ def Main():
                 ViewSave(result,name)
             
             except Exception as e:
-                print "[ERROR] Corpus:%s, Review:%i, Description:%s" % (name,id,str(e))
+                error = "[ERROR] Corpus:%s, Review:%i, Description:%s" % (name,id,str(e))
+                with open('LogError.txt','wa') as f:
+                    f.write(error)
+                    content = json.dumps(result,indent=4,ensure_ascii=False)
+                    f.write(content) 
+                print error
             
 # Call to main program
 Main()                        

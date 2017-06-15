@@ -24,9 +24,11 @@ SUBSTITUTIONS = [
     (u"(?i)([lrce])\\1\\1+",u"\\1\\1"),
     (u"(?i)([lrce])\\1(\W)",u"\\1\\2"),
     # Separate alpabetical character from non-alphabegical character by a blank space
-    (u"(?i)([a-záéíóúñ\\\]?)([^a-záéíóúñ\\\\s]|(?:{.*?}|\[.*?\])]+)([a-záéíóúñ\\\]?)",u"\\1 \\2 \\3"),
+    (u"(?i)([a-záéíóúñüÁÉÍÓÚÑÚ\\\]?)([^a-záéíóúñüÁÉÍÓÚÑÚ\\\\s]|(?:{.*?}|\[.*?\])]+)([a-záéíóúñüÁÉÍÓÚÑÚ\\\]?)",u"\\1 \\2 \\3"),
     # Force every review (document) to end with a period
     (u"(.*)[^\.]",u"\\1 ."),
+    # Replace all non-alphabetical symbols by a whitespace
+    (u"(?i)[^0-9a-záéíóúñüÁÉÍÓÚÑÚ¿\?¡!\(\),\.:;\"\$/]",u" "),
     # Replace multiple blank spaces by one
     (u"(\s){2,}",u" ")
 ]
@@ -156,31 +158,56 @@ class CorpusReader:
         Return a json style structure (list of dict) which contains every review with its category and an id.
         @mapping: Function that assigns a value for each category on the data. By default leaves as was matched in the corpus. 
         '''
+        if not callable(mapping):
+            raise Exception("Mapping must be a function")
         total = len(self.opinions)
         data = []
         for idx in range(total):                
             data.append({
-                '_id'      : "%s_%i"%(self.name,idx+1),
+                'id'       : idx+1,
+                'corpus'   : self.name,
                 'review'   : self.opinions[idx], 
                 'category' : mapping(self.categories[idx]) 
             })
         return data
     
-    def save_read(self,odir='outputs/corpus'):
+    def save_read(self,odir='outputs/corpus',mapping=lambda x:x):
         '''
         Save the data read in a json file.
         @odir: Target directory where the file will be saved.
         '''
-        # Check output dir
+        # Check output directory and concatenate the filename
         if not os.path.isdir(odir): 
             os.makedirs(odir)
         odir = "%s/%s.json" % (odir,self.name)
+        # Get formatted data
+        data = self.get_data(mapping)
+        # Save it into a the file
         with io.open(odir,"w",encoding='utf8') as f:
-            data = self.get_data()
             content = json.dumps(data,indent=4,ensure_ascii=False)
             if not isinstance(content, unicode):
                 content = unicode(content,'utf8')
             f.write(content)
+            
+def Test():
+    # Correct function test
+    obtained = correct(u"1º Acto: Yo haciendo tareäs.\u0083 2º Acto: Yo estudiando. 3º Acto: Yo rècogiendo... ¡mi cuarto!.¿CÓMO SE LLAMA LA OBRA? `No tengo vidaaaa´ 😡")
+    expected = u" 1 Acto : Yo haciendo tareás . 2 Acto : Yo estudiando . 3 Acto : Yo récogiendo . . . ¡ mi cuarto ! . ¿ CÓMO SE LLAMA LA OBRA ? \" No tengo vida \" ."
+    assert expected == obtained
+    
+    # CorpusReader test
+    corpus = CorpusReader(
+        "../../corpus/corpus_apps_android",
+        "*/*.json",
+        review_pattern ="\"(.*?)\"[,(?:\\r\\n)]",
+        category_pattern = "(.*?)/",
+        category_location = "PATH",
+        category_level=0,
+        decoding='unicode-escape'
+    )
+    assert len(corpus.get_opinions()) == len(corpus.get_categories())
+    fun = {'neg':0,'pos':100}
+    assert sorted(set(data['category'] for data in corpus.get_data(mapping=lambda x:fun[x]))) == [0,100]
             
 ##############################
 #          EXAMPLES          #
@@ -189,135 +216,137 @@ if __name__=="__main__":
     
     start_time = time.time()
     
-    corpus = CorpusReader(
-        "../../corpus/corpus_apps_android",
-        "*/*.json",
-        "\"(.*?)\"[,(?:\\r\\n)]",
-        "(.*?)/",
-        "PATH",
-        category_level=0,
-        decoding='unicode-escape'
-    )
-    corpus.save_read()
-    print "TOTAL",len(corpus.get_opinions())
-    cats = sorted(list(set(corpus.get_categories())))
-    print "CATEGORIES",cats
-    size = 100
-    fun = dict(zip(sorted(cats),range(0,size*(len(cats)-1)+1,size/(len(cats)-1))))
-    print "FUN",fun
-    data = corpus.get_data(mapping=lambda x:fun[x])
-    print "Ejemplo"
-    print "  _id      :",data[0]['_id']
-    print "  Category :",data[0]['category']
-    print "  Review   :",data[0]['review'][:30]+" (...) "+data[0]['review'][-30:]
-          
-    corpus = CorpusReader(
-        "../../corpus/corpus_cine",
-        "*.xml",
-        "<body>(.*?)</body>",
-        "rank=\"(.*?)\"",
-        "FILE",
-        category_position="BEFORE"
-    )
-    corpus.save_read()
-    print "TOTAL",len(corpus.get_opinions())
-    cats = sorted(list(set(corpus.get_categories())))
-    print "CATEGORIES",cats
-    size = 100
-    fun = dict(zip(sorted(cats),range(0,size*(len(cats)-1)+1,size/(len(cats)-1))))
-    print "FUN",fun
-    data = corpus.get_data(mapping=lambda x:fun[x])
-    print "Ejemplo"
-    print "  _id      :",data[0]['_id']
-    print "  Category :",data[0]['category']
-    print "  Review   :",data[0]['review'][:30]+" (...) "+data[0]['review'][-30:]
-          
-    corpus = CorpusReader(
-        "../../corpus/corpus_hoteles",
-        "*.xml",
-        "<coah:review>(.*?)</coah:review>",
-        "<coah:rank>(.*?)</coah:rank>",
-        "FILE",
-        category_position="BEFORE"
-    )
-    corpus.save_read()
-    print "TOTAL",len(corpus.get_opinions())
-    cats = sorted(list(set(corpus.get_categories())))
-    print "CATEGORIES",cats
-    size = 100
-    fun = dict(zip(sorted(cats),range(0,size*(len(cats)-1)+1,size/(len(cats)-1))))
-    print "FUN",fun
-    data = corpus.get_data(mapping=lambda x:fun[x])
-    print "Ejemplo"
-    print "  _id      :",data[0]['_id']
-    print "  Category :",data[0]['category']
-    print "  Review   :",data[0]['review'][:30]+" (...) "+data[0]['review'][-30:]
-           
-    corpus = CorpusReader(
-        "../../corpus/corpus_prensa_uy",
-        "*.csv",
-        "\"(.*?)\",(?:TRUE|FALSE)", # No considera el test.csv
-        ",(.*?)\\n",
-        "FILE",
-        category_position="AFTER"
-    )
-    corpus.save_read()
-    print "TOTAL",len(corpus.get_opinions())
-    cats = sorted(list(set(corpus.get_categories())))
-    print "CATEGORIES",cats
-    size = 100
-    fun = dict(zip(sorted(cats),range(0,size*(len(cats)-1)+1,size/(len(cats)-1))))
-    print "FUN",fun
-    data = corpus.get_data(mapping=lambda x:fun[x])
-    print "Ejemplo"
-    print "  _id      :",data[0]['_id']
-    print "  Category :",data[0]['category']
-    print "  Review   :",data[0]['review'][:30]+" (...) "+data[0]['review'][-30:]
-   
-    corpus = CorpusReader(
-        "../../corpus/corpus_tweets",
-        "*.tsv",
-        "(.*?)\\t.*?\\n",
-        "(.*?\\t.*?)\\t",
-        "FILE",
-        category_position="BEFORE",
-        start=1
-    )
-    corpus.save_read()
-    print "TOTAL",len(corpus.get_opinions())
-    cats = list(set(corpus.get_categories()))
-    nums = [tuple(cat.split("\t")) for cat in cats]
-    nums = [int(pos)-int(neg)+5 for (pos,neg) in nums if pos in "1234567890"]
-    print "CATEGORIES",cats
-    size = 100
-    fun = dict(zip(sorted(cats),map(lambda x:10*x,nums)))
-    print "FUN",fun
-    data = corpus.get_data(mapping=lambda x:fun[x])
-    print "Ejemplo"
-    print "  _id      :",data[0]['_id']
-    print "  Category :",data[0]['category']
-    print "  Review   :",data[0]['review'][:30]+" (...) "+data[0]['review'][-30:]
-   
-    corpus = CorpusReader(
-        "../../corpus/corpus_variado_sfu",
-        "*/*.txt", 
-        "(.*)\s",
-        "(.*?)_",
-        "PATH",
-        category_level=1
-    )
-    corpus.save_read()
-    print "TOTAL",len(corpus.get_opinions())
-    cats = sorted(list(set(corpus.get_categories())))
-    print "CATEGORIES",cats
-    size = 100
-    fun = dict(zip(sorted(cats),range(0,size*(len(cats)-1)+1,size/(len(cats)-1))))
-    print "FUN",fun
-    data = corpus.get_data(mapping=lambda x:fun[x])
-    print "Ejemplo"
-    print "  _id      :",data[0]['_id']
-    print "  Category :",data[0]['category']
-    print "  Review   :",data[0]['review'][:30]+" (...) "+data[0]['review'][-30:]
+    Test()
+    
+#     corpus = CorpusReader(
+#         "../../corpus/corpus_apps_android",
+#         "*/*.json",
+#         "\"(.*?)\"[,(?:\\r\\n)]",
+#         "(.*?)/",
+#         "PATH",
+#         category_level=0,
+#         decoding='unicode-escape'
+#     )
+#     corpus.save_read()
+#     print "TOTAL",len(corpus.get_opinions())
+#     cats = sorted(list(set(corpus.get_categories())))
+#     print "CATEGORIES",cats
+#     size = 100
+#     fun = dict(zip(sorted(cats),range(0,size*(len(cats)-1)+1,size/(len(cats)-1))))
+#     print "FUN",fun
+#     data = corpus.get_data(mapping=lambda x:fun[x])
+#     print "Ejemplo"
+#     print "  id      :",data[0]['id']
+#     print "  Category :",data[0]['category']
+#     print "  Review   :",data[0]['review'][:30]+" (...) "+data[0]['review'][-30:]
+#           
+#     corpus = CorpusReader(
+#         "../../corpus/corpus_cine",
+#         "*.xml",
+#         "<body>(.*?)</body>",
+#         "rank=\"(.*?)\"",
+#         "FILE",
+#         category_position="BEFORE"
+#     )
+#     corpus.save_read()
+#     print "TOTAL",len(corpus.get_opinions())
+#     cats = sorted(list(set(corpus.get_categories())))
+#     print "CATEGORIES",cats
+#     size = 100
+#     fun = dict(zip(sorted(cats),range(0,size*(len(cats)-1)+1,size/(len(cats)-1))))
+#     print "FUN",fun
+#     data = corpus.get_data(mapping=lambda x:fun[x])
+#     print "Ejemplo"
+#     print "  id      :",data[0]['id']
+#     print "  Category :",data[0]['category']
+#     print "  Review   :",data[0]['review'][:30]+" (...) "+data[0]['review'][-30:]
+#           
+#     corpus = CorpusReader(
+#         "../../corpus/corpus_hoteles",
+#         "*.xml",
+#         "<coah:review>(.*?)</coah:review>",
+#         "<coah:rank>(.*?)</coah:rank>",
+#         "FILE",
+#         category_position="BEFORE"
+#     )
+#     corpus.save_read()
+#     print "TOTAL",len(corpus.get_opinions())
+#     cats = sorted(list(set(corpus.get_categories())))
+#     print "CATEGORIES",cats
+#     size = 100
+#     fun = dict(zip(sorted(cats),range(0,size*(len(cats)-1)+1,size/(len(cats)-1))))
+#     print "FUN",fun
+#     data = corpus.get_data(mapping=lambda x:fun[x])
+#     print "Ejemplo"
+#     print "  id      :",data[0]['id']
+#     print "  Category :",data[0]['category']
+#     print "  Review   :",data[0]['review'][:30]+" (...) "+data[0]['review'][-30:]
+#             
+#     corpus = CorpusReader(
+#         "../../corpus/corpus_prensa_uy",
+#         "*.csv",
+#         "\"(.*?)\",(?:TRUE|FALSE)", # No considera el test.csv
+#         ",(.*?)\\n",
+#         "FILE",
+#         category_position="AFTER"
+#     )
+#     corpus.save_read()
+#     print "TOTAL",len(corpus.get_opinions())
+#     cats = sorted(list(set(corpus.get_categories())))
+#     print "CATEGORIES",cats
+#     size = 100
+#     fun = dict(zip(sorted(cats),range(0,size*(len(cats)-1)+1,size/(len(cats)-1))))
+#     print "FUN",fun
+#     data = corpus.get_data(mapping=lambda x:fun[x])
+#     print "Ejemplo"
+#     print "  id      :",data[0]['id']
+#     print "  Category :",data[0]['category']
+#     print "  Review   :",data[0]['review'][:30]+" (...) "+data[0]['review'][-30:]
+#    
+#     corpus = CorpusReader(
+#         "../../corpus/corpus_tweets",
+#         "*.tsv",
+#         "(.*?)\\t.*?\\n",
+#         "(.*?\\t.*?)\\t",
+#         "FILE",
+#         category_position="BEFORE",
+#         start=1
+#     )
+#     corpus.save_read()
+#     print "TOTAL",len(corpus.get_opinions())
+#     cats = list(set(corpus.get_categories()))
+#     nums = [tuple(cat.split("\t")) for cat in cats]
+#     nums = [int(pos)-int(neg)+5 for (pos,neg) in nums if pos in "1234567890"]
+#     print "CATEGORIES",cats
+#     size = 100
+#     fun = dict(zip(sorted(cats),map(lambda x:10*x,nums)))
+#     print "FUN",fun
+#     data = corpus.get_data(mapping=lambda x:fun[x])
+#     print "Ejemplo"
+#     print "  id      :",data[0]['id']
+#     print "  Category :",data[0]['category']
+#     print "  Review   :",data[0]['review'][:30]+" (...) "+data[0]['review'][-30:] 
+#    
+#     corpus = CorpusReader(
+#         "../../corpus/corpus_variado_sfu", 
+#         "*/*.txt", 
+#         "(.*)\s",
+#         "(.*?)_",
+#         "PATH",
+#         category_level=1
+#     )
+#     corpus.save_read()
+#     print "TOTAL",len(corpus.get_opinions())
+#     cats = sorted(list(set(corpus.get_categories())))
+#     print "CATEGORIES",cats
+#     size = 100
+#     fun = dict(zip(sorted(cats),range(0,size*(len(cats)-1)+1,size/(len(cats)-1))))
+#     print "FUN",fun
+#     data = corpus.get_data(mapping=lambda x:fun[x])
+#     print "Ejemplo"
+#     print "  id      :",data[0]['id']
+#     print "  Category :",data[0]['category']
+#     print "  Review   :",data[0]['review'][:30]+" (...) "+data[0]['review'][-30:]
     
     print '\nElapsed time: %.2f Sec' % (time.time() - start_time)
     
