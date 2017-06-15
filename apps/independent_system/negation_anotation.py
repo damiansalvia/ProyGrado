@@ -1,9 +1,15 @@
 # -*- coding: utf-8 -*-
+import sys
+sys.path.append('../utilities')
+from printHelper import Log
+
 from corpus_reader import CorpusReader
 import os, random, json, io
 
 tmp = os.popen('stty size', 'r').read().split()
 WIDTH = int(tmp[1])-15 if tmp else 100
+
+log = Log("./log")
 
 # source extension review_pattern category_pattern category_location category_position category_level start decoding
 parameters = [
@@ -16,6 +22,7 @@ parameters = [
 ]
  
 def DisplayMenu():
+    os.system('clear')
     print "*"*20," MENU ","*"*20
     print "0. EXIT"
     print "1. Corpus APPS" 
@@ -26,12 +33,14 @@ def DisplayMenu():
     print "6. Corpus SFU"
     return 
  
-def DisplayReview(idx,total,words,cats):
+def DisplayReview(id,current,total,words,cats):
+    os.system('clear')
+    print "Review [%i]" % id
     print "\"",
     for i in range(total):
-        if i < idx:
+        if i < current:
             print words[i]+"\033[93m/"+cats[i]+"\033[0m",
-        elif i > idx:
+        elif i > current:
             print words[i],
         else:
             print "\033[92m\033[4m"+words[i]+"\033[0m\033[0m",
@@ -61,9 +70,9 @@ def ViewSave(result,name):
     if op.lower() == 'y':
         DisplayAnnotated(result)
     # Ask for save twice 
-    op = raw_input("\nSave result? (y/n) > ")
+    op = raw_input("\nSave result? [y/n] > ")
     if op.lower() == 'n':
-        op = raw_input("Are you sure? (y/n) > ")
+        op = raw_input("Are you sure? [y/n] > ")
         if op.lower() == 'y':
             return
     # Save the result
@@ -78,7 +87,6 @@ def ViewSave(result,name):
 def Main():
     while True:
         # Display menu options
-        os.system('clear')
         DisplayMenu()
         op = raw_input("\nOption > ")
         if not op.isdigit() and int(op) in [0,1,2,3,4,5,6]:
@@ -111,15 +119,13 @@ def Main():
             op = int(op)
             left = op
             try:     
-                # Get the reviews an shuffle them for pick random reviews
+                # Get reviews and shuffle them for picking random reviews
                 reviews = list(enumerate(corpus.get_opinions()))
                 random.shuffle(reviews)
                 result = []
-                while left != 0:
-                    os.system('clear')
-                    print "\033[0;36;40mLeft %i\033[00m. Are you ready for the next? Enter to continue..." % left
-                    raw_input()
-                    
+                
+                while left != 0:   
+                                     
                     # Start
                     id,review = reviews[left]
                     words = review.split(' ')
@@ -128,10 +134,21 @@ def Main():
                     
                     # For each word annotate with (N) or (I) and give the possibility of back by pressing (B)
                     idx = 0
-                    while idx != total:
-                        os.system('clear') 
-                        DisplayReview(idx,total,words,cats)
-                        cat = raw_input("[%i] N(ormal), I(nverted) or B(ack)? > "%id)
+                    while True:
+                        # Display review
+                        DisplayReview(id,idx,total,words,cats)
+                        
+                        # Check end condition
+                        if idx == total:
+                            op = raw_input("\nDone. Proceed with the next review (left %i)? [y/n] > " % (left-1))
+                            if op == 'y':
+                                break
+                            idx = idx - 1 if idx != 0 else 0
+                            cats[idx] = ''
+                            continue
+                        
+                        # Ask for input
+                        cat = raw_input("\nN(ormal), I(nverted) or B(ack)? > ")
                         cat = cat.upper()
                         if not cat or cat not in 'NIBnib':
                             print "Option",cat,"is not correct." ;raw_input()
@@ -160,12 +177,10 @@ def Main():
                 ViewSave(result,name)
             
             except Exception as e:
-                error = "[ERROR] Corpus:%s, Review:%i, Description:%s" % (name,id,str(e))
-                with open('LogError.txt','wa') as f:
-                    f.write(error)
-                    content = json.dumps(result,indent=4,ensure_ascii=False)
-                    f.write(content) 
-                print error
+                content = json.dumps(result,indent=4,ensure_ascii=False)
+                error = "Corpus:%s, Review:%i, Description:%s Partial:%s" % (name,id,str(e),content)
+                log(error)
+                raw_input("Enter to cotinue...")
             
 # Call to main program
 Main()                        
