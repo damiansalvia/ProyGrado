@@ -80,7 +80,7 @@ def ViewSave(result,name):
     if not os.path.isdir(odir): 
         os.makedirs(odir)
     odir = odir+"/negated_%s.json" % name
-    with io.open(odir,"w",encoding='utf8') as f:
+    with io.open(odir,"w",encoding='unicode-escape') as f:
         content = json.dumps(result,indent=4,ensure_ascii=False)
         f.write(content) 
 
@@ -130,9 +130,10 @@ def Main():
                     id,review = reviews[left]
                     words = review.split(' ')
                     total = len(words)
-                    cats = ['' for _ in range(total)]
+                    cats = ['  ' for _ in range(total)]
                     
                     # For each word annotate with (N) or (I) and give the possibility of back by pressing (B)
+                    cat = ""
                     idx = 0
                     while True:
                         # Display review
@@ -144,11 +145,17 @@ def Main():
                             if op == 'y':
                                 break
                             idx = idx - 1 if idx != 0 else 0
-                            cats[idx] = ''
+                            cats[idx] = '  '
                             continue
                         
                         # Ask for input
-                        cat = raw_input("\nN(ormal), I(nverted) or B(ack)? > ")
+                        tmp = raw_input("\nN(ormal), I(nverted), B(ack)? or enter for last (%s) > " % cat)
+                        if not tmp and not cat: # Prevents parse empty cat
+                            print "Input a category first";raw_input()
+                            continue
+                        elif tmp:
+                            cat = tmp
+                        
                         cat = cat.upper()
                         if not cat or cat not in 'NIBnib':
                             print "Option",cat,"is not correct." ;raw_input()
@@ -156,7 +163,7 @@ def Main():
                         if cat == 'B':
                             # Back
                             idx = idx - 1 if idx != 0 else 0
-                            cats[idx] = ''
+                            cats[idx] = '  '
                         else:
                             # Associate the category
                             cats[idx] = cat
