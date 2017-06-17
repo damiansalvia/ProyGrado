@@ -149,7 +149,7 @@ def Main():
                             continue
                         
                         # Ask for input
-                        tmp = raw_input("\nN(ormal), I(nverted), B(ack)? or enter for last (%s) > " % cat)
+                        tmp = raw_input("\nTag with N(ormal) or I(nverted). Enter for last (%s) or B(ack)? > " % cat)
                         if not tmp and not cat: # Prevents parse empty cat
                             print "Input a category first";raw_input()
                             continue
