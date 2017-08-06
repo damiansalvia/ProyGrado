@@ -7,6 +7,7 @@ sys.path.append('../utilities') # To import 'utilities' modules
 from printHelper import *
 import re, glob, io, json
 #####################################################################
+pURL = u"(?:(?:https?|ftp):\/\/)(?:\S+(?::\S*)?@)?((?!10(?:\.\d{1,3}){3})(?!127(?:\.\d{1,3}){3})(?!169\.254(?:\.\d{1,3}){2})(?!192\.168(?:\.\d{1,3}){2})(?!172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2})(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|(?:(?:[a-z0-9]+-?)*[a-z0-9]+)(?:\.(?:[a-z0-9]+-?)*[a-z0-9]+)*(?:\.(?:[a-z]{2,})))(?::\d{2,5})?(?:\/[^\s]*)?"
 
 SUBSTITUTIONS = [
     # Replace non-spanish characters with hipotetical correct character
@@ -19,6 +20,8 @@ SUBSTITUTIONS = [
     # Replace other non-spanish characters
     (u"`",u"\""),(u"´",u"\""),
     (u"\'",u"\""),
+    # Replace every URL by its domain
+    (pURL,u"\\1"),
     # Replace every ocurrence of repetitive characters except {l,r,c,e} [cabaLLo, coRRer, aCCion, crEE]
     (u"(?i)([abdf-km-qs-z])\\1+",u"\\1"),
     (u"(?i)([lrce])\\1\\1+",u"\\1\\1"),
@@ -78,20 +81,26 @@ class CorpusReader:
             raise Exception("Only one group is admitted for review pattern.")
         if re.compile(category_pattern).groups > 1:
             raise Exception("Only one group is admitted for category pattern.")
+        
         # Settings for Log
         if not os.path.isdir(ldir): 
             os.makedirs(ldir)
         self.log  = Log(ldir)
+        
         # Normalize source directory
         source = source.replace("\\","/")
         source = source if source[-1] != "/" else source[:-1]
+        
         # Create a name for the corpus
         self.name = source.split("/")[-1]
+        
         # Create the resource file directory for glob reader
         files_dir = source+'/'+extension
+        
         # Read the corpus from each file
         revs, cats = [], []
         for filename in glob.glob(files_dir):
+            
             # Generate pattern
             filename = filename.replace('\\','/')
             if category_location == "PATH":
@@ -104,12 +113,16 @@ class CorpusReader:
                     pattern = "%s.*?%s"%(category_pattern,review_pattern)
                 elif category_position == "AFTER":
                     pattern = "%s.*?%s"%(review_pattern,category_pattern)
+                    
             # Compile pattern
+            #print pattern; raw_input("cont...")
             regex = re.compile(pattern,re.DOTALL)
+            
             # Read the file content
             with open(filename,'r') as file:
                 content = file.read()
                 content = content.decode(decoding,'ignore')
+                   
             # Find targets
             if category_location == "PATH":
                 revs_tmp = regex.findall(content)
@@ -119,6 +132,7 @@ class CorpusReader:
             elif category_location == "FILE":
                 found = regex.findall(content)
                 if not found:
+                    print "Noting found in %s" % filename
                     continue
                 if category_position == "BEFORE":
                     cats_tmp,revs_tmp = zip(*found)
@@ -126,15 +140,19 @@ class CorpusReader:
                     revs_tmp,cats_tmp = zip(*found)
                 revs += list(revs_tmp)
                 cats += list(cats_tmp)
+                
             assert len(revs_tmp) == len(cats_tmp)
+            
         assert len(revs) == len(cats)
+        
         # Process the input data
         self.opinions = []
         self.categories = []
         total = len(revs)
         for idx in range(total)[start:]:
             progressive_bar("Reading %s" % self.name,total,idx)
-            rev = correct(revs[idx])
+            rev = revs[idx]
+            rev = correct(rev)
             cat = cats[idx]
             if rev:
                 self.opinions.append(rev)
@@ -191,7 +209,7 @@ class CorpusReader:
             
 def Test():
     # Correct function test
-    obtained = correct(u"1º Acto: Yo haciendo tareäs.\u0083 2º Acto: Yo estudiando. 3º Acto: Yo rècogiendo... ¡mi cuarto!.¿CÓMO SE LLAMA LA OBRA? `No tengo vidaaaa´ 😡")
+    obtained = correct(u"1º Acto: Yo haciendo tareäs.\u0083 2º Acto: Yo estudiaaando. 3º Acto: Yo rècogiendo... ¡mi cuarto!.¿CÓMO SE LLAMA LA OBRA? `No tengo vida´ 😡")
     expected = u" 1 Acto : Yo haciendo tareás . 2 Acto : Yo estudiando . 3 Acto : Yo récogiendo . . . ¡ mi cuarto ! . ¿ CÓMO SE LLAMA LA OBRA ? \" No tengo vida \" ."
     assert expected == obtained
     
@@ -216,7 +234,7 @@ if __name__=="__main__":
     
     start_time = time.time()
     
-    Test()
+#     Test()
     
 #     corpus = CorpusReader(
 #         "../../corpus/corpus_apps_android",
@@ -236,7 +254,7 @@ if __name__=="__main__":
 #     print "FUN",fun
 #     data = corpus.get_data(mapping=lambda x:fun[x])
 #     print "Ejemplo"
-#     print "  id      :",data[0]['id']
+#     print "  id       :",data[0]['id']
 #     print "  Category :",data[0]['category']
 #     print "  Review   :",data[0]['review'][:30]+" (...) "+data[0]['review'][-30:]
 #           
@@ -257,7 +275,7 @@ if __name__=="__main__":
 #     print "FUN",fun
 #     data = corpus.get_data(mapping=lambda x:fun[x])
 #     print "Ejemplo"
-#     print "  id      :",data[0]['id']
+#     print "  id       :",data[0]['id']
 #     print "  Category :",data[0]['category']
 #     print "  Review   :",data[0]['review'][:30]+" (...) "+data[0]['review'][-30:]
 #           
@@ -278,7 +296,7 @@ if __name__=="__main__":
 #     print "FUN",fun
 #     data = corpus.get_data(mapping=lambda x:fun[x])
 #     print "Ejemplo"
-#     print "  id      :",data[0]['id']
+#     print "  id       :",data[0]['id']
 #     print "  Category :",data[0]['category']
 #     print "  Review   :",data[0]['review'][:30]+" (...) "+data[0]['review'][-30:]
 #             
@@ -299,7 +317,7 @@ if __name__=="__main__":
 #     print "FUN",fun
 #     data = corpus.get_data(mapping=lambda x:fun[x])
 #     print "Ejemplo"
-#     print "  id      :",data[0]['id']
+#     print "  id       :",data[0]['id']
 #     print "  Category :",data[0]['category']
 #     print "  Review   :",data[0]['review'][:30]+" (...) "+data[0]['review'][-30:]
 #    
@@ -323,7 +341,7 @@ if __name__=="__main__":
 #     print "FUN",fun
 #     data = corpus.get_data(mapping=lambda x:fun[x])
 #     print "Ejemplo"
-#     print "  id      :",data[0]['id']
+#     print "  id       :",data[0]['id']
 #     print "  Category :",data[0]['category']
 #     print "  Review   :",data[0]['review'][:30]+" (...) "+data[0]['review'][-30:] 
 #    
@@ -344,9 +362,33 @@ if __name__=="__main__":
 #     print "FUN",fun
 #     data = corpus.get_data(mapping=lambda x:fun[x])
 #     print "Ejemplo"
-#     print "  id      :",data[0]['id']
+#     print "  id       :",data[0]['id']
 #     print "  Category :",data[0]['category']
 #     print "  Review   :",data[0]['review'][:30]+" (...) "+data[0]['review'][-30:]
+    
+    print correct("esto tiene una direccion tipo http://www.facebook.com y tambien http://t.co/KAJLcas912")
+    
+    corpus = CorpusReader(
+        "../../corpus/corpus_tweets_2",
+        "*.csv",
+        "\"(.*?)\",",
+        "(.*?)\\n",
+        "FILE",
+        category_position="AFTER",
+        start=1
+    )
+    corpus.save_read()
+    print "TOTAL",len(corpus.get_opinions())
+    cats = sorted(list(set(corpus.get_categories())))
+    print "CATEGORIES",cats
+    size = 100
+    fun = dict(zip(sorted(cats),range(0,size*(len(cats)-1)+1,size/(len(cats)-1))))
+    print "FUN",fun
+    data = corpus.get_data(mapping=lambda x:fun[x])
+    print "Ejemplo"
+    print "  id       :",data[0]['id']
+    print "  Category :",data[0]['category']
+    print "  Review   :",data[0]['review'][:30]+" (...) "+data[0]['review'][-30:]
     
     print '\nElapsed time: %.2f Sec' % (time.time() - start_time)
     

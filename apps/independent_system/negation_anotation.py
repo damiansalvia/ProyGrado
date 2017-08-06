@@ -149,12 +149,12 @@ def Main():
                             continue
                         
                         # Ask for input
-                        tmp = raw_input("\nTag with N(ormal) or I(nverted). Enter for last (%s) or B(ack)? > " % cat)
-                        if not tmp and not cat: # Prevents parse empty cat
+                        tag = raw_input("\nTag with N(ormal) or I(nverted).Enter for last (%s) or B(ack)? > " % (cat if cat else "None"))
+                        if not tag and not cat: # Prevents parse empty cat
                             print "Input a category first";raw_input()
                             continue
-                        elif tmp:
-                            cat = tmp
+                        elif tag:
+                            cat = tag
                         
                         cat = cat.upper()
                         if not cat or cat not in 'NIBnib':
