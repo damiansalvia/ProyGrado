@@ -14,37 +14,34 @@ log = Log("./log")
 # source extension review_pattern category_pattern category_location category_position category_level start decoding
 parameters = [
     ("../../corpus/corpus_apps_android","*/*.json","\"(.*?)\"[,(?:\\r\\n)]","(.*?)/","PATH",None,0,0,'unicode-escape'),
-    ("../../corpus/corpus_cine","*.xml","<body>(.*?)</body>","rank=\"(.*?)\"","FILE","BEFORE",None,0,'utf8'),
+    ("../../corpus/corpus_cine","*.xml","<body>(.*?)</body>","rank=\"(.*?)\"","FILE","BEFORE",None,0,'cp1252'),
     ("../../corpus/corpus_hoteles","*.xml","<coah:review>(.*?)</coah:review>","<coah:rank>(.*?)</coah:rank>","FILE","BEFORE",None,0,'utf8'),
     ("../../corpus/corpus_prensa_uy","*.csv","\"(.*?)\",(?:TRUE|FALSE)",",(.*?)\\n","FILE","AFTER",None,0,'utf8'),
     ("../../corpus/corpus_tweets","*.tsv","(.*?)\\t.*?\\n","(.*?\\t.*?)\\t","FILE","BEFORE",None,1,'utf8'),
-    ("../../corpus/corpus_variado_sfu","*/*.txt","(.*)\s","(.*?)_","PATH",None,1,0,'utf8')
+    ("../../corpus/corpus_variado_sfu","*/*.txt","(.*)\s","(.*?)_","PATH",None,1,0,'utf8'),
+    ("../../corpus/corpus_tweets_2","*.csv","\"(.*?)\",","(.*?)\\n","FILE","AFTER",None,1,'utf8')
 ]
  
 def DisplayMenu():
     os.system('clear')
     print "*"*20," MENU ","*"*20
-    print "0. EXIT"
-    print "1. Corpus APPS" 
-    print "2. Corpus CINE"
-    print "3. Corpus HOTELES"
-    print "4. Corpus PRENSA"
-    print "5. Corpus TWEETS"
-    print "6. Corpus SFU"
+    print "0 . exit"
+    for i,parm in enumerate(parameters):
+        print i+1,".",parm[0].split('/')[-1]
     return 
  
 def DisplayReview(id,current,total,words,cats):
     os.system('clear')
     print "Review [%i]" % id
-    print "\"",
+    print "<<",
     for i in range(total):
         if i < current:
             print words[i]+"\033[93m/"+cats[i]+"\033[0m",
         elif i > current:
-            print words[i],
+            print words[i]+"  ",
         else:
-            print "\033[92m\033[4m"+words[i]+"\033[0m\033[0m",
-    print "\""
+            print "\033[92m\033[4m"+words[i]+"\033[0m\033[0m  ",
+    print ">>"
     
 def chunkstring(string, length):
     return (string[0+i:length+i] for i in range(0, len(string), length))
@@ -120,7 +117,7 @@ def Main():
             left = op
             try:     
                 # Get reviews and shuffle them for picking random reviews
-                reviews = list(enumerate(corpus.get_opinions()))
+                reviews = list(enumerate(corpus.get_opinions())) 
                 random.shuffle(reviews)
                 result = []
                 
@@ -149,21 +146,28 @@ def Main():
                             continue
                         
                         # Ask for input
-                        tag = raw_input("\nTag with N(ormal) or I(nverted).Enter for last (%s) or B(ack)? > " % (cat if cat else "None"))
+                        tooltip  = "\nTag with N(ormal) or I(nverted)."
+                        tooltip += "Enter A(bort), B(ack) or <intro> for"
+                        tooltip += "repeating last action (%s) > " % (cat.upper() if cat else "None")
+                        tag = raw_input(tooltip)
+                        
                         if not tag and not cat: # Prevents parse empty cat
                             print "Input a category first";raw_input()
                             continue
                         elif tag:
                             cat = tag
                         
-                        cat = cat.upper()
-                        if not cat or cat not in 'NIBnib':
+                        # Action from decision
+                        cat = cat.lower()
+                        if not cat or cat not in 'niba':
                             print "Option",cat,"is not correct." ;raw_input()
                             continue
-                        if cat == 'B':
-                            # Back
+                        if cat == 'b': # Back
                             idx = idx - 1 if idx != 0 else 0
                             cats[idx] = '  '
+                        elif cat == 'a':
+                            op = raw_input("Are you sure you want to abort (left %i)? [y/n] > " % left)
+                            if op.lower() == 'y': raise Exception("Abort")
                         else:
                             # Associate the category
                             cats[idx] = cat
@@ -187,7 +191,7 @@ def Main():
                 content = json.dumps(result,indent=4,ensure_ascii=False)
                 error = "Corpus:%s, Review:%i, Description:%s Partial:%s" % (name,id,str(e),content)
                 log(error)
-                raw_input("Enter to cotinue...")
+                raw_input("Reason: %s\nEnter to cotinue..." % str(e))
             
 # Call to main program
 Main()                        

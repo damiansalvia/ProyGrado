@@ -7,7 +7,26 @@ sys.path.append('../utilities') # To import 'utilities' modules
 from printHelper import *
 import re, glob, io, json
 #####################################################################
-pURL = u"(?:(?:https?|ftp):\/\/)(?:\S+(?::\S*)?@)?((?!10(?:\.\d{1,3}){3})(?!127(?:\.\d{1,3}){3})(?!169\.254(?:\.\d{1,3}){2})(?!192\.168(?:\.\d{1,3}){2})(?!172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2})(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|(?:(?:[a-z0-9]+-?)*[a-z0-9]+)(?:\.(?:[a-z0-9]+-?)*[a-z0-9]+)*(?:\.(?:[a-z]{2,})))(?::\d{2,5})?(?:\/[^\s]*)?"
+URL_PATTERN = u"""
+    (?:(?:https?|ftp):\/\/)
+    (?:\S+(?::\S*)?@)?
+    (
+        (?!10(?:\.\d{1,3}){3})
+        (?!127(?:\.\d{1,3}){3})
+        (?!169\.254(?:\.\d{1,3}){2})
+        (?!192\.168(?:\.\d{1,3}){2})
+        (?!172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2})
+        (?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])
+        (?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}
+        (?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))
+    |
+        (?:(?:[a-z0-9]+-?)*[a-z0-9]+)
+        (?:\.(?:[a-z0-9]+-?)*[a-z0-9]+)*
+        (?:\.(?:[a-z]{2,}))
+    )
+    (?::\d{2,5})?
+    (?:\/[^\s]*)?
+    """.replace(u"\n", u"").replace(u"\t", u"").replace(u" ", u"")
 
 SUBSTITUTIONS = [
     # Replace non-spanish characters with hipotetical correct character
@@ -21,12 +40,12 @@ SUBSTITUTIONS = [
     (u"`",u"\""),(u"´",u"\""),
     (u"\'",u"\""),
     # Replace every URL by its domain
-    (pURL,u"\\1"),
-    # Replace every ocurrence of repetitive characters except {l,r,c,e} [cabaLLo, coRRer, aCCion, crEE]
+#     (URL_PATTERN,u"\\1"),
+    # Replace every occurrence of repetitive characters except {l,r,c,e} [cabaLLo, coRRer, aCCion, crEE]
     (u"(?i)([abdf-km-qs-z])\\1+",u"\\1"),
     (u"(?i)([lrce])\\1\\1+",u"\\1\\1"),
     (u"(?i)([lrce])\\1(\W)",u"\\1\\2"),
-    # Separate alpabetical character from non-alphabegical character by a blank space
+    # Separate alphabetical character from non-alphabetical character by a blank space
     (u"(?i)([a-záéíóúñüÁÉÍÓÚÑÚ\\\]?)([^a-záéíóúñüÁÉÍÓÚÑÚ\\\\s]|(?:{.*?}|\[.*?\])]+)([a-záéíóúñüÁÉÍÓÚÑÚ\\\]?)",u"\\1 \\2 \\3"),
     # Force every review (document) to end with a period
     (u"(.*)[^\.]",u"\\1 ."),
@@ -365,30 +384,30 @@ if __name__=="__main__":
 #     print "  id       :",data[0]['id']
 #     print "  Category :",data[0]['category']
 #     print "  Review   :",data[0]['review'][:30]+" (...) "+data[0]['review'][-30:]
-    
-    print correct("esto tiene una direccion tipo http://www.facebook.com y tambien http://t.co/KAJLcas912")
-    
-    corpus = CorpusReader(
-        "../../corpus/corpus_tweets_2",
-        "*.csv",
-        "\"(.*?)\",",
-        "(.*?)\\n",
-        "FILE",
-        category_position="AFTER",
-        start=1
-    )
-    corpus.save_read()
-    print "TOTAL",len(corpus.get_opinions())
-    cats = sorted(list(set(corpus.get_categories())))
-    print "CATEGORIES",cats
-    size = 100
-    fun = dict(zip(sorted(cats),range(0,size*(len(cats)-1)+1,size/(len(cats)-1))))
-    print "FUN",fun
-    data = corpus.get_data(mapping=lambda x:fun[x])
-    print "Ejemplo"
-    print "  id       :",data[0]['id']
-    print "  Category :",data[0]['category']
-    print "  Review   :",data[0]['review'][:30]+" (...) "+data[0]['review'][-30:]
+#     
+#     print correct("esto tiene una direccion tipo http://www.facebook.com y tambien http://t.co/KAJLcas912")
+#     
+#     corpus = CorpusReader(
+#         "../../corpus/corpus_tweets_2",
+#         "*.csv",
+#         "\"(.*?)\",",
+#         "(.*?)\\n",
+#         "FILE",
+#         category_position="AFTER",
+#         start=1
+#     )
+#     corpus.save_read()
+#     print "TOTAL",len(corpus.get_opinions())
+#     cats = sorted(list(set(corpus.get_categories())))
+#     print "CATEGORIES",cats
+#     size = 100
+#     fun = dict(zip(sorted(cats),range(0,size*(len(cats)-1)+1,size/(len(cats)-1))))
+#     print "FUN",fun
+#     data = corpus.get_data(mapping=lambda x:fun[x])
+#     print "Ejemplo"
+#     print "  id       :",data[0]['id']
+#     print "  Category :",data[0]['category']
+#     print "  Review   :",data[0]['review'][:30]+" (...) "+data[0]['review'][-30:]
     
     print '\nElapsed time: %.2f Sec' % (time.time() - start_time)
     
