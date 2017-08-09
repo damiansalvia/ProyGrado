@@ -36,7 +36,10 @@ def DisplayReview(id,current,total,words,cats):
     print "<<",
     for i in range(total):
         if i < current:
-            print words[i]+"\033[93m/"+cats[i]+"\033[0m",
+            if cats[i] == 'n':
+                print words[i]+"\033[93m/"+cats[i]+"\033[0m",
+            else:
+                 print words[i]+"\033[91m/"+cats[i]+"\033[0m",
         elif i > current:
             print words[i]+"  ",
         else:
