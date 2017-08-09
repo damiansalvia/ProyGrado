@@ -146,8 +146,8 @@ def Main():
                             continue
                         
                         # Ask for input
-                        tooltip  = "\nTag with N(ormal) or I(nverted)."
-                        tooltip += "Enter A(bort), B(ack) or <intro> for"
+                        tooltip  = "\nTag with N(ormal) or I(nverted). "
+                        tooltip += "Enter A(bort), B(ack) or <intro> for "
                         tooltip += "repeating last action (%s) > " % (cat.upper() if cat else "None")
                         tag = raw_input(tooltip)
                         
