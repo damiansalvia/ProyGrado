@@ -120,6 +120,8 @@ def Main():
                 op = raw_input("\nInsert IDs separated by ',' or <intro> for pick up randomly > ")
                 if op: # From indexes
                     indexes = [int(i) for i in op.split(',')]
+                    indexes = set(indexes)  # Ensure no duplicated
+                    indexes = list(indexes) # Transform
                     left = len(indexes)
                 else: # Randomly
                     while not op.isdigit():
