@@ -63,7 +63,7 @@ def DisplayAnnotated(result,width=WIDTH):
             print row % ("",chunk)
         print line % ("-"*7,"-"*width)
 
-def ViewSave(result,name):
+def ViewSave(result,name,encoding='utf8'):
     os.system('clear')
     op = raw_input("Done! View result? (y/n) > ")
     # Ask for display
@@ -80,8 +80,10 @@ def ViewSave(result,name):
     if not os.path.isdir(odir): 
         os.makedirs(odir)
     odir = odir+"/negated_%s.json" % name
-    with io.open(odir,"w",encoding='unicode-escape') as f:
+    with io.open(odir,"w",encoding=encoding) as f:
         content = json.dumps(result,indent=4,ensure_ascii=False)
+        if not isinstance(content, unicode):
+            content = unicode(content,'utf8')
         f.write(content) 
 
 def Main():
@@ -112,22 +114,28 @@ def Main():
                 decoding=parameter[8],
             )
             
-            # Ask how many review for annotating
-            op = ""
-            while not op.isdigit():
-                op = raw_input("\nHow many? > ")
-            op = int(op)
-            left = op
             try:     
-                # Get reviews and shuffle them for picking random reviews
-                reviews = list(enumerate(corpus.get_opinions())) 
-                random.shuffle(reviews)
+                # Get reviews and shuffle them 
+                reviews = list(enumerate(corpus.get_opinions()))
+                op = raw_input("\nInsert IDs separated by ',' or <intro> for randomly > ")
+                if op: # From indexes
+                    indexes = [int(i) for i in op.split(',')]
+                    left = len(indexes)
+                else: # Randomly
+                    while not op.isdigit():
+                        op = raw_input("How many? > ")
+                    left = int(op)
+                    indexes = range(len(reviews))
+                    random.shuffle(indexes)
+                indexes = indexes[:left]
+                reviews = [(i,review) for (i,review) in reviews if i in indexes]
                 result = []
                 
+                # Tag every review
                 while left != 0:   
                                      
                     # Start
-                    id,review = reviews[left]
+                    id,review = reviews[left-1]
                     words = review.split(' ')
                     total = len(words)
                     cats = ['  ' for _ in range(total)]
