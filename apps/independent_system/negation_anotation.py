@@ -117,7 +117,7 @@ def Main():
             try:     
                 # Get reviews and shuffle them 
                 reviews = list(enumerate(corpus.get_opinions()))
-                op = raw_input("\nInsert IDs separated by ',' or <intro> for randomly > ")
+                op = raw_input("\nInsert IDs separated by ',' or <intro> for pick up randomly > ")
                 if op: # From indexes
                     indexes = [int(i) for i in op.split(',')]
                     left = len(indexes)
