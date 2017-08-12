@@ -53,9 +53,17 @@ RUN ln -s /FreeLing/APIs/python/freeling.py /usr/lib/python2.7/freeling.py
 RUN ln -s /usr/bin/python2.7 /usr/bin/python
 
 # Install python dependencies for DUA
+# RUN apt update && apt install -y python-pip
+# RUN pip install \
+#     nltk \
+#     numpy \
+#     pymongo \
+#     tensorflow \
+#     scikit-learn \
+#     pillow \
+#     h5py \
+#     keras 
 
-RUN apt update && apt install -y \
-    python-nltk 
 
 RUN python -c 'import nltk; nltk.download("wordnet")'
 RUN python -c 'import nltk; nltk.download("punkt")'
