@@ -1,4 +1,11 @@
+ # -*- coding: utf-8 -*-
+
+import sys
+sys.path.append('../utilities') # To import 'utilities' modules
+
 from pymongo import MongoClient
+
+
 
 db = MongoClient().ProyGrado
 
