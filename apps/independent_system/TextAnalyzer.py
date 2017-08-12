@@ -27,7 +27,7 @@ def analyze(reviews):
             op_id = md5.new(str(op['category']) + op['review']).hexdigest()
             if not db.get_opinion(op_id):
                 opinion = {}         
-                opinion['id_']      = op_id
+                opinion['_id']      = op_id
                 opinion['category'] = op['category']
                 opinion['idx']      = op['idx']
                 opinion['text']     = [{
