@@ -14,11 +14,12 @@ WIDTH = int(tmp[1])-15 if tmp else 100
 log = Log("./log")
 
 
+
 sources = [
     "corpus_apps_android",
     "corpus_cine",
     "corpus_hoteles",
-    "corpus_prensa_uy"
+    "corpus_prensa_uy",
     "corpus_tweets",
     "corpus_tweets_2",
     "corpus_variado_sfu"
@@ -26,14 +27,28 @@ sources = [
 
 
 
-def start(sample):
+class Network:
+    
+    def __init__(self,hidden_layers,activacion):
+        pass
+    
+    def fit(self,X,Y):
+        pass
+        
+    def predict(self,X):
+        
+        return Y
+
+
+
+def start():
     
     def DisplayMenu():
         os.system('clear')
         print "*"*20," MENU ","*"*20
         print "0 . exit"
-        for i,parm in enumerate(parameters):
-            print i+1,".",parm[0].split('/')[-1]
+        for i,source in enumerate(sources):
+            print i+1,".",source
         return 
      
     def DisplayReview(id,current,total,words,cats):
@@ -88,8 +103,8 @@ def start(sample):
         # Display menu options
         DisplayMenu()
         op = raw_input("\nOption > ")
-        if not op.isdigit() or op > len(sources):
-            print "Opcion invalida"
+        if not op.isdigit() or int(op) > len(sources):
+            raw_input("Opcion invalida")
             continue
         op = int(op)
         if op == 0:
@@ -99,7 +114,7 @@ def start(sample):
             try:     
                 # Ask for retrieving options 
                 source = sources[op-1]
-                op = raw_input("\nInsert IDs separated by ',' or <intro> for pick up randomly > ")
+                op = raw_input("\nInsert indexes separated by ',' or <intro> for pick up randomly > ")
                 if op: # From indexes
                     indexes = list(set(int(i) for i in op.split(',')))
                     quantity = len(indexes)
@@ -187,4 +202,7 @@ def start(sample):
                 error = "Corpus:%s, Review:%i, Description:%s Partial:%s" % (name,id,str(e),content)
                 log(error)
                 raw_input("Reason: %s\nEnter to continue..." % str(e))
+                
+if __name__=='__main__':
+    start()
     

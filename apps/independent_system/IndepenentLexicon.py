@@ -3,10 +3,10 @@
 import sys
 sys.path.append('../utilities') # To import 'utilities' modules
 
-from CorpusReader import from_corpus
-from NegationTagger import start, Network
-from OpinionsDatabase import save_opinios
-from TextAnalyzer import analyze
+import CorpusReader as cr 
+import NegationTagger as nt
+import OpinionsDatabase as db
+import TextAnalyzer as ta
 
 
 
@@ -140,7 +140,7 @@ parameters = [
 
 for parm in parameters: 
     
-    opinions, source = from_corpus(
+    opinions, source = cr.from_corpus(
             parameter[0], # source
             parameter[1], # path pattern to file
             parameter[2], # review pattern
@@ -153,11 +153,24 @@ for parm in parameters:
             decoding=parameter[9],
         )
     
-    analyzed = analize(opinions)
+    analyzed = ta.analize(opinions)
     
-    save_opinions(analyzed,source)
+    db.save_opinions(analyzed,source)
     
-tagged = start()   
+nt.start_tagging()   
+
+ann = nt.Network( )
+
+X_train, Y_train = db.get_tagged()
+ann.fit(X_train,Y_train)
+
+X = db.get_untagged()
+Y = ann.predict(X)
+
+db.save_result(X,Y)
+
+li = db.get_indepentent_lex() 
+ 
 
 
 
