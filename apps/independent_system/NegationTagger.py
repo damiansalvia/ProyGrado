@@ -83,7 +83,7 @@ def start():
                 print row % ("",chunk)
             print line % ("-"*7,"-"*width)
     
-    def ViewSave(result,name,encoding='utf8'):
+    def ViewSave(result,source,encoding='utf8'):
         os.system('clear')
         op = raw_input("Done! View result? (y/n) > ")
         # Ask for display
@@ -110,7 +110,8 @@ def start():
         if op == 0:
             # Exit
             break
-        else:            
+        else:    
+            result,id = [],0        
             try:     
                 # Ask for retrieving options 
                 source = sources[op-1]
@@ -129,7 +130,6 @@ def start():
                 reviews = db.get_sample(quantity,source,indexes)
                 
                 # Tag every review
-                result = []
                 left = quantity
                 while left != 0:   
                                      
@@ -186,7 +186,7 @@ def start():
                     # Save the result as two list: words and its respective category for each one 
                     result.append({
                         "id" : id+1,
-                        "from" : name,
+                        "from" : source,
                         "annotation" : ' '.join(word.lower()+"/"+cat for word,cat in zip(words,cats))
                     })
                     
@@ -195,11 +195,11 @@ def start():
                        
                 # View and save results
                 if op == 0: continue
-                ViewSave(result,name)
+                ViewSave(result,source)
             
             except Exception as e:
                 content = json.dumps(result,indent=4,ensure_ascii=False)
-                error = "Corpus:%s, Review:%i, Description:%s Partial:%s" % (name,id,str(e),content)
+                error = "Corpus:%s, Review:%i, Description:%s Partial:%s" % (source,id,str(e),content)
                 log(error)
                 raw_input("Reason: %s\nEnter to continue..." % str(e))
                 
