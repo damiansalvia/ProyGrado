@@ -3,7 +3,7 @@ import sys
 sys.path.append('../utilities')
 from printHelper import Log
 
-from NegationTagger import save_negations, get_sample 
+import OpinionsDatabase as db 
 import os, random, json, io
 
 
@@ -81,7 +81,7 @@ def start(sample):
             if op.lower() == 'y':
                 return
         # Save the result
-        save_negations(result)
+        db.save_negations(result)
         
     
     while True:
@@ -114,7 +114,7 @@ def start(sample):
                 
                 # Get a sample of reviews from options
                 source = sources[op-1]
-                reviews = get_sample(source,indexes)
+                reviews = db.get_sample(quantity, source,indexes)
                 
                 # Tag every review
                 result = []
