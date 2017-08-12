@@ -98,26 +98,24 @@ def start(sample):
         else:            
             try:     
                 # Ask for retrieving options 
+                source = sources[op-1]
                 op = raw_input("\nInsert IDs separated by ',' or <intro> for pick up randomly > ")
                 if op: # From indexes
-                    indexes = [int(i) for i in op.split(',')]
-                    indexes = set(indexes)  # Ensure no duplicated
-                    indexes = list(indexes) # Transform
-                    left = len(indexes)
+                    indexes = list(set(int(i) for i in op.split(',')))
+                    quantity = len(indexes)
+                    indexes = indexes[:quantity]
                 else: # Randomly
                     while not op.isdigit():
                         op = raw_input("How many? > ")
-                    left = int(op)
-                    indexes = range(len(reviews))
-                    random.shuffle(indexes)
-                indexes = indexes[:left]
+                    quantity = int(op)
+                    indexes = []
                 
                 # Get a sample of reviews from options
-                source = sources[op-1]
-                reviews = db.get_sample(quantity, source,indexes)
+                reviews = db.get_sample(quantity,source,indexes)
                 
                 # Tag every review
                 result = []
+                left = quantity
                 while left != 0:   
                                      
                     # Start
