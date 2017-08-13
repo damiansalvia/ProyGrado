@@ -15,18 +15,31 @@ def get_opinion(id):
 
 
 def save_opinions(opinions, corpus):
-    for op in opinions:
-        op['source'] = corpus
-    return db.reviews.insert_many(opinions)
+    if opinions:
+        for op in opinions:
+            op['source'] = corpus
+        db.reviews.insert_many(opinions)
 
 
-def save_negations():
-    return
+def save_negations(opinions):
+    for id in opinions:
+        options = { 'tagged' : 'manually' }
+        for idx, tag in opinions[id]:
+            opinions['text.' + str(idx) + '.negated'] = tag
+        db.reviews.update( {'_id': id}, {'$set': options} )
 
 
-def get_sample():
-    pass
-
+def get_sample(quantity, source, identifiers = None):
+    if not identifiers:
+        return list(db.reviews.aggregate([ 
+            { '$match' : { "source" : source } },
+            { '$sample': { 'size': 3 } } 
+        ]))
+    else:
+        return list(db.reviews.find({
+            'source': source,
+            'idx' :{ '$in': identifiers} 
+        }))
 
 def get_manually_tagged():
     return list(db.reviews.find({ "tagged" : "manually" }))
@@ -40,8 +53,12 @@ def get_untagged():
     return list(db.reviews.find({ "tagged" : { "$exists" : False } }))
 
 
-def save_result():
-    return
+def save_result(opinions):
+    for id in opinions:
+        options = { 'tagged' : 'automatically' }
+        for idx, tag in opinions[id]:
+            opinions['text.' + str(idx) + '.negated'] = tag
+        db.reviews.update( {'_id': id}, {'$set': options} )
 
 def get_corproea_size():
     return len(db.reviews.distinct("source"))
