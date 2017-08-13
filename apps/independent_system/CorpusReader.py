@@ -164,7 +164,7 @@ def from_corpus(
             cats += list(cats_tmp)
             
         assert len(revs_tmp) == len(cats_tmp)
-        assert len(revs_tmp) == len(has_tmp) 
+#         assert len(revs_tmp) == has_tmp 
             
     assert len(revs) == len(cats)
     progressive_bar("Parsing %s   " % corpus_name,total,idx+1)
@@ -173,16 +173,19 @@ def from_corpus(
     opinion_data , total = [] , len(revs)
     for idx in range(total)[start:]:
         progressive_bar("Generating %s" % corpus_name,total,idx)
-        rev = unicode(revs[idx],'utf8') 
+        rev = revs[idx]
+        if not isinstance(content, unicode): 
+            rev = unicode(rev,'utf8') 
         cat = cats[idx]
         if rev:
             opinion_data.append({
                 'idx'      : idx+1,
+                'source'   : corpus_name,
                 'review'   : review_correction(rev), 
                 'category' : category_mapping[cat] 
             })
     progressive_bar("Generating %s" % corpus_name,total,idx+1)    
-    return opinion_data , corpus_name
+    return opinion_data
 
 
 

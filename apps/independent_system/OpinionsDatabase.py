@@ -14,10 +14,8 @@ def get_opinion(id):
     return db.reviews.find_one({'_id':id})
 
 
-def save_opinions(opinions, corpus):
+def save_opinions(opinions):
     if opinions:
-        for op in opinions:
-            op['source'] = corpus
         db.reviews.insert_many(opinions)
 
 

@@ -22,14 +22,15 @@ def analyze(reviews):
     opinions = []
     corpus_length = len(reviews)
     for idx, op in enumerate(reviews):
-        progressive_bar( "analyzing", corpus_length, idx)
+        progressive_bar("Analyzing %s " % op['source'], corpus_length, idx)
         try:
-            op_id = md5.new(str(op['category']) + op['review']).hexdigest()
+            op_id = md5.new(str(op['category']) + op['review'].encode('ascii', 'ignore')).hexdigest()
             if not db.get_opinion(op_id):
                 opinion = {}         
                 opinion['_id']      = op_id
                 opinion['category'] = op['category']
                 opinion['idx']      = op['idx']
+                opinion['source']   = op['source']
                 opinion['text']     = [{
                     'word'  : token['form'],
                     'lemma' : token['lemma'],
@@ -39,6 +40,7 @@ def analyze(reviews):
         except Exception as e:
             log(str(e))
             raise e
+    progressive_bar("Analyzing %s " % op['source'], corpus_length, idx+1)
     print '\n'
     return opinions
 
@@ -61,7 +63,7 @@ if __name__ == "__main__":
         {
             'idx'     : 3,
             'category': 0, 
-            'review'  : 'No me gustó .'
+            'review'  : 'No me gustÃ³ .'
         }
     ]
     corpus  = "corpus_test"
