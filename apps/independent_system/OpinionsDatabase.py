@@ -31,7 +31,7 @@ def get_sample(quantity, source, identifiers = None):
     if not identifiers:
         return list(db.reviews.aggregate([ 
             { '$match' : { "source" : source } },
-            { '$sample': { 'size': 3 } } 
+            { '$sample': { 'size': quantity } } 
         ]))
     else:
         return list(db.reviews.find({

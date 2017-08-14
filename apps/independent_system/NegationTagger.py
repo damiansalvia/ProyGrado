@@ -3,6 +3,8 @@ import sys
 sys.path.append('../utilities')
 from printHelper import Log
 
+# from keras.models import Sequential
+# from keras.layers import Dense
 import OpinionsDatabase as db 
 import os, random, json, io
 
@@ -27,21 +29,36 @@ sources = [
 
 
 
-class Network:
-    
-    def __init__(self,hidden_layers,activacion):
-        pass
-    
-    def fit(self,X,Y):
-        pass
-        
-    def predict(self,X):
-        
-        return Y
+# class Network:
+#     
+#     def __init__(self,
+#             hidden_layers=2,
+#             activation=['relu'],
+#             loss='binary_crossentropy', 
+#             optimizer='adam', 
+#             metrics=['accuracy']
+#         ):
+#         left = hidden_layers - len(activation)
+#         for _ in range(left):
+#             activation.append(activation[0]) 
+#         self.model = Sequential()
+#         self.model.add( Dense( 12, input_dim=8, activation=activation[0] ) )
+#         for i in range(hidden_layers):
+#             self.model.add( Dense( 8, activation=activation[i+1] ) )
+#         self.model.compile(loss=loss, optimizer=optimizer, metrics=metrics)
+#     
+#     def fit(self,X,Y):
+#         self.model.fit(X, Y, epochs=150, batch_size=10)
+#         scores = model.evaluate(X, Y)
+#         for i in range(len(scores)):
+#             print "\n%s: %.2f%%" % (model.metrics_names[i], scores[i]*100)
+#         
+#     def predict(self,X):
+#         return self.model.predict(X)
 
 
 
-def start():
+def start_tagging():
     
     def DisplayMenu():
         os.system('clear')
@@ -51,15 +68,15 @@ def start():
             print i+1,".",source
         return 
      
-    def DisplayReview(id,current,total,words,cats):
+    def DisplayReview(_id,current,total,words,tags):
         os.system('clear')
-        print "Review [%i]" % id
+        print "Review [%s]" % _id
         print "<<",
         for i in range(total):
-            if i < current and cats[i] == 'n':
-                print words[i]+"\033[93m/"+cats[i]+"\033[0m",
+            if i < current and tags[i] == 'n':
+                print words[i]+"\033[93m/"+tags[i]+"\033[0m",
             elif i < current:
-                print words[i]+"\033[91m/"+cats[i]+"\033[0m",
+                print words[i]+"\033[91m/"+tags[i]+"\033[0m",
             elif i > current:
                 print words[i]+"  ",
             else:
@@ -83,13 +100,13 @@ def start():
                 print row % ("",chunk)
             print line % ("-"*7,"-"*width)
     
-    def ViewSave(result,source,encoding='utf8'):
+    def ViewSave(result):
         os.system('clear')
         op = raw_input("Done! View result? (y/n) > ")
         # Ask for display
         if op.lower() == 'y':
             DisplayAnnotated(result)
-        # Ask for save twice 
+        # Ask for save in two steps
         op = raw_input("\nSave result? [y/n] > ")
         if op.lower() == 'n':
             op = raw_input("Are you sure? [y/n] > ")
@@ -127,24 +144,28 @@ def start():
                     indexes = []
                 
                 # Get a sample of reviews from options
-                reviews = db.get_sample(quantity,source,indexes)
+                samples = db.get_sample(quantity,source,indexes)
                 
                 # Tag every review
                 left = quantity
                 while left != 0:   
                                      
-                    # Start
-                    id,review = reviews[left-1]
-                    words = review.split(' ')
-                    total = len(words)
-                    cats = ['  ' for _ in range(total)]
+                    # Retrieve relevant data from the sample
+                    sample  = samples[left-1]
+                    _id     = sample['_id']
+                    review  = sample['text']
                     
-                    # For each word annotate with (N) or (I) and give the possibility of back by pressing (B)
+                    # Initialization (keep current words and empty categories)
+                    words = [item['word'] for item in review]
+                    total = len(words)
+                    tags  = ['  ' for _ in range(total)]
+                    
+                    # For each word, annotate with (N) or (I) and give the possibility of back by pressing (B)
                     cat = ""
                     idx = 0
                     while True:
                         # Display review
-                        DisplayReview(id,idx,total,words,cats)
+                        DisplayReview(_id,idx,total,words,tags)
                         
                         # Check end condition
                         if idx == total:
@@ -152,7 +173,7 @@ def start():
                             if op == 'y':
                                 break
                             idx = idx - 1 if idx != 0 else 0
-                            cats[idx] = '  '
+                            tags[idx] = '  '
                             continue
                         
                         # Ask for input
@@ -174,20 +195,18 @@ def start():
                             continue
                         if cat == 'b': # Back
                             idx = idx - 1 if idx != 0 else 0
-                            cats[idx] = '  '
+                            tags[idx] = '  '
                         elif cat == 'a':
                             op = raw_input("Are you sure you want to abort (left %i)? [y/n] > " % left)
                             if op.lower() == 'y': raise Exception("Abort")
                         else:
                             # Associate the category
-                            cats[idx] = cat
+                            tags[idx] = cat
                             idx = idx + 1
                             
-                    # Save the result as two list: words and its respective category for each one 
+                    # Once the text is tagged, add it to the result
                     result.append({
-                        "id" : id+1,
-                        "from" : source,
-                        "annotation" : ' '.join(word.lower()+"/"+cat for word,cat in zip(words,cats))
+                        _id : enumerate(tags)
                     })
                     
                     # Update
@@ -195,8 +214,8 @@ def start():
                        
                 # View and save results
                 if op == 0: continue
-                ViewSave(result,source)
-            
+                ViewSave(result)
+                
             except Exception as e:
                 content = json.dumps(result,indent=4,ensure_ascii=False)
                 error = "Corpus:%s, Review:%i, Description:%s Partial:%s" % (source,id,str(e),content)
