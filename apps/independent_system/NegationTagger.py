@@ -29,33 +29,58 @@ sources = [
 
 
 
-# class Network:
-#     
-#     def __init__(self,
-#             hidden_layers=2,
-#             activation=['relu'],
-#             loss='binary_crossentropy', 
-#             optimizer='adam', 
-#             metrics=['accuracy']
-#         ):
-#         left = hidden_layers - len(activation)
-#         for _ in range(left):
-#             activation.append(activation[0]) 
-#         self.model = Sequential()
-#         self.model.add( Dense( 12, input_dim=8, activation=activation[0] ) )
-#         for i in range(hidden_layers):
-#             self.model.add( Dense( 8, activation=activation[i+1] ) )
-#         self.model.compile(loss=loss, optimizer=optimizer, metrics=metrics)
-#     
-#     def fit(self,X,Y):
-#         self.model.fit(X, Y, epochs=150, batch_size=10)
-#         scores = model.evaluate(X, Y)
-#         for i in range(len(scores)):
-#             print "\n%s: %.2f%%" % (model.metrics_names[i], scores[i]*100)
-#         
-#     def predict(self,X):
-#         return self.model.predict(X)
-
+class Network:
+     
+    def __init__(self,
+            hidden_layers=2,
+            activation=['relu'],
+            loss='binary_crossentropy', 
+            optimizer='adam', 
+            metrics=['accuracy']
+        ):
+        left = hidden_layers - len(activation)
+        for _ in range(left):
+            activation.append(activation[0]) 
+        self.model = Sequential()
+        self.model.add( Dense( 12, input_dim=8, activation=activation[0] ) )
+        for i in range(hidden_layers):
+            self.model.add( Dense( 8, activation=activation[i+1] ) )
+        self.model.compile(loss=loss, optimizer=optimizer, metrics=metrics)
+     
+    def fit(opinions, window_left, window_right):
+        X , Y = [] , []
+        for op in opinions:
+            entry = get_vectors(op.text, window_left, window_right)
+            X.append(entry[0])
+            Y.append(entry[1])
+        self.model.fit(X,Y)
+        scores = model.evaluate(X, Y)
+        for i in range(len(scores)):
+            print "\n%s: %.2f%%" % (model.metrics_names[i], scores[i]*100)
+    
+    def predict(opinions, window_left, window_right):
+        results = {}
+        for op in opinions:
+            results[op._id] = [ self.model.predict(X) for X in get_vectors(op.text, window_left, window_right)[0] ]
+        return results
+    
+    def get_vectors(text, window_left, window_right):
+        vectors = []
+        tags = []
+        for idx, word in enumerate(text):
+            vec = []
+            for i in range(window_left + window_right + 1):
+                vec.append(get_entry(text, idx - window_left + i))
+            tags.append(text[idx].get('negated'))
+            vectors.append(vec)
+        return vectors, tags    
+    
+    def get_entry(text, idx):
+        if  0 <= idx < len(text) :
+            return text[idx]['word']
+        else :
+            return ''
+        
 
 
 def start_tagging():

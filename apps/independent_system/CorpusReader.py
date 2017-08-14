@@ -137,7 +137,10 @@ def from_corpus(
                 pattern = "%s.*?%s" % ( review_pattern , category_pattern )
                 
         # Compile pattern
-        regex = re.compile(pattern,re.DOTALL)
+        tmp = pattern.replace("\\#", "")
+        flag = re.DOTALL if tmp == pattern else 0
+        pattern = tmp
+        regex = re.compile(pattern,flag)
         
         # Read the file content
         with open(filename,'r') as file:
@@ -164,7 +167,7 @@ def from_corpus(
             cats += list(cats_tmp)
             
         assert len(revs_tmp) == len(cats_tmp)
-#         assert len(revs_tmp) == has_tmp 
+#         assert len(revs_tmp) == has_tmp - start
             
     assert len(revs) == len(cats)
     progressive_bar("Parsing %s   " % corpus_name,total,idx+1)
