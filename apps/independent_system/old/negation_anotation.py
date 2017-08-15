@@ -16,7 +16,7 @@ parameters = [
     ("../../corpus/corpus_apps_android","*/*.json","\"(.*?)\"[,(?:\\r\\n)]","(.*?)/","PATH",None,0,0,'unicode-escape'),
     ("../../corpus/corpus_cine","*.xml","<body>(.*?)</body>","rank=\"(.*?)\"","FILE","BEFORE",None,0,'cp1252'),
     ("../../corpus/corpus_hoteles","*.xml","<coah:review>(.*?)</coah:review>","<coah:rank>(.*?)</coah:rank>","FILE","BEFORE",None,0,'utf8'),
-    ("../../corpus/corpus_prensa_uy","*.csv","\"(.*?)\",(?:TRUE|FALSE)",",(.*?)\\n","FILE","AFTER",None,0,'utf8'),
+    ("../../corpus/corpus_prensa_uy","*.csv","(.*),(?:TRUE|FALSE)",",(.*?)\\n","FILE","AFTER",None,0,'utf8'),
     ("../../corpus/corpus_tweets","*.tsv","(.*?)\\t.*?\\n","(.*?\\t.*?)\\t","FILE","BEFORE",None,1,'utf8'),
     ("../../corpus/corpus_variado_sfu","*/*.txt","(.*)\s","(.*?)_","PATH",None,1,0,'unicode-escape'),
     ("../../corpus/corpus_tweets_2","*.csv","\"(.*?)\",","(.*?)\\n","FILE","AFTER",None,1,'utf8')
@@ -80,6 +80,7 @@ def ViewSave(result,name,encoding='utf8'):
     if not os.path.isdir(odir): 
         os.makedirs(odir)
     odir = odir+"/negated_%s.json" % name
+    # TODO: Se sustituye por acceso a la BD 
     with io.open(odir,"w",encoding=encoding) as f:
         content = json.dumps(result,indent=4,ensure_ascii=False)
         if not isinstance(content, unicode):
@@ -116,7 +117,7 @@ def Main():
             
             try:     
                 # Get reviews and shuffle them 
-                reviews = list(enumerate(corpus.get_opinions()))
+                reviews = list(enumerate(corpus.get_opinions())) # TODO: Cambia por lectura de BD
                 op = raw_input("\nInsert IDs separated by ',' or <intro> for pick up randomly > ")
                 if op: # From indexes
                     indexes = [int(i) for i in op.split(',')]

@@ -62,7 +62,7 @@ def get_corproea_size():
     return len(db.reviews.distinct("source"))
 
 def get_indepentent_lex(limit=None, tolerance=0, filter_neutral=False):
-    min_matches = int(round(len(get_corproea_size())*(1.0-tolerance),0))
+    min_matches = int(round(get_corproea_size()*(1.0-tolerance),0))
     query = [
         { '$unwind' : '$text' },{ 
             '$group': {
@@ -117,12 +117,15 @@ def get_indepentent_lex(limit=None, tolerance=0, filter_neutral=False):
 
     if filter_neutral:
         query.append({ '$match' : {'pol': {'$ne': '0'} } })
+        
     query.extend([
         { '$project' : {'_id': 0, 'accepted' : 0} },
         { '$sort' : { 'corpus_len' : -1 } }
     ])
+    
     if limit:
        query.append({ '$limit': limit }) 
+       
     return db.reviews.aggregate(query)
 
     

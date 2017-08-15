@@ -3,65 +3,86 @@
 import sys
 sys.path.append('../utilities') # To import 'utilities' modules
 
+import json, os, io
 import CorpusReader as cr 
 import NegationTagger as nt
 import OpinionsDatabase as db
 import TextAnalyzer as ta
 
 
+def save_independent_lex(
+        data,
+        name,
+        path='outputs/lexicons'
+    ):
+    
+    # Check output directory and concatenate the filename
+    if not os.path.isdir(path): 
+        os.makedirs(path)
+    path = "%s/%s.json" % (path,name)
+    
+    # Save it into a the file
+    with io.open(path,"w",encoding='utf8') as f:
+        content = json.dumps(data,indent=4,ensure_ascii=False)
+        if not isinstance(content, unicode):
+            content = unicode(content,'utf8')
+        f.write(content)
+    print "Saved at",path
+        
+
 
 parameters = [
-#     (
-#         "../../corpus/corpus_apps_android",
-#         "*/*.json",
-#         "\"(.*?)\"[,(?:\\r\\n)]",
-#         "(neg|pos)/",
-#         {
-#             'neg': 0,
-#             'pos': 100
-#         },
-#         "PATH",
-#         None,
-#         0,
-#         0,
-#         'unicode-escape'
-#     ),
-#     (
-#         "../../corpus/corpus_cine",
-#         "*.xml",
-#         "<body>(.*?)</body>",
-#         "rank=\"([1-5])\"",
-#         {
-#             '1': 0, 
-#             '2': 25, 
-#             '3': 50, 
-#             '4': 75, 
-#             '5': 100
-#         },
-#         "FILE",
-#         "BEFORE",
-#         None,
-#         0,
-#         'utf8'
-#     ),
-#     (
-#         "../../corpus/corpus_hoteles",
-#         "*.xml",
-#         "<coah:review>(.*?)</coah:review>",
-#         "<coah:rank>([1-5])</coah:rank>",
-#         {
-#             '1': 0, 
-#             '2': 25, 
-#             '3': 50, 
-#             '4': 75, 
-#             '5': 100
-#         },
-#         "FILE",
-#         "BEFORE",
-#         None,
-#         0,
-#         'utf8'
-#     ),
+    (
+        "../../corpus/corpus_apps_android",
+        "*/*.json",
+        "\"(.*?)\"[,(?:\\r\\n)]",
+        "(neg|pos)/",
+        {
+            'neg': 0,
+            'pos': 100
+        },
+        "PATH",
+        None,
+        0,
+        0,
+        'unicode-escape'
+    ),
+    (
+        "../../corpus/corpus_cine",
+        "*.xml",
+        "<body>(.*?)</body>",
+        "rank=\"([1-5])\"",
+        {
+            '1': 0, 
+            '2': 25, 
+            '3': 50, 
+            '4': 75, 
+            '5': 100
+        },
+        "FILE",
+        "BEFORE",
+        None,
+        0,
+        'utf8'
+    ),
+    (
+        "../../corpus/corpus_hoteles",
+        "*.xml",
+        "<coah:review>(.*?)</coah:review>",
+        "<coah:rank>([1-5])</coah:rank>",
+        {
+            '1': 0, 
+            '2': 25, 
+            '3': 50, 
+            '4': 75, 
+            '5': 100
+        },
+        "FILE",
+        "BEFORE",
+        None,
+        0,
+        'utf8'
+    ),
     (
         "../../corpus/corpus_prensa_uy",
         "*.csv",
@@ -136,30 +157,49 @@ parameters = [
         None,
         1,
         'utf8'
+    ),
+    (
+        "../../corpus/corpus_restaurantes",
+        "*/*.json",
+        "\"(.*?)\"[,(?:\\r\\n)]",
+        "(neg|pos)/",
+        {
+            'neg': 0,
+            'pos': 100
+        },
+        "PATH",
+        None,
+        0,
+        0,
+        'unicode-escape'
     )
 ] 
 
-for parameter in parameters: 
-     
-    opinions = cr.from_corpus(
-            parameter[0], # source
-            parameter[1], # path pattern to file
-            parameter[2], # review pattern
-            parameter[3], # category pattern
-            parameter[4], # category mapping
-            parameter[5], # category mapping
-            category_position=parameter[6],
-            category_level=parameter[7],
-            start=parameter[8],
-            decoding=parameter[9],
-        )
-     
-    analyzed = ta.analyze(opinions)
-     
-    db.save_opinions(analyzed)
-    
-nt.start_tagging()   
-
+# count = 0
+# for parameter in parameters: 
+#        
+#     opinions = cr.from_corpus(
+#             parameter[0], # source
+#             parameter[1], # path pattern to file
+#             parameter[2], # review pattern
+#             parameter[3], # category pattern
+#             parameter[4], # category mapping
+#             parameter[5], # category mapping
+#             category_position=parameter[6],
+#             category_level=parameter[7],
+#             start=parameter[8],
+#             decoding=parameter[9],
+#         )
+#        
+#     analyzed = ta.analyze(opinions)
+#        
+#     db.save_opinions(analyzed)
+#       
+#     count += len(opinions)
+#       
+# nt.start_tagging() 
+#
+# print "Total =",count
 # ann = nt.Network( )
 #  
 # opinions = db.get_tagged('manual')
@@ -169,8 +209,11 @@ nt.start_tagging()
 # Y = ann.predict(X)
 # 
 # db.save_result(Y)
-# 
-# li = db.get_indepentent_lex() 
+
+tolerance = 1.0
+li = db.get_indepentent_lex(tolerance=tolerance)
+li = list(li)
+save_independent_lex(li,"independent_lexcon_-_tolerance_%i_percent" % (tolerance*100))
  
 
 
