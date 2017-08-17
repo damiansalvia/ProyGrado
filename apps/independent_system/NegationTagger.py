@@ -3,8 +3,8 @@ import sys
 sys.path.append('../utilities')
 from utilities import *
 
-from keras.models import Sequential
-from keras.layers import Dense
+# from keras.models import Sequential
+# from keras.layers import Dense
 import OpinionsDatabase as db 
 import os, json, io, glob, re
 

@@ -46,3 +46,29 @@ def analyze(reviews):
     print 
     return opinions
 
+
+if __name__ == '__main__':
+    reviews = [
+        {
+            'source' : u'corpus_test',
+            'review' : u'Excelente .',
+            'category': 100,
+            'idx' : 1
+        },{
+            'source' : u'corpus_test',
+            'review' : u'No la volveria a ver, pero es buena .',
+            'category': 50,
+            'idx' : 2
+        },{
+            'source' : u'corpus_test',
+            'review' : u'No me gustó .',
+            'category': 0,
+            'idx' : 3
+        },
+
+    ]
+
+    db.save_opinions(analyze(reviews)) 
+
+
+    

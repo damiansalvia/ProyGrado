@@ -26,10 +26,11 @@ def save_opinions(opinions):
 
 
 def save_negations(opinions):
+    import pdb; pdb.set_trace()  # breakpoint 92934679 //
     for id in opinions:
         options = { 'tagged' : 'manually' }
-        for idx, tag in opinions[id]:
-            opinions['text.' + str(idx) + '.negated'] = tag
+        for idx, tag in enumerate(opinions[id]):
+            options['text.' + str(idx) + '.negated'] = tag
         db.reviews.update( {'_id': id}, {'$set': options} )
 
 
@@ -132,3 +133,14 @@ def get_indepentent_lex(limit=None, tolerance=0, filter_neutral=False):
        query.append({ '$limit': limit }) 
        
     return db.reviews.aggregate(query)
+
+
+if __name__ == '__main__':
+
+    negations = {
+        '72355624354ff30d03038b818044ac46': [False, False],
+        '97609c4dd3e893bce2c035bea586bbdd': [False, True, True, True, True, False, False, False, False, False], #10
+        'd93708dbb4ebc3e6711118ef20a77669': [ False, True, True, False], #4
+    } 
+
+    save_negations(negations)
