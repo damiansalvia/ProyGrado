@@ -2,37 +2,15 @@
 
 import sys
 import time
-sys.path.append('../utilities') # To import 'utilities' modules
+sys.path.append('../utilities')
 
-from printHelper import *
+from utilities import *
 import re, glob, io, json
 
 
 
-URL_PATTERN = u"""
-    (?:(?:https?|ftp):\/\/)
-    (?:\S+(?::\S*)?@)?
-    (
-        (?!10(?:\.\d{1,3}){3})
-        (?!127(?:\.\d{1,3}){3})
-        (?!169\.254(?:\.\d{1,3}){2})
-        (?!192\.168(?:\.\d{1,3}){2})
-        (?!172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2})
-        (?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])
-        (?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}
-        (?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))
-    |
-        (?:(?:[a-z0-9]+-?)*[a-z0-9]+)
-        (?:\.(?:[a-z0-9]+-?)*[a-z0-9]+)*
-        (?:\.(?:[a-z]{2,}))
-    )
-    (?::\d{2,5})?
-    (?:\/[^\s]*)?
-    """.replace(u"\n", u"").replace(u"\t", u"").replace(u" ", u"")
-
-
 SUBSTITUTIONS = [
-    # Replace non-spanish characters with hipotetical correct character
+    # Replace non-spanish characters by the hipotetical correct character
     (u"à",u"á"), (u"è",u"é"), (u"ì",u"í"), (u"ò",u"ó"), (u"ù",u"ú"),
     (u"â",u"á"), (u"ê",u"é"), (u"î",u"í"), (u"ô",u"ó"), (u"û",u"ú"),
     (u"À",u"Á"), (u"È",u"É"), (u"Ì",u"Í"), (u"Ò",u"Ó"), (u"ù",u"Ú"),
@@ -42,20 +20,18 @@ SUBSTITUTIONS = [
     # Replace other non-spanish characters
     (u"`",u"\""),(u"´",u"\""),
     (u"\'",u"\""),
-    # Replace every URL by its domain
-#     (URL_PATTERN,u"\\1"),
     # Replace every occurrence of repetitive characters except {l,r,c,e} [cabaLLo, coRRer, aCCion, crEE]
-    (u"(?i)([abdf-km-qs-z])\\1+",u"\\1"),
+    (u"(?i)([^lrce])\\1+",u"\\1"),
     (u"(?i)([lrce])\\1\\1+",u"\\1\\1"),
     (u"(?i)([lrce])\\1(\W)",u"\\1\\2"),
     # Separate alphabetical character from non-alphabetical character by a blank space
     (u"(?i)([a-záéíóúñüÁÉÍÓÚÑÚ\\\]?)([^a-záéíóúñüÁÉÍÓÚÑÚ\\\\s]|(?:{.*?}|\[.*?\])]+)([a-záéíóúñüÁÉÍÓÚÑÚ\\\]?)",u"\\1 \\2 \\3"),
-    # Force every review (document) to end with a period
-    (u"(.*)[^\.]",u"\\1 ."),
     # Replace all non-alphabetical symbols by a whitespace
     (u"(?i)[^0-9a-záéíóúñüÁÉÍÓÚÑÚ¿\?¡!\(\),\.:;\"\$/]",u" "),
     # Replace multiple blank spaces by one
-    (u"(\s){2,}",u" ")
+    (u"(\s){2,}",u" "),
+    # Replace multiple periods by one
+    (u"(\.\s*)+",u".")
 ]
 
 
@@ -63,6 +39,7 @@ def review_correction(
     # Apply simple pattern correction in the input text
         text # Text for applying the correction.
     ):
+    text += u" ."
     for source,target in SUBSTITUTIONS:
         text = re.sub(source,target,text,flags=re.DOTALL)
     return text    
@@ -120,8 +97,7 @@ def from_corpus(
     revs , cats  = [] , []
     total = len(filenames)
     for idx, filename in enumerate(filenames):
-        
-        progressive_bar("Parsing %s" % corpus_name,total,idx)
+        progress("Parsing %s   " % corpus_name,total,idx)
         
         # Generate pattern
         filename = filename.replace('\\','/')
@@ -157,7 +133,7 @@ def from_corpus(
         elif category_location == "FILE":
             found = regex.findall(content)
             if not found:
-                print "Noting found in %s" % filename
+                print "\rNothing found in",filename
                 continue
             if category_position == "BEFORE":
                 cats_tmp,revs_tmp = zip(*found)
@@ -170,12 +146,11 @@ def from_corpus(
 #         assert len(revs_tmp) == has_tmp - start
             
     assert len(revs) == len(cats)
-    progressive_bar("Parsing %s   " % corpus_name,total,idx+1)
     
     # Process the opinions for returning
     opinion_data , total = [] , len(revs)
     for idx in range(total)[start:]:
-        progressive_bar("Generating %s" % corpus_name,total,idx)
+        progress("Generating %s" % corpus_name,total,idx)
         rev = revs[idx]
         if not isinstance(content, unicode): 
             rev = unicode(rev,'utf8') 
@@ -186,143 +161,5 @@ def from_corpus(
                 'source'   : corpus_name,
                 'review'   : review_correction(rev), 
                 'category' : category_mapping[cat] 
-            })
-    progressive_bar("Generating %s" % corpus_name,total,idx+1)    
+            })   
     return opinion_data
-
-
-
-def test(cases):
-    if 1 in cases:    
-        corus , name = from_corpus(
-            "../../corpus/corpus_apps_android",
-            "*/*.json",
-            "\"(.*?)\"[,(?:\\r\\n)]",
-            "(neg|pos)/",
-            {
-                'neg': 0,
-                'pos': 100
-            },
-            "PATH",
-            category_level=0,
-            decoding='unicode-escape'
-        )
-        print "total:",len(corpus)
-        print corpus[:2]+corpus[-2:]
-    if 2 in cases:
-        corus , name = from_corpus(
-            "../../corpus/corpus_cine",
-            "*.xml",
-            "<body>(.*?)</body>",
-            "rank=\"([1-5])\"",
-            {
-                '1': 0, 
-                '2': 25, 
-                '3': 50, 
-                '4': 75, 
-                '5': 100
-            },
-            "FILE",
-            category_position="BEFORE"
-        )   
-        print "total:",len(corpus)
-        print corpus[:2]+corpus[-2:]   
-    if 3 in cases:
-        corus , name = from_corpus(
-            "../../corpus/corpus_hoteles",
-            "*.xml",
-            "<coah:review>(.*?)</coah:review>",
-            "<coah:rank>([1-5])</coah:rank>",
-            {
-                '1': 0, 
-                '2': 25, 
-                '3': 50, 
-                '4': 75, 
-                '5': 100
-            },
-            "FILE",
-            category_position="BEFORE"
-        )
-        print "total:",len(corpus)
-        print corpus[:2]+corpus[-2:]
-    if 4 in cases:
-        corus , name = from_corpus(
-            "../../corpus/corpus_prensa_uy",
-            "*.csv",
-            "(.*?),(?:TRUE|FALSE)", # No considera el test.csv
-            ",(Neg|Neu|Pos)\\n",
-            {
-                'Neg': 0, 
-                'Neu': 50, 
-                'Pos': 100
-            },
-            "FILE",
-            category_position="AFTER"
-        )
-        print "total:",len(corpus)
-        print corpus[:2]+corpus[-2:]
-    if 5 in cases:
-        corus , name = from_corpus(
-            "../../corpus/corpus_tweets",
-            "*.tsv",
-            "(.*?)\\t.*?\\n",
-            "(.*?\\t.*?)\\t",
-            {
-                '3\t1': 10, 
-                '3\t2': 20, 
-                '2\t4': 90, 
-                '2\t2': 70, 
-                '2\t3': 60, 
-                '4\t2': 30,
-                '2\t1': 80, 
-                '5\t1': 40, 
-                '1\t5': 50, 
-                '1\t4': 30, 
-                '4\t1': 50, 
-                '1\t1': 40, 
-                '1\t3': 60, 
-                '1\t2': 70
-            },
-            "FILE",
-            category_position="BEFORE",
-            start=1
-        )
-        print "total:",len(corpus)
-        print corpus[:2]+corpus[-2:]
-    if 6 in cases:
-        corus , name = from_corpus(
-            "../../corpus/corpus_variado_sfu", 
-            "*/*.txt", 
-            "(.*)\s",
-            "(yes|no)_",
-            {
-                'no' : 0, 
-                'yes': 100
-            },
-            "PATH",
-            category_level=1
-        )
-        print "total:",len(corpus)
-        print corpus[:2]+corpus[-2:]
-    if 7 in cases:
-        corus , name = from_corpus(
-            "../../corpus/corpus_tweets_2",
-            "*.csv",
-            "\"(.*?)\",",
-            "(N|P|NEU)\\n",#"(.*?)\\n",
-            {
-                'N'  :0,
-                'NEU':50,
-                'P'  :100
-            },
-            "FILE",
-            category_position="AFTER",
-            start=1
-        )
-        print "total:",len(corpus)
-        print corpus[:2]+corpus[-2:]
-   
-if __name__ == '__main__':
-    cases = raw_input("Enter cases separated by a colon > ")
-    cases = [int(case) for case in cases.split(",")]
-    test(cases)

@@ -1,52 +1,31 @@
  # -*- coding: utf-8 -*-
 
 import sys
-sys.path.append('../utilities') # To import 'utilities' modules
+sys.path.append('../utilities')
+from utilities import *
 
-import json, os, io
 import CorpusReader as cr 
 import NegationTagger as nt
 import OpinionsDatabase as db
-import TextAnalyzer as ta
+import TextAnalyzer as ta        
 
 
-def save_independent_lex(
-        data,
-        name,
-        path='outputs/lexicons'
-    ):
-    
-    # Check output directory and concatenate the filename
-    if not os.path.isdir(path): 
-        os.makedirs(path)
-    path = "%s/%s.json" % (path,name)
-    
-    # Save it into a the file
-    with io.open(path,"w",encoding='utf8') as f:
-        content = json.dumps(data,indent=4,ensure_ascii=False)
-        if not isinstance(content, unicode):
-            content = unicode(content,'utf8')
-        f.write(content)
-    print "Saved at",path
-        
-
-
-# parameters = [
-#     (
-#         "../../corpus/corpus_apps_android",
-#         "*/*.json",
-#         "\"(.*?)\"[,(?:\\r\\n)]",
-#         "(neg|pos)/",
-#         {
-#             'neg': 0,
-#             'pos': 100
-#         },
-#         "PATH",
-#         None,
-#         0,
-#         0,
-#         'unicode-escape'
-#     ),
+parameters = [
+    (
+        "../../corpus/corpus_apps_android",
+        "*/*.json",
+        "\"(.*?)\"[,(?:\\r\\n)]",
+        "(neg|pos)/",
+        {
+            'neg': 0,
+            'pos': 100
+        },
+        "PATH",
+        None,
+        0,
+        0,
+        'utf8'
+    ),
 #     (
 #         "../../corpus/corpus_cine",
 #         "*.xml",
@@ -173,47 +152,47 @@ def save_independent_lex(
 #         0,
 #         'unicode-escape'
 #     )
-# ] 
+] 
 
-# count = 0
-# for parameter in parameters: 
+count = 0
+for parameter in parameters: 
+        
+    opinions = cr.from_corpus(
+            parameter[0], # source
+            parameter[1], # path pattern to file
+            parameter[2], # review pattern
+            parameter[3], # category pattern
+            parameter[4], # category mapping
+            parameter[5], # category mapping
+            category_position=parameter[6],
+            category_level=parameter[7],
+            start=parameter[8],
+            decoding=parameter[9],
+        )
+    save(opinions,"tmp_from_corpus_%s" % opinions[0]['source'],"./outputs")    
+    analyzed = ta.analyze(opinions)
+        
+    db.save_opinions(analyzed)
        
-#     opinions = cr.from_corpus(
-#             parameter[0], # source
-#             parameter[1], # path pattern to file
-#             parameter[2], # review pattern
-#             parameter[3], # category pattern
-#             parameter[4], # category mapping
-#             parameter[5], # category mapping
-#             category_position=parameter[6],
-#             category_level=parameter[7],
-#             start=parameter[8],
-#             decoding=parameter[9],
-#         )
+    count += len(opinions)
        
-#     analyzed = ta.analyze(opinions)
-       
-#     db.save_opinions(analyzed)
-      
-#     count += len(opinions)
-      
-# nt.start_tagging() 
+nt.start_tagging() 
 
-# print "Total =",count
-# ann = nt.Network( )
+print "Total =",count
+ann = nt.Network(5)
+  
+opinions = db.get_tagged('manual')
+ann.fit(opinions,2,2)
  
-# opinions = db.get_tagged('manual')
-# ann.fit(opinions)
+X = db.get_untagged()
+Y = ann.predict(X,2,2)
+ 
+db.save_result(Y)
 
-# X = db.get_untagged()
-# Y = ann.predict(X)
-
-# db.save_result(Y)
-
-tolerance = 0.1
+tolerance = 1.0
 li = db.get_indepentent_lex(tolerance=tolerance)
 li = list(li)
-save_independent_lex(li,"independent_lexcon_-_tolerance_%i_percent" % (tolerance*100))
+save_file(li,"independent_lexcon_-_tolerance_%i_percent" % (tolerance*100),"./outputs/lexicon")
  
 
 

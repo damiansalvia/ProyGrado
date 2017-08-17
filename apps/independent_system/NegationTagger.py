@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 import sys
 sys.path.append('../utilities')
-from printHelper import Log
+from utilities import *
 
-# from keras.models import Sequential
-# from keras.layers import Dense
+from keras.models import Sequential
+from keras.layers import Dense
 import OpinionsDatabase as db 
-import os, random, json, io
+import os, json, io, glob, re
 
 
 
@@ -32,39 +32,56 @@ sources = [
 class Network:
      
     def __init__(self,
+            win_size,
             hidden_layers=2,
             activation=['relu'],
             loss='binary_crossentropy', 
             optimizer='adam', 
-            metrics=['accuracy']
+            metrics=['accuracy'],
+            neurons=(12,8)
         ):
         left = hidden_layers - len(activation)
+        
         for _ in range(left):
-            activation.append(activation[0]) 
+            activation.append(activation[0])
+             
         self.model = Sequential()
-        self.model.add( Dense( 12, input_dim=8, activation=activation[0] ) )
-        for i in range(hidden_layers):
-            self.model.add( Dense( 8, activation=activation[i+1] ) )
-        self.model.compile(loss=loss, optimizer=optimizer, metrics=metrics)
+        
+        self.model.add( Dense( neurons[0] , input_dim=win_size , activation=activation[0] ) )
+        for i in range(hidden_layers)[:-1]:
+            self.model.add( Dense( neurons[0] , activation=activation[i+1] ) )
+        self.model.add( Dense( 2 , activation=activation[i+1] ) )
+        
+        self.model.compile(loss=loss, optimizer=optimizer , metrics=metrics)
      
-    def fit(opinions, window_left, window_right):
+     
+    def fit(self,opinions, window_left, window_right):
         X , Y = [] , []
-        for op in opinions:
+        total = len(opinions)
+        for idx,op in enumerate(opinions):
+            progress("Fitting negations",total,idx)
             entry = get_vectors(op.text, window_left, window_right)
             X.append(entry[0])
             Y.append(entry[1])
+            
+        if not X:
+            raise Exception("Nothing to fit")
+        
         self.model.fit(X,Y)
-        scores = model.evaluate(X, Y)
+        
+        scores = model.evaluate(X, Y)        
         for i in range(len(scores)):
             print "\n%s: %.2f%%" % (model.metrics_names[i], scores[i]*100)
     
-    def predict(opinions, window_left, window_right):
+    def predict(self,opinions, window_left=2, window_right=2):
         results = {}
-        for op in opinions:
+        total = len(opinions)
+        for idx,op in enumerate(opinions):
+            progress("Predicting negations",total,idx)
             results[op._id] = [ self.model.predict(X) for X in get_vectors(op.text, window_left, window_right)[0] ]
         return results
     
-    def get_vectors(text, window_left, window_right):
+    def get_vectors(text, window_left=2, window_right=2):
         vectors = []
         tags = []
         for idx, word in enumerate(text):
@@ -140,6 +157,7 @@ def start_tagging():
         # Save the result
         db.save_negations(result)
         
+    # #------- Execute Function -------#
     
     while True:
         # Display menu options
@@ -246,7 +264,27 @@ def start_tagging():
                 error = "Corpus:%s, Review:%i, Description:%s Partial:%s" % (source,id,str(e),content)
                 log(error)
                 raw_input("Reason: %s\nEnter to continue..." % str(e))
+    
+                
+def manual_file_to_db(source_dir):
+    for source in glob.glob(source_dir):
+        with open(source) as fp:
+            opinions = json.load(fp)
+        negations = {}
+        errors = []
+        for op in opinions:
+            target = db.get_by_idx(op['from'], op['id'])
+            tags = re.findall(u'(/i|/n)', op['annotation'])
+            if len(target['text']) == len(tags):
+                negations[target['_id']] = map(lambda x: x == '/i', tags)
+            else:
+                errors.append(op)
+        if errors:
+            print errors
+        db.save_negations(negations)
+    
                 
 if __name__=='__main__':
-    start()
+#     start()
+    manual_file_to_db("old/outputs/negation/*")
     
