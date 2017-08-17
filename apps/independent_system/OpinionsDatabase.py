@@ -13,6 +13,8 @@ db = MongoClient().ProyGrado
 def get_opinion(id):
     return db.reviews.find_one({'_id':id})
 
+def get_by_idx(source, idx):
+    return db.reviews.find_one({'source': source, 'idx': idx})
 
 def save_opinions(opinions):
     if opinions:
@@ -39,12 +41,8 @@ def get_sample(quantity, source, identifiers = None):
             'idx' :{ '$in': identifiers} 
         }))
 
-def get_manually_tagged():
-    return list(db.reviews.find({ "tagged" : "manually" }))
-
-
-def get_automatically_tagged():
-    return list(db.reviews.find({ "tagged" : "automatically" }))
+def get_tagged(tagger):
+    return list(db.reviews.find({ "tagged" : tagger }))
 
 
 def get_untagged():
@@ -60,6 +58,7 @@ def save_result(opinions):
 
 def get_corproea_size():
     return len(db.reviews.distinct("source"))
+
 
 def get_indepentent_lex(limit=None, tolerance=0, filter_neutral=False):
     min_matches = int(round(get_corproea_size()*(1.0-tolerance),0))
@@ -129,3 +128,4 @@ def get_indepentent_lex(limit=None, tolerance=0, filter_neutral=False):
     return db.reviews.aggregate(query)
 
     
+print

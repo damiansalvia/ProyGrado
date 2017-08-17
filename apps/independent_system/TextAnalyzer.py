@@ -8,6 +8,7 @@ import freeling_analyzer
 from printHelper import *
 import OpinionsDatabase as db
 import md5
+import re
 
 analyzer = freeling_analyzer.Analyzer()
 log = Log("./")
@@ -48,34 +49,41 @@ def analyze(reviews):
 
 
 def addManualTagged(opinions):
-    return 
-
+    negations = {}
+    errors = []
+    for op in opinions:
+        target = db.get_by_idx(op['source'], op['idx'])
+        tags = re.findall(u'(/i|/n)', op['annotation'])
+        if len(target['text']) == len(tags):
+            negations[target['_id']] = map(lambda x: x == '/i', tags)
+        else:
+            errors.append(op)
+    db.save_negations(negations)
 
 if __name__ == "__main__":
 
     start_time = time.time()
 
-    reviews = [
-        {
-            'idx'     : 1,
-            'category': 100 , 
-            'review'  : u'Excelente .'
-        },
-        {
-            'idx'     : 2,
-            'category': 50, 
-            'review'  : u'No esta mala .'
-        },
-        {
-            'idx'     : 3,
-            'category': 0, 
-            'review'  : u'No me gustó .'
-        }
-    ]
-    corpus  = "corpus_test"
+    # reviews = [
+    #     {
+    #         'idx'     : 1,
+    #         'category': 100 , 
+    #         'review'  : u'Excelente .'
+    #     },
+    #     {
+    #         'idx'     : 2,
+    #         'category': 50, 
+    #         'review'  : u'No esta mala .'
+    #     },
+    #     {
+    #         'idx'     : 3,
+    #         'category': 0, 
+    #         'review'  : u'No me gustó .'
+    #     }
+    # ]
+    # corpus  = "corpus_test"
 
-    db.save_opinions(analyze(reviews),corpus )
-
+    # db.save_opinions(analyze(reviews),corpus )
 
     # opinions [{
     #     "from": "corpus_apps_android", 
