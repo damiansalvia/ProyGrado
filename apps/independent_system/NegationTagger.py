@@ -293,7 +293,7 @@ def manual_file_to_db(source_dir):
                         print "WORDS"
                         print ' '.join(words),"\n"
                         print "ANNOT"
-                        print ' '.join(annot),"\n"
+                        print ' '.join(annot),"\n" 
                         if idxW >= len(words) or idxA >= len(annot):
                            break 
                         if words[idxW] == annot[idxA]:
