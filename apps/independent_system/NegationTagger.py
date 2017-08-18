@@ -3,8 +3,8 @@ import sys
 sys.path.append('../utilities')
 from utilities import *
 
-# from keras.models import Sequential
-# from keras.layers import Dense
+from keras.models import Sequential
+from keras.layers import Dense
 import OpinionsDatabase as db 
 import os, json, io, glob, re
 
@@ -265,22 +265,69 @@ def start_tagging():
                 log(error)
                 raw_input("Reason: %s\nEnter to continue..." % str(e))
     
-                
+    
+import re
 def manual_file_to_db(source_dir):
     for source in glob.glob(source_dir):
         with open(source) as fp:
+            print source
             opinions = json.load(fp)
         negations = {}
         errors = []
-        for op in opinions:
+        for idx, op in enumerate(opinions):
             target = db.get_by_idx(op['from'], op['id'])
-            tags = re.findall(u'(/i|/n)', op['annotation'])
-            if len(target['text']) == len(tags):
-                negations[target['_id']] = map(lambda x: x == '/i', tags)
-            else:
-                errors.append(op)
-        if errors:
-            print errors
+            if 'negated' in target['text'][idx].keys(): # Skip if already re-tagged
+                break
+            tags  = [tag[-1] for tag in op['annotation'].split(' ')]
+            words = [item['word'].lower() for item in target['text']]
+            annot = [tag[:-2].lower() for tag in op['annotation'].split(' ')]
+            if words != annot:
+                size = len(words)
+                retags = [None for _ in range(size)]
+                idxW,idxA = 0,0
+                try:
+                    qW,qA = [],[]
+                    while True:
+                        os.system('clear')
+                        print op['from'], op['id']
+                        print "WORDS"
+                        print ' '.join(words),"\n"
+                        print "ANNOT"
+                        print ' '.join(annot),"\n"
+                        if idxW >= len(words) or idxA >= len(annot):
+                           break 
+                        if words[idxW] == annot[idxA]:
+                            if idxW < len(retags) and idxA < len(tags):
+                                retags[idxW] = tags[idxA]
+                                qW.append(idxW)
+                                qA.append(idxA)
+                                idxW += 1
+                                idxA += 1
+                        elif annot[idxA] == '.':
+                            qA.append(idxA)
+                            idxA += 1 
+                        else:
+                            print "%-10s vs %10s" % (words[idxW],annot[idxA])
+                            opt = raw_input("(S)kip or (B)orrow ? Tap <enter> for previous > ")
+                            if opt == 'b': 
+                                retags[idxW] = tags[idxA]
+                                qW.append(idxW)
+                                idxW += 1
+                            elif opt == 's':
+                                qA.append(idxA)
+                                idxA += 1
+                            else:
+                                idxW = qW.pop()
+                                idxA = qA.pop()
+                except Exception as e:
+                    print str(e)
+                    print "words",idxW,len(words)
+                    print "annot",idxA,len(annot)
+                    print "tags",idxA, len(tags)
+                    raw_input()
+                tags = retags 
+            negations[target['_id']] = map(lambda x: x == 'i', tags)
+        
         db.save_negations(negations)
     
                 
