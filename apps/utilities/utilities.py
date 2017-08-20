@@ -29,7 +29,7 @@ def progress(prompt, total, current, width=width):
     percent = float(current) / total
     hashes = '#' * int(round(percent * bar_length))
     spaces = ' ' * (bar_length - len(hashes))
-    print "\r{0} [{1}] {2}%".format(prompt,hashes + spaces, round(percent * 100,2)),
+    print "\r{0} [{1}] {2}%".format(prompt, hashes + spaces, round(percent * 100,2)),
     if current==total: print
 
 
@@ -40,5 +40,4 @@ class Log:
 
     def __call__(self,error, level='error'):
         time = strftime("%Y-%m-%d %H:%M:%S", gmtime())
-        self.log.write( level.upper() + ':' + time + ' > ' + error + '\n' + 'at:' \
-            +  inspect.stack()[1][0].f_code.co_name + '\n' )
+        self.log.write( "%s : %s > %s (at %s)\n" % ( level.upper() , time , error ,  inspect.stack()[1][0].f_code.co_name ) )

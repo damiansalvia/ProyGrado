@@ -4,71 +4,90 @@ import sys
 sys.path.append('../utilities')
 
 import time
-import analyzer
+from analyzer import Analyzer
 from utilities import *
 import OpinionsDatabase as db
-import md5
-import re
+import md5, re
 
-analyzer = analyzer.Analyzer()
+print "Initializing FreeLing analyzer"
+an = Analyzer()
 log = Log("./log")
 
-def analyze(reviews):
-
-    def get_tokens(review):
-        # obtain a list of words from a text
-        return analyzer.analyze(review)
+def analyze(opinions):
 
     # #------- Execute Function -------#
-    opinions = []
-    ids = []
-    corpus_length = len(reviews)
-    for idx, op in enumerate(reviews):
-        progress("Analyzing %s " % op['source'], corpus_length, idx)
+    analyzed = []
+    _ids = []
+    total = len(opinions)
+    fails = 0
+    for idx, opinion in enumerate(opinions):
+        progress("Analyzing %s (%05.2f%%)" %  ( opinion['source'], 100.0*fails/total ), total, idx )
+        
         try:
-            op_id = md5.new(str(op['category']) + op['review'].encode('ascii', 'ignore')).hexdigest()
-            if not db.get_opinion(op_id) and op_id not in ids:
-                ids.append(op_id)
-                opinion = {}         
-                opinion['_id']      = op_id
-                opinion['category'] = op['category']
-                opinion['idx']      = op['idx']
-                opinion['source']   = op['source']
-                opinion['text']     = [{
+            
+            _id = md5.new(str(opinion['category']) + opinion['text'].encode('ascii', 'ignore')).hexdigest()
+            
+            if not db.get_opinion(_id) and _id not in _ids:
+                
+                _ids.append(_id)
+                tokens = an.analyze(opinion['text'])
+                
+                if not tokens: 
+                    log("Empty analysis for : %s" % opinion['text'])
+                    fails += 1
+                    continue
+                
+                analysis = {}         
+                analysis['_id']      = _id
+                analysis['category'] = opinion['category']
+                analysis['idx']      = opinion['idx']
+                analysis['source']   = opinion['source']
+                analysis['text']     = [{
                     'word'  : token['form'],
                     'lemma' : token['lemma'],
                     'tag'   : token['tag']
-                } for token in get_tokens(op['review']) ]
-                opinions.append(opinion)
+                } for token in tokens ]
+                    
+                analyzed.append(analysis)
+                
         except Exception as e:
             log(str(e))
-            raise e
-    print 
-    return opinions
+            #raise e
+        
+    print
+    db.save_opinions(analyzed)
 
 
 if __name__ == '__main__':
-    reviews = [
+    opinions = [
         {
-            'source' : u'corpus_test',
-            'review' : u'Excelente .',
+            'source' : 'corpus_test',
+            'text' : u'Mola mundo .',
             'category': 100,
             'idx' : 1
-        },{
-            'source' : u'corpus_test',
-            'review' : u'No la volveria a ver, pero es buena .',
+        },
+        {
+            'source' : 'corpus_test',
+            'text' : u'. Hola mundo .',
             'category': 50,
             'idx' : 2
-        },{
-            'source' : u'corpus_test',
-            'review' : u'No me gustó .',
-            'category': 0,
-            'idx' : 3
         },
+        {
+            'category': 1000, 
+            'source': 'corpus_test', 
+            'idx': 76, 
+            'text': u'Hola mundo ! .'
+        },
+        {
+            'category': 1000, 
+            'source': 'corpus_test', 
+            'idx': 76, 
+            'text': u'Hola ( mundo !' # Este caso da error para FreeLing
+        }
 
     ]
 
-    db.save_opinions(analyze(reviews)) 
+    analyze(opinions) 
 
 
     
