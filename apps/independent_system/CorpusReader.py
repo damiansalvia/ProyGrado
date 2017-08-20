@@ -39,6 +39,8 @@ def review_correction(
     # Apply simple pattern correction in the input text
         text # Text for applying the correction.
     ):
+    if not isinstance(text,unicode):
+        text = unicode(text,'utf8')
     text += u" ."
     for source,target in SUBSTITUTIONS:
         text = re.sub(source,target,text,flags=re.DOTALL)
@@ -97,7 +99,7 @@ def from_corpus(
     revs , cats  = [] , []
     total = len(filenames)
     for idx, filename in enumerate(filenames):
-        progress("Parsing %s   " % corpus_name,total,idx)
+        progress("Parsing %s" % corpus_name,total,idx)
         
         # Generate pattern
         filename = filename.replace('\\','/')
@@ -122,7 +124,6 @@ def from_corpus(
         with open(filename,'r') as file:
             content = file.read()
             content = content.decode(decoding,'ignore')
-            has_tmp = len(content.split('\n'))
                
         # Find targets
         if category_location == "PATH":
@@ -143,7 +144,6 @@ def from_corpus(
             cats += list(cats_tmp)
             
         assert len(revs_tmp) == len(cats_tmp)
-#         assert len(revs_tmp) == has_tmp - start
             
     assert len(revs) == len(cats)
     
@@ -152,14 +152,12 @@ def from_corpus(
     for idx in range(total)[start:]:
         progress("Generating %s" % corpus_name,total,idx)
         rev = revs[idx]
-        if not isinstance(content, unicode): 
-            rev = unicode(rev,'utf8') 
         cat = cats[idx]
         if rev:
             opinion_data.append({
                 'idx'      : idx+1,
                 'source'   : corpus_name,
-                'review'   : review_correction(rev), 
+                'text'     : review_correction(rev), 
                 'category' : category_mapping[cat] 
             })   
     return opinion_data

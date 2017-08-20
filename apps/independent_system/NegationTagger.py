@@ -26,6 +26,7 @@ sources = [
     "corpus_tweets_2",
     "corpus_variado_sfu"
 ]
+sources_size = len(sources)
 
 
 
@@ -106,8 +107,10 @@ def start_tagging():
         os.system('clear')
         print "*"*20," MENU ","*"*20
         print "0 . exit"
-        for i,source in enumerate(sources):
-            print i+1,".",source
+        i = 1
+        while i <= sources_size:
+            print i,".",sources[i-1] ; i+=1
+        print i,". from files"
         return 
      
     def DisplayReview(_id,current,total,words,tags):
@@ -163,7 +166,7 @@ def start_tagging():
         # Display menu options
         DisplayMenu()
         op = raw_input("\nOption > ")
-        if not op.isdigit() or int(op) > len(sources):
+        if not op.isdigit() or int(op) > sources_size:
             raw_input("Opcion invalida")
             continue
         op = int(op)
@@ -333,5 +336,5 @@ def manual_file_to_db(source_dir):
                 
 if __name__=='__main__':
 #     start()
-    manual_file_to_db("old/outputs/negation/*")
+    manual_file_to_db("outputs/negation/*")
     

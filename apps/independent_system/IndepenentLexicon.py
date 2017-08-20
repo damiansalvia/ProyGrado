@@ -5,8 +5,8 @@ sys.path.append('../utilities')
 from utilities import *
 
 import CorpusReader as cr 
-import NegationTagger as nt
 import OpinionsDatabase as db
+import NegationTagger as nt
 import TextAnalyzer as ta        
 
 
@@ -24,7 +24,7 @@ parameters = [
         None,
         0,
         0,
-        'utf8'
+        'unicode-escape'
     ),
     (
         "../../corpus/corpus_cine",
@@ -156,7 +156,7 @@ parameters = [
 
 count = 0
 for parameter in parameters: 
-        
+         
     opinions = cr.from_corpus(
             parameter[0], # source
             parameter[1], # path pattern to file
@@ -169,16 +169,14 @@ for parameter in parameters:
             start=parameter[8],
             decoding=parameter[9],
         )
-    save(opinions,"tmp_from_corpus_%s" % opinions[0]['source'],"./outputs")    
+    #save(opinions,"tmp_from_corpus_%s" % opinions[0]['source'],"./outputs")    
     analyzed = ta.analyze(opinions)
         
-    db.save_opinions(analyzed)
-       
     count += len(opinions)
+print "Total =",count
        
 nt.start_tagging() 
 
-print "Total =",count
 ann = nt.Network(5)
   
 opinions = db.get_tagged('manual')
