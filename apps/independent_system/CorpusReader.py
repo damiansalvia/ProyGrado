@@ -30,7 +30,7 @@ SUBSTITUTIONS = [
     # Separate alphabetical character from non-alphabetical character by a blank space
     (u"(?i)([a-záéíóúñüÁÉÍÓÚÑÜ\\\]?)([^a-záéíóúñüÁÉÍÓÚÑÜ_\\\\s]+)([a-záéíóúñüÁÉÍÓÚÑÜ\\\]?)",u"\\1 \\2 \\3"),
     # Remove not enclosing characters
-    (u"\"([^\"]*)$",u"\\1"),(u"\(([^\(]*)$",u"\\1"),(u"([^\)]*)\)",u"\\1"),
+    (u"\"([^\"]*)$",u"\\1"),(u"\(([^\(]*)$",u"\\1"),(u"^([^\)]*)\)",u"\\1"),
     # Replace all non-alphabetical symbols by a whitespace
     (u"(?i)[^0-9a-záéíóúñüÁÉÍÓÚÑÜ_¿\?¡!\(\),\.:;\"\$/]",u" "),
     # Replace multiple blank spaces by one
@@ -162,5 +162,5 @@ def from_corpus(
     return opinion_data
 
 if __name__ == '__main__':
-    print review_correction(u'Esto :( eeees " una prueba! :) Usando ( corrrrrreccion')
+    print review_correction(u'Esto :( creo que ) eeees " una prueba! :) Usando ( corrrrrreccion ) de las ( palabras mal')
     print review_correction(u"Can \" t ad teams Cant ad brazilian soccer teams .")
