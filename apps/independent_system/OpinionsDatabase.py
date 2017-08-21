@@ -9,12 +9,12 @@ from pymongo.errors import ServerSelectionTimeoutError
 
 
 print "Connecting Mongo database"
-client = MongoClient()
 try:
+    client = MongoClient(serverSelectionTimeoutMS=2000)
     client.server_info()
+    db = client.ProyGrado
 except ServerSelectionTimeoutError:
     raise Exception("Couldn't connect Mongo database")
-db = client.ProyGrado
 
 
 def get_opinion(id):
@@ -137,7 +137,7 @@ def get_indepentent_lex(limit=None, tolerance=0, filter_neutral=False):
     if limit:
        query.append({ '$limit': limit }) 
        
-    return db.reviews.aggregate(query)
+    return list(db.reviews.aggregate(query))
 
 
 def get_indepentent_lex2(limit=None, tolerance=0, filter_neutral=False):
@@ -245,7 +245,7 @@ def get_indepentent_lex2(limit=None, tolerance=0, filter_neutral=False):
     if limit:
        query.append({ '$limit': limit }) 
        
-    return db.reviews.aggregate(query)
+    return list(db.reviews.aggregate(query))
 
 # ----------------------------------------------------------------------------------------------------------------------
 

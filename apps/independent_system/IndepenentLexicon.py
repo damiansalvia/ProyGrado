@@ -156,7 +156,7 @@ parameters = [
 
 # count = 0
 # for parameter in parameters: 
-#          
+#           
 #     opinions = cr.from_corpus(
 #             parameter[0], # source
 #             parameter[1], # path pattern to file
@@ -171,26 +171,27 @@ parameters = [
 #         )
 #     #save(opinions,"tmp_from_corpus_%s" % opinions[0]['source'],"./outputs")    
 #     analyzed = ta.analyze(opinions)
-#         
+#          
 #     count += len(opinions)
-# print "Total =",count
-       
-nt.start_tagging() 
-
-ann = nt.Network(5)
-  
-opinions = db.get_tagged('manual')
-ann.fit(opinions,2,2)
- 
-X = db.get_untagged()
-Y = ann.predict(X,2,2)
- 
-db.save_result(Y)
+# raw_input("Total %i .Continue..." % count)
+#        
+# nt.start_tagging() 
+# 
+# ann = nt.Network(5)
+#    
+# opinions = db.get_tagged('manual')
+# ann.fit(opinions,2,2)
+#   
+# X = db.get_untagged()
+# Y = ann.predict(X,2,2)
+#   
+# db.save_result(Y)
 
 tolerance = 1.0
 li = db.get_indepentent_lex(tolerance=tolerance)
-li = list(li)
-save_file(li,"independent_lexcon_-_tolerance_%i_percent" % (tolerance*100),"./outputs/lexicon")
+save(li,"independent_lexcon_-_tolerance_%i_percent" % (tolerance*100),"./outputs/lexicon")
+li = db.get_indepentent_lex2(tolerance=tolerance)
+save(li,"independent_lexcon_2_-_tolerance_%i_percent" % (tolerance*100),"./outputs/lexicon")
  
 
 
