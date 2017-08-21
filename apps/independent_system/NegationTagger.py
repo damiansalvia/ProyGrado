@@ -133,15 +133,16 @@ def start_tagging():
     
     def ViewSave(result):
         os.system('clear')
+        if not result:
+            return
         # Ask for save in two steps
-        if result:
-            op = raw_input("Done! Save result? [y/n] > ")
-            if op.lower() == 'n':
-                op = raw_input("Are you sure? [y/n] > ")
-                if op.lower() == 'y':
-                    return
-            # Save the result
-            db.save_negations(result)
+        op = raw_input("Done! Save result? [y/n] > ")
+        if op.lower() == 'n':
+            op = raw_input("Are you sure? [y/n] > ")
+            if op.lower() == 'y':
+                return
+        # Save the result
+        db.save_negations(result)
         
     # #------- Execute Function -------#
     
@@ -178,6 +179,7 @@ def start_tagging():
                 
                 # Tag every review
                 left = quantity
+                skipped = False
                 while left != 0:   
                                      
                     # Retrieve relevant data from the sample
@@ -224,6 +226,7 @@ def start_tagging():
                             print "Option",cat,"is not correct." ;raw_input()
                             continue
                         if cat == 's':
+                            skipped = True
                             break
                         elif cat == 'b': # Back
                             idx = idx - 1 if idx != 0 else 0
@@ -235,6 +238,9 @@ def start_tagging():
                             # Associate the category
                             tags[idx] = cat
                             idx = idx + 1
+                    
+                    if skipped:
+                        break
                             
                     # Once the text is tagged, add it to the result
                     result.update({
@@ -249,7 +255,6 @@ def start_tagging():
                 ViewSave(result)
                 
             except Exception as e:
-                print result
                 content = json.dumps(result,indent=4,ensure_ascii=False)
                 log("Reason : %s (at %s) [%i] '%s'" % ( str(e) , source , id , content ))
                 raw_input("Reason: %s\nEnter to continue..." % str(e))
