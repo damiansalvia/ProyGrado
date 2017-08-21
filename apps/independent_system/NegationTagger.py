@@ -110,6 +110,7 @@ def start_tagging():
         for i in range(sources_size):
             qty = len(db.get_tagged('manually',sources[i])) 
             print i+1,".","%-20s" % sources[i], "(%i)" % qty
+        print i+1, ".", "View those corpora already tagged"
         return 
      
     def DisplayReview(_id,current,total,words,tags):
@@ -133,13 +134,14 @@ def start_tagging():
     def ViewSave(result):
         os.system('clear')
         # Ask for save in two steps
-        op = raw_input("Done! Save result? [y/n] > ")
-        if op.lower() == 'n':
-            op = raw_input("Are you sure? [y/n] > ")
-            if op.lower() == 'y':
-                return
-        # Save the result
-        db.save_negations(result)
+        if result:
+            op = raw_input("Done! Save result? [y/n] > ")
+            if op.lower() == 'n':
+                op = raw_input("Are you sure? [y/n] > ")
+                if op.lower() == 'y':
+                    return
+            # Save the result
+            db.save_negations(result)
         
     # #------- Execute Function -------#
     
@@ -206,7 +208,7 @@ def start_tagging():
                         
                         # Ask for input
                         tooltip  = "\nTag with N(ormal) or I(nverted). "
-                        tooltip += "Enter A(bort), B(ack) or <intro> for "
+                        tooltip += "Enter A(bort), B(ack) S(kip) or <intro> for "
                         tooltip += "repeating last action (%s) > " % (cat.upper() if cat else "None")
                         tag = raw_input(tooltip)
                         
@@ -218,10 +220,12 @@ def start_tagging():
                         
                         # Action from decision
                         cat = cat.lower()
-                        if not cat or cat not in 'niba':
+                        if not cat or cat not in 'nibas':
                             print "Option",cat,"is not correct." ;raw_input()
                             continue
-                        if cat == 'b': # Back
+                        if cat == 's':
+                            break
+                        elif cat == 'b': # Back
                             idx = idx - 1 if idx != 0 else 0
                             tags[idx] = '  '
                         elif cat == 'a':
