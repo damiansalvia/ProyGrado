@@ -31,21 +31,22 @@ def save_opinions(opinions):
 
 
 def save_negations(opinions):
-    for id in opinions:
-        options = { 'tagged' : 'manually' }
+    for _id in opinions:
+        negation = { 'tagged' : 'manually' }
         for idx, tag in enumerate(opinions[id]):
-            options['text.' + str(idx) + '.negated'] = tag
-        db.reviews.update( {'_id': id}, {'$set': options} )
+            negation['text.' + str(idx) + '.negated'] = tag
+        if opinions[id]:
+            db.reviews.update( { '_id': _id } , { '$set': negation }  )
 
 
-def get_sample(quantity, source, identifiers = None):
-    if identifiers:
+def get_sample(quantity, source, indexes = None):
+    if indexes:
         return list(db.reviews.find({
             'source': source,
-            'idx' :{ '$in': identifiers} 
+            'idx' :{ '$in': indexes} 
         }))
     return list(db.reviews.aggregate([ 
-        { '$match' : { "source" : source } },
+        { '$match' : { "source" : source,"tagged" : { "$exists" : False } } },
         { '$sample': { 'size': quantity } } 
     ]))
 
