@@ -42,7 +42,7 @@ parameters = [
         "BEFORE",
         None,
         0,
-        'utf8'
+        'cp1252'
     ),
     (
         "../../corpus/corpus_hoteles",
@@ -118,7 +118,7 @@ parameters = [
         None,
         1,
         0,
-        'utf8'
+        'unicode-escape'
     ),
     (
         "../../corpus/corpus_tweets_2",
@@ -154,26 +154,26 @@ parameters = [
     )
 ] 
 
-count = 0
-for parameter in parameters: 
-         
-    opinions = cr.from_corpus(
-            parameter[0], # source
-            parameter[1], # path pattern to file
-            parameter[2], # review pattern
-            parameter[3], # category pattern
-            parameter[4], # category mapping
-            parameter[5], # category mapping
-            category_position=parameter[6],
-            category_level=parameter[7],
-            start=parameter[8],
-            decoding=parameter[9],
-        )
-    #save(opinions,"tmp_from_corpus_%s" % opinions[0]['source'],"./outputs")    
-    analyzed = ta.analyze(opinions)
-        
-    count += len(opinions)
-print "Total =",count
+# count = 0
+# for parameter in parameters: 
+#          
+#     opinions = cr.from_corpus(
+#             parameter[0], # source
+#             parameter[1], # path pattern to file
+#             parameter[2], # review pattern
+#             parameter[3], # category pattern
+#             parameter[4], # category mapping
+#             parameter[5], # category mapping
+#             category_position=parameter[6],
+#             category_level=parameter[7],
+#             start=parameter[8],
+#             decoding=parameter[9],
+#         )
+#     #save(opinions,"tmp_from_corpus_%s" % opinions[0]['source'],"./outputs")    
+#     analyzed = ta.analyze(opinions)
+#         
+#     count += len(opinions)
+# print "Total =",count
        
 nt.start_tagging() 
 

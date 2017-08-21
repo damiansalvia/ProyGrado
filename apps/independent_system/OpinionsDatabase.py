@@ -4,12 +4,17 @@ import sys
 sys.path.append('../utilities')
 
 from pymongo import MongoClient
+from pymongo.errors import ServerSelectionTimeoutError
 
 
 
 print "Connecting Mongo database"
-db = MongoClient().ProyGrado
-
+client = MongoClient()
+try:
+    client.server_info()
+except ServerSelectionTimeoutError:
+    raise Exception("Couldn't connect Mongo database")
+db = client.ProyGrado
 
 
 def get_opinion(id):
@@ -26,7 +31,6 @@ def save_opinions(opinions):
 
 
 def save_negations(opinions):
-    import pdb; pdb.set_trace()  # breakpoint 92934679 //
     for id in opinions:
         options = { 'tagged' : 'manually' }
         for idx, tag in enumerate(opinions[id]):
@@ -35,19 +39,20 @@ def save_negations(opinions):
 
 
 def get_sample(quantity, source, identifiers = None):
-    if not identifiers:
-        return list(db.reviews.aggregate([ 
-            { '$match' : { "source" : source } },
-            { '$sample': { 'size': quantity } } 
-        ]))
-    else:
+    if identifiers:
         return list(db.reviews.find({
             'source': source,
             'idx' :{ '$in': identifiers} 
         }))
+    return list(db.reviews.aggregate([ 
+        { '$match' : { "source" : source } },
+        { '$sample': { 'size': quantity } } 
+    ]))
 
 
-def get_tagged(tagger):
+def get_tagged(tagger,source=None):
+    if source:
+        return list(db.reviews.find({ "tagged" : tagger , "source" : source }))
     return list(db.reviews.find({ "tagged" : tagger }))
 
 

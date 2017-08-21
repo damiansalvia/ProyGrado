@@ -33,7 +33,7 @@ def analyze(opinions):
                 tokens = an.analyze(opinion['text'])
                 
                 if not tokens: 
-                    log("Empty analysis for : %s" % opinion['text'])
+                    log("Reason : Empty analysis for '%s' (at %s)" % (opinion['text'],opinion['source']) )
                     fails += 1
                     continue
                 
@@ -51,8 +51,8 @@ def analyze(opinions):
                 analyzed.append(analysis)
                 
         except Exception as e:
-            log(str(e))
-            #raise e
+            fails += 1
+            log("Reason : %s (at %s)" % (str(e),opinion['source']) )
         
     print
     db.save_opinions(analyzed)
@@ -62,7 +62,7 @@ if __name__ == '__main__':
     opinions = [
         {
             'source' : 'corpus_test',
-            'text' : u'Mola mundo .',
+            'text' : u'Hola mundo .',
             'category': 100,
             'idx' : 1
         },
@@ -75,14 +75,20 @@ if __name__ == '__main__':
         {
             'category': 1000, 
             'source': 'corpus_test', 
-            'idx': 76, 
+            'idx': 4, 
             'text': u'Hola mundo ! .'
         },
         {
             'category': 1000, 
             'source': 'corpus_test', 
-            'idx': 76, 
+            'idx': 5, 
             'text': u'Hola ( mundo !' # Este caso da error para FreeLing
+        },
+        {
+            'category': 1000, 
+            'source': 'corpus_test', 
+            'idx': 6, 
+            'text': u'Hola ( mi ( mundo ) ! ) .' # Este caso da error para FreeLing
         }
 
     ]

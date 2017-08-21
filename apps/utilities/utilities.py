@@ -34,10 +34,10 @@ def progress(prompt, total, current, width=width):
 
 
 class Log:
-    def __init__(self,ldir):
+    def __init__(self,ldir,lname="log_general"):
         if not os.path.isdir(ldir): os.makedirs(ldir)
-        self.log = open(ldir + "/error_log", 'w')
+        self.log = open(ldir+"/"+lname, 'w')
 
     def __call__(self,error, level='error'):
         time = strftime("%Y-%m-%d %H:%M:%S", gmtime())
-        self.log.write( "%s : %s > %s (at %s)\n" % ( level.upper() , time , error ,  inspect.stack()[1][0].f_code.co_name ) )
+        self.log.write( "%s : %s at %s > %s \n" % ( level.upper() , time , inspect.stack()[1][0].f_code.co_name.upper() , error ) )

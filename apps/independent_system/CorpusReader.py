@@ -8,6 +8,8 @@ from utilities import *
 import re, glob, io, json
 
 
+log = Log("./log")
+
 
 SUBSTITUTIONS = [
     # Replace non-spanish characters by the hipotetical correct character
@@ -18,16 +20,19 @@ SUBSTITUTIONS = [
     (u"Ä",u"A"), (u"Ë",u"E"), (u"Ï",u"I"), (u"Ö",u"O"),
     (u"å",u"a"), (u"ç",u"c"),
     # Replace other non-spanish characters
-    (u"`",u"\""),(u"´",u"\""),
-    (u"\'",u"\""),
+    (u"`",u"\""),(u"´",u"\""),(u"\'",u"\""),
     # Replace every occurrence of repetitive characters except {l,r,c,e} [cabaLLo, coRRer, aCCion, crEE]
     (u"(?i)([^lrce])\\1+",u"\\1"),
     (u"(?i)([lrce])\\1\\1+",u"\\1\\1"),
     (u"(?i)([lrce])\\1(\W)",u"\\1\\2"),
+    # Replace emojis by a special tag
+    (u":\(",u"emoji_triste"),(u":\)",u"emoji_feliz"),
     # Separate alphabetical character from non-alphabetical character by a blank space
-    (u"(?i)([a-záéíóúñüÁÉÍÓÚÑÚ\\\]?)([^a-záéíóúñüÁÉÍÓÚÑÚ\\\\s]|(?:{.*?}|\[.*?\])]+)([a-záéíóúñüÁÉÍÓÚÑÚ\\\]?)",u"\\1 \\2 \\3"),
+    (u"(?i)([a-záéíóúñüÁÉÍÓÚÑÜ\\\]?)([^a-záéíóúñüÁÉÍÓÚÑÜ_\\\\s]+)([a-záéíóúñüÁÉÍÓÚÑÜ\\\]?)",u"\\1 \\2 \\3"),
+    # Remove not enclosing characters
+    (u"\"([^\"]*)$",u"\\1"),(u"\(([^\(]*)$",u"\\1"),(u"([^\)]*)\)",u"\\1"),
     # Replace all non-alphabetical symbols by a whitespace
-    (u"(?i)[^0-9a-záéíóúñüÁÉÍÓÚÑÚ¿\?¡!\(\),\.:;\"\$/]",u" "),
+    (u"(?i)[^0-9a-záéíóúñüÁÉÍÓÚÑÜ_¿\?¡!\(\),\.:;\"\$/]",u" "),
     # Replace multiple blank spaces by one
     (u"(\s){2,}",u" "),
     # Replace multiple periods by one
@@ -59,7 +64,6 @@ def from_corpus(
         category_level=None,    # Indicates where the category_pattern should match in the path pattern (extension). Apply for PATH location.
         start=0,                # Indicates where should start reading the file. Useful for excluding a header in a .csv file (value 1).
         decoding='utf8',        # Format for decoding the corpus file. By default "ut8", but it can be "cp1252", "unicode-escape", etc.
-        ldir='./log'            # Directory for the Log file.
     ):
     # Checking prerequisites
     if not source: 
@@ -78,11 +82,6 @@ def from_corpus(
         raise Exception("Only one group is admitted for review pattern.")
     if re.compile(category_pattern).groups > 1:
         raise Exception("Only one group is admitted for category pattern.")
-    
-    # Settings for Log
-    if not os.path.isdir(ldir): 
-        os.makedirs(ldir)
-    log = Log(ldir)
     
     # Normalize source directory
     source = source.replace("\\","/")
@@ -123,7 +122,7 @@ def from_corpus(
         # Read the file content
         with open(filename,'r') as file:
             content = file.read()
-            content = content.decode(decoding,'ignore')
+            content = content.decode(decoding,'replace').encode('utf8')
                
         # Find targets
         if category_location == "PATH":
@@ -134,7 +133,7 @@ def from_corpus(
         elif category_location == "FILE":
             found = regex.findall(content)
             if not found:
-                print "\rNothing found in",filename
+                log("Nothing match in %s" % filename, level="warning")
                 continue
             if category_position == "BEFORE":
                 cats_tmp,revs_tmp = zip(*found)
@@ -161,3 +160,7 @@ def from_corpus(
                 'category' : category_mapping[cat] 
             })   
     return opinion_data
+
+if __name__ == '__main__':
+    print review_correction(u'Esto :( eeees " una prueba! :) Usando ( corrrrrreccion')
+    print review_correction(u"Can \" t ad teams Cant ad brazilian soccer teams .")

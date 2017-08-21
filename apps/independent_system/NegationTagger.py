@@ -107,10 +107,9 @@ def start_tagging():
         os.system('clear')
         print "*"*20," MENU ","*"*20
         print "0 . exit"
-        i = 1
-        while i <= sources_size:
-            print i,".",sources[i-1] ; i+=1
-        print i,". from files"
+        for i in range(sources_size):
+            qty = len(db.get_tagged('manually',sources[i])) 
+            print i+1,".","%-20s" % sources[i], "(%i)" % qty
         return 
      
     def DisplayReview(_id,current,total,words,tags):
@@ -131,28 +130,10 @@ def start_tagging():
     def chunkstring(string, length):
         return (string[0+i:length+i] for i in range(0, len(string), length))
     
-    def DisplayAnnotated(result,width=WIDTH):
-        width = width-10
-        row   = "%-7s | %-"+str(width)+"s"
-        line  = "%-7s-+-%-"+str(width)+"s"
-        print row% ("ID","ANNOTATION")
-        print line % ("-"*7,"-"*width)
-        for item in result:
-            chunks = chunkstring(item['annotation'], width)
-            chunks = list(chunks)
-            print row % (str(item['id']),chunks[0])
-            for chunk in chunks[1:]:
-                print row % ("",chunk)
-            print line % ("-"*7,"-"*width)
-    
     def ViewSave(result):
         os.system('clear')
-        op = raw_input("Done! View result? (y/n) > ")
-        # Ask for display
-        if op.lower() == 'y':
-            DisplayAnnotated(result)
         # Ask for save in two steps
-        op = raw_input("\nSave result? [y/n] > ")
+        op = raw_input("Done! Save result? [y/n] > ")
         if op.lower() == 'n':
             op = raw_input("Are you sure? [y/n] > ")
             if op.lower() == 'y':
@@ -174,10 +155,11 @@ def start_tagging():
             # Exit
             break
         else:    
-            result,id = [],0        
+            result = {}
+            id     = 0        
+            source = sources[op-1]
             try:     
                 # Ask for retrieving options 
-                source = sources[op-1]
                 op = raw_input("\nInsert indexes separated by ',' or <intro> for pick up randomly > ")
                 if op: # From indexes
                     indexes = list(set(int(i) for i in op.split(',')))
@@ -251,8 +233,8 @@ def start_tagging():
                             idx = idx + 1
                             
                     # Once the text is tagged, add it to the result
-                    result.append({
-                        _id : enumerate(tags)
+                    result.update({
+                        _id : tags
                     })
                     
                     # Update
@@ -263,9 +245,9 @@ def start_tagging():
                 ViewSave(result)
                 
             except Exception as e:
+                print result
                 content = json.dumps(result,indent=4,ensure_ascii=False)
-                error = "Corpus:%s, Review:%i, Description:%s Partial:%s" % (source,id,str(e),content)
-                log(error)
+                log("Reason : %s (at %s) [%i] '%s'" % ( str(e) , source , id , content ))
                 raw_input("Reason: %s\nEnter to continue..." % str(e))
     
     
@@ -279,7 +261,7 @@ def manual_file_to_db(source_dir):
         errors = []
         for idx, op in enumerate(opinions):
             target = db.get_by_idx(op['from'], op['id'])
-            if 'negated' in target['text'][idx].keys(): # Skip if already re-tagged
+            if idx > len(target['text']) or u'negated' in target['text'][idx].keys(): # Skip if already re-tagged
                 break
             tags  = [tag[-1] for tag in op['annotation'].split(' ')]
             words = [item['word'].lower() for item in target['text']]
@@ -311,7 +293,7 @@ def manual_file_to_db(source_dir):
                             idxA += 1 
                         else:
                             print "%-10s vs %10s" % (words[idxW],annot[idxA])
-                            opt = raw_input("(S)kip or (B)orrow ? Tap <enter> for previous > ")
+                            opt = raw_input("(S)kip or (B)orrow ? Tap <enter> for previous or (N)ext > ")
                             if opt == 'b': 
                                 retags[idxW] = tags[idxA]
                                 qW.append(idxW)
@@ -319,6 +301,8 @@ def manual_file_to_db(source_dir):
                             elif opt == 's':
                                 qA.append(idxA)
                                 idxA += 1
+                            elif opt == 'n':
+                                break
                             else:
                                 idxW = qW.pop()
                                 idxA = qA.pop()
