@@ -22,7 +22,6 @@ def analyze(opinions):
     fails = 0
     for idx, opinion in enumerate(opinions):
         progress("Analyzing %s (%05.2f%%)" %  ( opinion['source'], 100.0*fails/total ), total, idx )
-        
         try:
             
             _id = md5.new(str(opinion['category']) + opinion['text'].encode('ascii', 'ignore')).hexdigest()
@@ -54,46 +53,87 @@ def analyze(opinions):
             fails += 1
             log("Reason : %s (at %s)" % (str(e),opinion['source']) )
         
-    print
-    db.save_opinions(analyzed)
+    return analyzed
+
+
+# if __name__ == '__main__':
+#     opinions = [
+#         {
+#             'source' : 'corpus_test',
+#             'text' : u'Mola mundo .',
+#             'category': 100,
+#             'idx' : 1
+#         },
+#         {
+#             'source' : 'corpus_test',
+#             'text' : u'. Hola mundo .',
+#             'category': 50,
+#             'idx' : 2
+#         },
+#         {
+#             'category': 1000, 
+#             'source': 'corpus_test', 
+#             'idx': 76, 
+#             'text': u'Hola mundo ! .'
+#         },
+#         {
+#             'category': 1000, 
+#             'source': 'corpus_test', 
+#             'idx': 76, 
+#             'text': u'Hola ( mundo !' # Este caso da error para FreeLing
+#         }
+
+#     ]
+
+#     analyze(opinions) 
 
 
 if __name__ == '__main__':
-    opinions = [
+    reviews = [
         {
-            'source' : 'corpus_test',
-            'text' : u'Hola mundo .',
+            'source' : u'corpus_test',
+            'text' : u'Excelente .',
             'category': 100,
             'idx' : 1
-        },
-        {
-            'source' : 'corpus_test',
-            'text' : u'. Hola mundo .',
+        },{
+            'source' : u'corpus_test',
+            'text' : u'No la volveria a ver, pero es buena .',
             'category': 50,
             'idx' : 2
-        },
-        {
-            'category': 1000, 
-            'source': 'corpus_test', 
-            'idx': 4, 
-            'text': u'Hola mundo ! .'
-        },
-        {
-            'category': 1000, 
-            'source': 'corpus_test', 
-            'idx': 5, 
-            'text': u'Hola ( mundo !' # Este caso da error para FreeLing
-        },
-        {
-            'category': 1000, 
-            'source': 'corpus_test', 
-            'idx': 6, 
-            'text': u'Hola ( mi ( mundo ) ! ) .' # Este caso da error para FreeLing
+        },{
+            'source' : u'corpus_test',
+            'text' : u'No me gustó .',
+            'category': 0,
+            'idx' : 3
         }
-
     ]
 
-    analyze(opinions) 
 
+    # reviews = [
+    # {
+    #     'source' : 'corpus_test',
+    #     'text' : u'Hola mundo .',
+    #     'category': 100,
+    #     'idx' : 1
+    # },{
+    #     'category': 1000, 
+    #     'source': 'corpus_test', 
+    #     'idx': 4, 
+    #     'text': u'Hola mundo ! .'
+    # },
+    # {
+    #     'category': 1000, 
+    #     'source': 'corpus_test', 
+    #     'idx': 5, 
+    #     'text': u'Hola ( mundo !' # Este caso da error para FreeLing
+    # },
+    # {
+    #     'category': 1000, 
+    #     'source': 'corpus_test', 
+    #     'idx': 6, 
+    #     'text': u'Hola ( mi ( mundo ) ! ) .' # Este caso da error para FreeLing
+    # }
+    # ]
 
     
+    db.save_opinions(analyze(reviews)) 

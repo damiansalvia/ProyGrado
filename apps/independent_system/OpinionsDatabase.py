@@ -123,7 +123,7 @@ def get_indepentent_lex(limit=None, tolerance=0, filter_neutral=False):
                 'polarities' : "$polarities"
             }
         },
-        { '$match' : { 'accepted': True, 'corpus_len' : { '$gte' : min_matches }, 'pol': {'$ne': '0'} } }
+        { '$match' : { 'accepted': True, 'corpus_len' : { '$gte' : min_matches } } }
     ] 
 
     if filter_neutral:
@@ -140,6 +140,115 @@ def get_indepentent_lex(limit=None, tolerance=0, filter_neutral=False):
     return db.reviews.aggregate(query)
 
 
+def get_indepentent_lex2(limit=None, tolerance=0, filter_neutral=False):
+    min_matches = int(round(get_corproea_size()*(1.0-tolerance),0))
+    sum_pos = list(db.reviews.aggregate([
+        { '$match': { 'category': { '$gt': 50 } } },
+        { '$unwind' : '$text' },
+        {
+            '$group': {
+                '_id':None,
+                'value': { '$sum': '$category'}
+            }
+        }
+    ]))[0].get('value')
+    sum_neg = list(db.reviews.aggregate([
+        { '$match': { 'category': { '$lt': 50 } } },
+        { '$unwind' : '$text' },
+        {
+            '$group': {
+                '_id':None,
+                'value': { '$sum': '$category'}
+            }
+        }
+    ]))[0].get('value')
+    query = [
+        { '$unwind' : '$text' },
+        { 
+            '$project' : {
+                "_id"      : 1,
+                'category' : { '$subtract': ['$category', -50] },
+                "source"   : 1,
+                "idx"      : 1,
+                "text"     : 1,
+                "tagged"   : 1
+            
+            }
+        },{ 
+            '$group': {
+                '_id'  : { 'source': '$source', 'lemma': '$text.lemma'},
+                'sent' : { 
+                    '$sum': { 
+                        '$cond': [ {'$gt': ['$category',50]}, 
+                            { '$divide': [ 
+                                {'$subtract': ['$category', 50]}, 
+                                sum_pos 
+                            ]},   
+                            {'$cond': [{'$lt': ['$category',50]},
+                                { '$divide': [ 
+                                    {'$subtract': [0,{'$subtract': [50,'$category']}]}, 
+                                    sum_neg 
+                                ]},
+                                0,
+                            ]}
+                        ]
+                    } 
+                }
+            }
+        },{
+            '$group': {
+                '_id' : '$_id.lemma',
+                'polarities' : {
+                    '$push' : {
+                        '$switch' : { 'branches' : [
+                            {'case' : { '$gt' : ['$sent', 0] }, 'then': '+'},    
+                            {'case' : { '$lt' : ['$sent', 0] }, 'then': '-'},    
+                            {'case' : True, 'then': '0'},    
+                        ]}
+                    }
+                }
+            }
+        },
+        {
+            '$project' : {
+                'lemma' : "$_id",
+                'corpus_len' : { '$size': "$polarities" } ,
+                'pol' : { '$arrayElemAt': [ "$polarities", 0] },
+                'accepted' : {
+                   '$let': {
+                       'vars': {
+                          'first': { '$arrayElemAt': [ "$polarities", 0] },
+                       },
+                       'in': { 
+                            '$reduce' : {
+                                'input': "$polarities",
+                                'initialValue': True,
+                                'in': { '$and': ["$$value", { '$eq' : ["$$this", "$$first" ]}] }
+                            } 
+                        }
+                    }
+                },
+                'polarities' : "$polarities"
+            }
+        },
+        { '$match' : { 'accepted': True, 'corpus_len' : { '$gte' : min_matches } } }
+    ] 
+
+    if filter_neutral:
+        query.append({ '$match' : {'pol': {'$ne': '0'} } })
+        
+    query.extend([
+        { '$project' : {'_id': 0, 'accepted' : 0} },
+        { '$sort' : { 'corpus_len' : -1 } }
+    ])
+    
+    if limit:
+       query.append({ '$limit': limit }) 
+       
+    return db.reviews.aggregate(query)
+
+# ----------------------------------------------------------------------------------------------------------------------
+
 if __name__ == '__main__':
 
     negations = {
@@ -147,5 +256,7 @@ if __name__ == '__main__':
         '97609c4dd3e893bce2c035bea586bbdd': [False, True, True, True, True, False, False, False, False, False], #10
         'd93708dbb4ebc3e6711118ef20a77669': [ False, True, True, False], #4
     } 
-
     save_negations(negations)
+
+
+
