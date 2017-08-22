@@ -110,7 +110,6 @@ def start_tagging():
         for i in range(sources_size):
             qty = len(db.get_tagged('manually',sources[i])) 
             print i+1,".","%-20s" % sources[i], "(%i)" % qty
-        print i+1, ".", "View those corpora already tagged"
         return 
      
     def DisplayReview(_id,current,total,words,tags):
@@ -149,14 +148,17 @@ def start_tagging():
     while True:
         # Display menu options
         DisplayMenu()
+        
         op = raw_input("\nOption > ")
-        if not op.isdigit() or int(op) > sources_size:
+        if not op.isdigit():
             raw_input("Opcion invalida")
             continue
         op = int(op)
         if op == 0:
-            # Exit
-            break
+            break # Exit
+            raw_input("Opcion invalida")
+        if op > sources_size:
+            continue
         else:    
             result = {}
             id     = 0        
@@ -170,7 +172,7 @@ def start_tagging():
                     indexes = indexes[:quantity]
                 else: # Randomly
                     while not op.isdigit():
-                        op = raw_input("How many? > ")
+                        op = raw_input("How many? (quantity or percentage) > ")
                     quantity = int(op)
                     indexes = []
                 
@@ -197,7 +199,7 @@ def start_tagging():
                     idx = 0
                     while True:
                         # Display review
-                        DisplayReview(_id,idx,total,words,tags)
+                        DisplayReview(sample['idx'],idx,total,words,tags)
                         
                         # Check end condition
                         if idx == total:
@@ -243,6 +245,7 @@ def start_tagging():
                         break
                             
                     # Once the text is tagged, add it to the result
+                    tags = map(lambda cat : cat =='i', tags)
                     result.update({
                         _id : tags
                     })
@@ -256,7 +259,7 @@ def start_tagging():
                 
             except Exception as e:
                 content = json.dumps(result,indent=4,ensure_ascii=False)
-                log("Reason : %s (at %s) [%i] '%s'" % ( str(e) , source , id , content ))
+                log("Reason : %s (at %s) [%i] '%s'" % ( str(e) , source , sample['idx'] , content ))
                 raw_input("Reason: %s\nEnter to continue..." % str(e))
     
     

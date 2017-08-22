@@ -19,24 +19,27 @@ SUBSTITUTIONS = [
     (u"ä",u"á"), (u"ë",u"é"), (u"ï",u"í"), (u"ö",u"ó"),
     (u"Ä",u"A"), (u"Ë",u"E"), (u"Ï",u"I"), (u"Ö",u"O"),
     (u"å",u"a"), (u"ç",u"c"),
+    # Eliminate english contractions
+    (u"(\w)'(\w)",u"\\1\\2"),
     # Replace other non-spanish characters
     (u"`",u"\""),(u"´",u"\""),(u"\'",u"\""),
+    # Replace multiple periods by one
+    (u"(\.\s*)+",u"."),
     # Replace every occurrence of repetitive characters except {l,r,c,e} [cabaLLo, coRRer, aCCion, crEE]
     (u"(?i)([^lrce])\\1+",u"\\1"),
     (u"(?i)([lrce])\\1\\1+",u"\\1\\1"),
     (u"(?i)([lrce])\\1(\W)",u"\\1\\2"),
     # Replace emojis by a special tag
-    (u":\(",u"emoji_triste"),(u":\)",u"emoji_feliz"),
+    (u":\(",u"emoji_triste"),(u"\(:",u"emoji_feliz"),(u":\)",u"emoji_feliz"),(u"\):",u"emoji_triste"),
     # Separate alphabetical character from non-alphabetical character by a blank space
     (u"(?i)([a-záéíóúñüÁÉÍÓÚÑÜ\\\]?)([^a-záéíóúñüÁÉÍÓÚÑÜ_\\\\s]+)([a-záéíóúñüÁÉÍÓÚÑÜ\\\]?)",u"\\1 \\2 \\3"),
     # Remove not enclosing characters
-    (u"\"([^\"]*)$",u"\\1"),(u"\(([^\(]*)$",u"\\1"),(u"^([^\)]*)\)",u"\\1"),
+    (u"\"([^\"]*)",u"\\1"),(u"([^\"]*)\"",u"\\1"),
+    (u"\(([^\(]*)$",u"\\1"),(u"^([^\)]*)\)",u"\\1"),
     # Replace all non-alphabetical symbols by a whitespace
     (u"(?i)[^0-9a-záéíóúñüÁÉÍÓÚÑÜ_¿\?¡!\(\),\.:;\"\$/]",u" "),
     # Replace multiple blank spaces by one
-    (u"(\s){2,}",u" "),
-    # Replace multiple periods by one
-    (u"(\.\s*)+",u".")
+    (u"(\s){2,}",u" ")
 ]
 
 
@@ -163,4 +166,4 @@ def from_corpus(
 
 if __name__ == '__main__':
     print review_correction(u'Esto :( creo que ) eeees " una prueba! :) Usando ( corrrrrreccion ) de las ( palabras mal')
-    print review_correction(u"Can \" t ad teams Cant ad brazilian soccer teams .")
+    print review_correction(u"Can't ad teams Cant ad brazilian soccer teams .")
