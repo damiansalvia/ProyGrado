@@ -51,7 +51,7 @@ def analyze(opinions):
                 
         except Exception as e:
             fails += 1
-            log("Reason : %s (at %s)" % (str(e),opinion['source']) )
+            log("Reason : %s with '%s' (at %s)" % (str(e),opinion['text'],opinion['source']) )
         
     db.save_opinions(analyzed)
 
