@@ -33,9 +33,9 @@ def save_opinions(opinions):
 def save_negations(opinions):
     for _id in opinions:
         negation = { 'tagged' : 'manually' }
-        for idx, tag in enumerate(opinions[id]):
+        for idx, tag in enumerate(opinions[_id]):
             negation['text.' + str(idx) + '.negated'] = tag
-        if opinions[id]:
+        if opinions[_id]:
             db.reviews.update( { '_id': _id } , { '$set': negation }  )
 
 
