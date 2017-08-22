@@ -17,6 +17,9 @@ except ServerSelectionTimeoutError:
     raise Exception("Couldn't connect Mongo database")
 
 
+def get_sources():
+    return list(db.reviews.distinct("source"))
+
 def get_opinion(id):
     return db.reviews.find_one({'_id':id})
 

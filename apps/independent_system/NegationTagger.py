@@ -17,15 +17,7 @@ log = Log("./log")
 
 
 
-sources = [
-    "corpus_apps_android",
-    "corpus_cine",
-    "corpus_hoteles",
-    "corpus_prensa_uy",
-    "corpus_tweets",
-    "corpus_tweets_2",
-    "corpus_variado_sfu"
-]
+sources = db.get_sources()
 sources_size = len(sources)
 
 
@@ -172,7 +164,7 @@ def start_tagging():
                     indexes = indexes[:quantity]
                 else: # Randomly
                     while not op.isdigit():
-                        op = raw_input("How many? (quantity or percentage) > ")
+                        op = raw_input("How many? > ")
                     quantity = int(op)
                     indexes = []
                 
