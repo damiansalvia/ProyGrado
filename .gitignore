@@ -4,3 +4,5 @@ Docker/FreeLing-4.0
 *.bat
 *.project
 *.pydevproject
+/corpus/
+/embeddings/
