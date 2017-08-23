@@ -30,13 +30,20 @@ SUBSTITUTIONS = [
     (u"(?i)([lrce])\\1\\1+",u"\\1\\1"),
     (u"(?i)([lrce])\\1(\W)",u"\\1\\2"),
     # Replace emojis by a special tag
-    (u":\(",u"emoji_triste"),(u"\(:",u"emoji_feliz"),(u":\)",u"emoji_feliz"),(u"\):",u"emoji_triste"),
+    (u":\)",u"emoji_feliz"),(u"\(:",u"emoji_feliz"),
+    (u":\(",u"emoji_triste"),(u"\):",u"emoji_triste"),
     # Separate alphabetical character from non-alphabetical character by a blank space
     (u"(?i)([a-záéíóúñüÁÉÍÓÚÑÜ\\\]?)([^a-záéíóúñüÁÉÍÓÚÑÜ_\\\\s]+)([a-záéíóúñüÁÉÍÓÚÑÜ\\\]?)",u"\\1 \\2 \\3"),
-    # Remove not enclosing characters
-    (u"\"([^\"]*)",u"\\1"),(u"([^\"]*)\"",u"\\1"),
-    (u"\(([^\(]*)$",u"\\1"),(u"^([^\)]*)\)",u"\\1"),
-    # Replace all non-alphabetical symbols by a whitespace
+    # Remove redundant quote marks  -- replace, delete, undo
+    (u"(\")([^\"]*?)(?(1)\")",u"&quote;\\2&quote;"),
+    (u"[\"]",u""),
+    (u"&quote;\s+&quote;",u""),
+    (u"&quote;",u"\""),
+    # Remove redundant parenthesis -- replace, delete, undo
+    (u"(\()([^\(]*?)(?(1)\))",u"&lquo;\\2&rquo;"),
+    (u"[\(\)]",u""),
+    (u"&lquo;",u"("),(u"&rquo;",u")"),
+    # Replace all non-alphabetical or special symbols by a whitespace
     (u"(?i)[^0-9a-záéíóúñüÁÉÍÓÚÑÜ_¿\?¡!\(\),\.:;\"\$/]",u" "),
     # Replace multiple blank spaces by one
     (u"(\s){2,}",u" ")
@@ -167,3 +174,6 @@ def from_corpus(
 if __name__ == '__main__':
     print review_correction(u'Esto :( creo que ) eeees " una prueba! :) Usando ( corrrrrreccion ) de las ( palabras mal')
     print review_correction(u"Can't ad teams Cant ad brazilian soccer teams .")
+    print review_correction(u"esta (es otra) prueba (con multiples) parentesis")
+    print review_correction(u"tengo (: una aca ( esta es otra ) de  ( prueba :) con ( multiples ) ) parentesis giles")
+    print review_correction(u"tengo \" una aca \" esta es otra \" de  \" prueba :\" con \" multiples \" \" parentesis giles")
