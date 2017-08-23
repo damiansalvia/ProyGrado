@@ -2,10 +2,15 @@
 
 import sys
 sys.path.append('../utilities')
+from utilities import *
 
 from pymongo import MongoClient
 from pymongo.errors import ServerSelectionTimeoutError
+import numpy as np
+from itertools import combinations
 
+
+log = Log("./log")
 
 
 print "Connecting Mongo database"
@@ -15,6 +20,7 @@ try:
     db = client.ProyGrado
 except ServerSelectionTimeoutError:
     raise Exception("Couldn't connect Mongo database")
+
 
 
 def get_sources():
@@ -251,16 +257,62 @@ def get_indepentent_lex2(limit=None, tolerance=0, filter_neutral=False):
        
     return list(db.reviews.aggregate(query))
 
+
+
+replacements = [(u'á',"a"),(u'é','e'),(u'í','i'),(u'ó','o'),(u'ú','u')]
+combinations = sum([map(list, combinations(replacements, i+1)) for i in range(len(replacements))], [])
+
+def update_embeddings(
+        femb='../../embeddings/emb39-word2vec.npy',
+        ftok='../../embeddings/emb39-word2vec.txt'
+    ):
+    
+    index_for  = { token.lower():index for index, token in enumerate(open(ftok).read().splitlines()) }
+    embeddings = np.load(femb)
+    vector_size = len(embeddings[0])
+    nullvector  = np.zeros(vector_size) 
+    
+    def get_vector(word,lemma): # Pueden aparecer en singular, sin tildes, etc
+        if index_for.has_key(word) :
+            return embeddings[ index_for[word] ]
+        singular = word[:-1]
+        if index_for.has_key(singular): 
+            return embeddings[ index_for[singular] ]
+        if index_for.has_key(lemma): 
+            return embeddings[ index_for[lemma] ]
+        for fr,to in replacements:
+            token = word
+            token = token.replace(fr,to)
+            if index_for.has_key(token): 
+                return embeddings[ index_for[token] ]
+            token = lemma
+            token = token.replace(fr,to)
+            if index_for.has_key(token):
+                return embeddings[ index_for[token] ]  
+        return nullvector
+    
+    total = db.reviews.find({}).count()
+    i = 0    
+    for opinion in db.reviews.find({}):
+        progress("updating embeddings",total,i) ; i+=1
+        if opinion['text'][0].has_key('vector'): 
+            continue
+        try:
+            vectors = {}
+            _id = opinion['_id']
+            for idx,token in enumerate(opinion['text']):
+                embedding = get_vector(token['word'],token['lemma']).tolist()
+                vectors['text.' + str(idx) + '.vector'] = embedding           
+            db.reviews.update( { '_id': _id } , { '$set': vectors }  )
+        except Exception as e:
+            log("Reason : %s for idx%i (at %s)" % (str(e),opinion['idx'],opinion['source']) )    
+
+
 # ----------------------------------------------------------------------------------------------------------------------
 
 if __name__ == '__main__':
 
-    negations = {
-        '72355624354ff30d03038b818044ac46': [False, False],
-        '97609c4dd3e893bce2c035bea586bbdd': [False, True, True, True, True, False, False, False, False, False], #10
-        'd93708dbb4ebc3e6711118ef20a77669': [ False, True, True, False], #4
-    } 
-    save_negations(negations)
+    update_embeddings()
 
 
 
