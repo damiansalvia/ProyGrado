@@ -4,7 +4,7 @@ import sys
 sys.path.append('../utilities')
 from utilities import *
 
-from pymongo import MongoClient
+from pymongo import MongoClient, ASCENDING
 from pymongo.errors import ServerSelectionTimeoutError
 import numpy as np
 from itertools import combinations
@@ -23,8 +23,16 @@ except ServerSelectionTimeoutError:
 
 
 
+if not db.reviews.index_information():
+    print "Creating Mongo indexes"
+    db.reviews.create_index('idx', name='position_index')
+    db.reviews.create_index('source', name='source_index')
+    db.reviews.create_index('tagged', name='negation_index')
+
+
 def get_sources():
     return list(db.reviews.distinct("source"))
+
 
 def get_opinion(id):
     return db.reviews.find_one({'_id':id})
