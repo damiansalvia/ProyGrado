@@ -37,10 +37,12 @@ def get_sources():
 def get_opinion(id):
     return db.reviews.find_one({'_id':id})
 
+def get_opinions(source=None):
+    query = {'source': source} if source else {}
+    return db.reviews.find(query)
 
 def get_by_idx(source, idx):
     return db.reviews.find_one({'source': source, 'idx': idx})
-
 
 def save_opinions(opinions):
     if opinions:
@@ -158,28 +160,7 @@ def get_indepentent_lex(limit=None, tolerance=0, filter_neutral=False):
     return list(db.reviews.aggregate(query))
 
 
-def get_indepentent_lex2(limit=None, tolerance=0, filter_neutral=False):
-    min_matches = int(round(get_corproea_size()*(1.0-tolerance),0))
-    sum_pos = list(db.reviews.aggregate([
-        { '$match': { 'category': { '$gt': 50 } } },
-        { '$unwind' : '$text' },
-        {
-            '$group': {
-                '_id':None,
-                'value': { '$sum': '$category'}
-            }
-        }
-    ]))[0].get('value')
-    sum_neg = list(db.reviews.aggregate([
-        { '$match': { 'category': { '$lt': 50 } } },
-        { '$unwind' : '$text' },
-        {
-            '$group': {
-                '_id':None,
-                'value': { '$sum': '$category'}
-            }
-        }
-    ]))[0].get('value')
+def get_vocabulary(source = None):
     query = [
         { '$unwind' : '$text' },
         { 
@@ -316,7 +297,8 @@ def update_embeddings(
         except Exception as e:
             log("Reason : %s for idx%i (at %s)" % (str(e),opinion['idx'],opinion['source']) )
             if len(opinion['text']) > 5000:
-                db.reviews.remove({"idx":opinion['idx'],"source":opinion['source']})    
+                db.reviews.remove({"idx":opinion['idx'],"source":opinion['source']})
+
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -326,4 +308,41 @@ if __name__ == '__main__':
     update_embeddings()
 
 
+# # Positive, Neutral and Negative Reviews
+# db.reviews.aggregate([
+#     { '$unwind' : '$text' },
+#     { '$project': {
+#         'category': {'$cond':[{'$eq': ['$text.negated',false]}, '$category' , {'$subtract': [100, '$category']} ]} 
+#         }
+#     },
+#     { '$group': {
+#             '_id': { '$cond':[ 
+#                 { '$gt':['$category',50] }, 
+#                 'Positivos', 
+#                 {'$cond':[ { '$lt':['$category',50]}, 'Negativos', 'Neutrales'] }
+#             ] },
+#             'total': {'$sum' : 1}
+#         } 
+#     }
+    
+#  ])
 
+
+# # Positive, Neutral and Negative Words
+# db.reviews.aggregate([
+#     { '$unwind' : '$text' },
+#     { '$project': {
+#         'category': {'$cond':[{'$eq': ['$text.negated',False]}, '$category' , {'$subtract': [100, '$category']} ]} 
+#         }
+#     },
+#     { '$group': {
+#             '_id': { '$cond':[ 
+#                 { '$gt':['$category',50] }, 
+#                 'Positivos', 
+#                 {'$cond':[ { '$lt':['$category',50]}, 'Negativos', 'Neutrales'] }
+#             ] },
+#             'total': {'$sum' : 1}
+#         } 
+#     }
+    
+#  ])
