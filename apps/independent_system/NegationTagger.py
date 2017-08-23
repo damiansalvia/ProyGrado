@@ -117,7 +117,7 @@ def start_tagging():
     
     def DisplayMenu():
         os.system('clear')
-        print "*"*15," MENU ","*"*15
+        print "*"*10," MENU ","*"*10
         print "0 . exit"
         for i in range(sources_size):
             qty = len(dp.get_tagged('manually',sources[i])) 
