@@ -46,9 +46,3 @@ class Log:
         
     def __exit__(self):
         self.log.close()
-
-if __name__=='__main__':
-    log = Log("./","log_test")
-    log("Test 1")
-    log("Test 2")
-    log("Test 3")
