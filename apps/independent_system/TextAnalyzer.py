@@ -31,10 +31,8 @@ def analyze(opinions):
                 _ids.append(_id)
                 tokens = an.analyze(opinion['text'])
                 
-                if not tokens: 
-                    log("Reason : Empty analysis for '%s' (at %s)" % (opinion['text'],opinion['source']) )
-                    fails += 1
-                    continue
+                if not tokens:
+                    raise Exception("Empty analysis")
                 
                 analysis = {}         
                 analysis['_id']      = _id
@@ -51,7 +49,7 @@ def analyze(opinions):
                 
         except Exception as e:
             fails += 1
-            log("Reason : %s with '%s' (at %s)" % (str(e),opinion['text'],opinion['source']) )
+            log("Reason : %s for '%s' (at %s)" % (str(e),opinion['text'].encode('ascii','ignore'),opinion['source']) )
         
     db.save_opinions(analyzed)
 

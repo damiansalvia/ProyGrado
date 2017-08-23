@@ -5,6 +5,7 @@ from utilities import *
 
 from keras.models import Sequential
 from keras.layers import Dense
+from keras.callbacks import EarlyStopping,CSVLogger
 import OpinionsDatabase as db 
 import os, json, io, glob, re
 
@@ -31,8 +32,27 @@ class Network:
             loss='binary_crossentropy', 
             optimizer='adam', 
             metrics=['accuracy'],
+            early_monitor='val_loss',
+            early_min_delta=0,
+            early_patience=2,
+            early_mode='auto',
             neurons=(12,8)
         ):
+        
+        self.callbacks = []
+        self.callbacks.append(
+            EarlyStopping(
+                monitor=early_monitor,
+                min_delta=early_min_delta,
+                patience=early_patience, 
+                mode=early_mode,
+                verbose=0
+            )
+        )
+        self.callbacks.append(
+            CSVLogger('training.log')
+        )
+        
         left = hidden_layers - len(activation)
         
         for _ in range(left):
@@ -60,7 +80,7 @@ class Network:
         if not X:
             raise Exception("Nothing to fit")
         
-        self.model.fit(X,Y)
+        self.model.fit(X,Y,callbacks=self.callbacks)
         
         scores = model.evaluate(X, Y)        
         for i in range(len(scores)):
@@ -97,7 +117,7 @@ def start_tagging():
     
     def DisplayMenu():
         os.system('clear')
-        print "*"*20," MENU ","*"*20
+        print "*"*15," MENU ","*"*15
         print "0 . exit"
         for i in range(sources_size):
             qty = len(db.get_tagged('manually',sources[i])) 
