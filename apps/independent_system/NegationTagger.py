@@ -6,7 +6,7 @@ from utilities import *
 from keras.models import Sequential
 from keras.layers import Dense
 from keras.callbacks import EarlyStopping,CSVLogger
-import OpinionsDatabase as db 
+import DataProvider as dp 
 import os, json, io, glob, re
 
 
@@ -18,7 +18,7 @@ log = Log("./log")
 
 
 
-sources = db.get_sources()
+sources = dp.get_sources()
 sources_size = len(sources)
 
 
@@ -120,7 +120,7 @@ def start_tagging():
         print "*"*15," MENU ","*"*15
         print "0 . exit"
         for i in range(sources_size):
-            qty = len(db.get_tagged('manually',sources[i])) 
+            qty = len(dp.get_tagged('manually',sources[i])) 
             print i+1,".","%-20s" % sources[i], "(%i)" % qty
         return 
      
@@ -146,14 +146,14 @@ def start_tagging():
         os.system('clear')
         if not result:
             return
-        # Ask for save in two steps
+
         op = raw_input("Done! Save result? [y/n] > ")
         if op.lower() == 'n':
             op = raw_input("Are you sure? [y/n] > ")
             if op.lower() == 'y':
                 return
-        # Save the result
-        db.save_negations(result)
+            
+        dp.save_negations(result)
         
     # #------- Execute Function -------#
     
@@ -189,7 +189,7 @@ def start_tagging():
                     indexes = []
                 
                 # Get a sample of reviews from options
-                samples = db.get_sample(quantity,source,indexes)
+                samples = dp.get_sample(quantity,source,indexes)
                 
                 # Tag every review
                 left = quantity
@@ -276,7 +276,7 @@ def start_tagging():
     
     
 import re
-def manual_file_to_db(source_dir):
+def manual_file_to_dp(source_dir):
     for source in glob.glob(source_dir):
         with open(source) as fp:
             print source
@@ -284,7 +284,7 @@ def manual_file_to_db(source_dir):
         negations = {}
         errors = []
         for idx, op in enumerate(opinions):
-            target = db.get_by_idx(op['from'], op['id'])
+            target = dp.get_by_idx(op['from'], op['id'])
             if idx > len(target['text']) or u'negated' in target['text'][idx].keys(): # Skip if already re-tagged
                 break
             tags  = [tag[-1] for tag in op['annotation'].split(' ')]
@@ -339,10 +339,6 @@ def manual_file_to_db(source_dir):
                 tags = retags 
             negations[target['_id']] = map(lambda x: x == 'i', tags)
         
-        db.save_negations(negations)
+        dp.save_negations(negations)
     
-                
-if __name__=='__main__':
-#     start()
-    manual_file_to_db("outputs/negation/*")
     

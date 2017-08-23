@@ -291,9 +291,10 @@ def update_embeddings(
                 return embeddings[ index_for[token] ]  
         return nullvector
     
-    total = db.reviews.find({}).count()
+    opinions = db.reviews.find({})
+    total = opinions.count()
     i = 0    
-    for opinion in db.reviews.find({}):
+    for opinion in opinions:
         progress("updating embeddings",total,i) ; i+=1
         if opinion['text'][0].has_key('vector'): 
             continue
@@ -305,7 +306,9 @@ def update_embeddings(
                 vectors['text.' + str(idx) + '.vector'] = embedding           
             db.reviews.update( { '_id': _id } , { '$set': vectors }  )
         except Exception as e:
-            log("Reason : %s for idx%i (at %s)" % (str(e),opinion['idx'],opinion['source']) )    
+            log("Reason : %s for idx%i (at %s)" % (str(e),opinion['idx'],opinion['source']) )
+            if len(opinion['text']) > 5000:
+                db.reviews.remove({"idx":opinion['idx'],"source":opinion['source']})    
 
 
 # ----------------------------------------------------------------------------------------------------------------------

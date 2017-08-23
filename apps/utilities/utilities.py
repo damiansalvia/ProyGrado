@@ -31,14 +31,38 @@ def progress(prompt, total, current, width=width):
     spaces = ' ' * (bar_length - len(hashes))
     print "\r{0} [{1}] {2}%".format(prompt, hashes + spaces, round(percent * 100,2)),
     if current==total: print
+
+
+class FileLog:
+
+    def __init__(self, fname, mode='w'):
+        self.__write_queue = []
+        self.__f = open(fname, mode)
+
+    def write(self, s):
+        self.__write_queue.insert(0, s)
+
+    def close(self):
+        self.__exit__(None, None, None)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, traceback):
+        if self.__write_queue: 
+            self.__f.writelines(self.__write_queue)
+        self.__f.close()
         
 
 class Log:
     
     def __init__(self,ldir,lname="log_general"):
         if not os.path.isdir(ldir): os.makedirs(ldir)
-        self.log = open(ldir+"/"+lname, 'w')
+        self.log = FileLog(ldir+"/"+lname, 'wa')
 
     def __call__(self,message, level='error'):
         time = strftime("%Y-%m-%d %H:%M:%S", gmtime())
         self.log.write( "%s : %s at %s > %s \n" % ( level.upper() , time , inspect.stack()[1][0].f_code.co_name.upper() , message ) )
+        
+    def __exit__(self):
+        self.log.close()

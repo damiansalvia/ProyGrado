@@ -6,12 +6,14 @@ sys.path.append('../utilities')
 import time
 from analyzer import Analyzer
 from utilities import *
-import OpinionsDatabase as db
+import DataProvider as dp
 import md5, re
+
 
 print "Initializing FreeLing analyzer"
 an = Analyzer()
 log = Log("./log")
+
 
 def analyze(opinions):
 
@@ -26,7 +28,7 @@ def analyze(opinions):
             
             _id = md5.new(str(opinion['category']) + opinion['text'].encode('ascii', 'ignore')).hexdigest()
             
-            if not db.get_opinion(_id) and _id not in _ids:
+            if not dp.get_opinion(_id) and _id not in _ids:
                 
                 _ids.append(_id)
                 tokens = an.analyze(opinion['text'])
@@ -51,7 +53,7 @@ def analyze(opinions):
             fails += 1
             log("Reason : %s for '%s' (at %s)" % (str(e),opinion['text'].encode('ascii','ignore'),opinion['source']) )
         
-    db.save_opinions(analyzed)
+    dp.save_opinions(analyzed)
 
 
 if __name__ == '__main__':
