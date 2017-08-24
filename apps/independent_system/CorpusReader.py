@@ -33,7 +33,7 @@ SUBSTITUTIONS = [
     (u":\)",u"emoji_feliz"),(u"\(:",u"emoji_feliz"),
     (u":\(",u"emoji_triste"),(u"\):",u"emoji_triste"),
     # Separate alphabetical character from non-alphabetical character by a blank space
-    (u"(?i)([a-záéíóúñüÁÉÍÓÚÑÜ\\\]?)([^a-záéíóúñüÁÉÍÓÚÑÜ_\\\\s]+)([a-záéíóúñüÁÉÍÓÚÑÜ\\\]?)",u"\\1 \\2 \\3"),
+    (u"(?i)([0-9a-záéíóúñüÁÉÍÓÚÑÜ\\\]?)([^0-9a-záéíóúñüÁÉÍÓÚÑÜ_\\\\s]+)([0-9a-záéíóúñüÁÉÍÓÚÑÜ\\\]?)",u"\\1 \\2 \\3"),
     # Remove redundant quote marks  -- replace, delete, undo
     (u"(\")([^\"]*?)(?(1)\")",u"&quote;\\2&quote;"),
     (u"[\"]",u""),
@@ -74,6 +74,7 @@ def from_corpus(
         category_level=None,    # Indicates where the category_pattern should match in the path pattern (extension). Apply for PATH location.
         start=0,                # Indicates where should start reading the file. Useful for excluding a header in a .csv file (value 1).
         decoding='utf8',        # Format for decoding the corpus file. By default "ut8", but it can be "cp1252", "unicode-escape", etc.
+        tofile=False            # Save result in a tmp file
     ):
     # Checking prerequisites
     if not source: 
@@ -169,6 +170,7 @@ def from_corpus(
                 'text'     : review_correction(rev), 
                 'category' : category_mapping[cat] 
             })   
+    if tofile: save(opinion_data,"from_%s" % corpus_name,"./outputs/tmp")
     return opinion_data
 
 if __name__ == '__main__':

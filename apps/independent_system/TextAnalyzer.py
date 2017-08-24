@@ -15,7 +15,7 @@ an = Analyzer()
 log = Log("./log")
 
 
-def analyze(opinions):
+def analyze(opinions,tofile=False):
 
     # #------- Execute Function -------#
     analyzed = []
@@ -54,6 +54,9 @@ def analyze(opinions):
             log("Reason : %s for '%s' (at %s)" % (str(e),opinion['text'].encode('ascii','ignore'),opinion['source']) )
         
     dp.save_opinions(analyzed)
+    if tofile: save(analyzed,"analyzed_%s" % opinions[0]['source'],"./outputs/tmp")
+    
+    return analyzed
 
 
 if __name__ == '__main__':

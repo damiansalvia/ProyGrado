@@ -154,38 +154,46 @@ parameters = [
     )
 ] 
 
-count = 0
-for parameter in parameters: 
-           
-    opinions = cr.from_corpus(
-            parameter[0], # source
-            parameter[1], # path pattern to file
-            parameter[2], # review pattern
-            parameter[3], # category pattern
-            parameter[4], # category mapping
-            parameter[5], # category mapping
-            category_position=parameter[6],
-            category_level=parameter[7],
-            start=parameter[8],
-            decoding=parameter[9],
-        )
-    #save(opinions,"tmp_from_corpus_%s" % opinions[0]['source'],"./outputs")    
-    analyzed = ta.analyze(opinions)
-          
-    count += len(opinions)
-raw_input("Total %i .Continue..." % count)
+# count = 0
+# for parameter in parameters: 
+#              
+#     opinions = cr.from_corpus(
+#             parameter[0], # source
+#             parameter[1], # path pattern to file
+#             parameter[2], # review pattern
+#             parameter[3], # category pattern
+#             parameter[4], # category mapping
+#             parameter[5], # category mapping
+#             category_position=parameter[6],
+#             category_level=parameter[7],
+#             start=parameter[8],
+#             decoding=parameter[9],
+#             tofile=True
+#         )
+#           
+#     analyzed = ta.analyze(
+#             opinions,
+#             tofile=True
+#         )
+#       
+#     count += len(analyzed)
+#       
+# raw_input("Total %i .Continue..." % count)
+
+dp.update_embeddings(verbose=True)
+raw_input()
         
-nt.start_tagging() 
+nt.start_tagging(tofile=True) 
  
-ann = nt.Network(5)
-    
-opinions = dp.get_tagged('manual')
-ann.fit(opinions,2,2)
-   
-X = dp.get_untagged()
-Y = ann.predict(X,2,2)
-   
-dp.save_result(Y)
+# ann = nt.Network(5)
+#     
+# opinions = dp.get_tagged('manual')
+# ann.fit(opinions,2,2)
+#    
+# X = dp.get_untagged()
+# Y = ann.predict(X,2,2)
+#    
+# dp.save_result(Y)
 
 tolerance = 1.0
 li = dp.get_indepentent_lex(tolerance=tolerance)
