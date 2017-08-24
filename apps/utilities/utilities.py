@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from time import gmtime, strftime 
+from time import gmtime, strftime
 import inspect, math, json, os, io
 
 
@@ -8,13 +8,15 @@ tmp = os.popen('stty size', 'r').read().split()
 width = int(tmp[1])-15 if tmp else 100
 
 
-def save(data,name,path):    
-    # Check output directory and concatenate the filename
-    if not os.path.isdir(path): 
-        os.makedirs(path)
-    path = "%s/%s.json" % (path,name)
+def save(data,name,path,overwrite=True):
+    if not data: return    
     
-    # Save it into a the file
+    if not os.path.isdir(path): os.makedirs(path)
+        
+    suffix = "" if overwrite else strftime("%Y%m%d_%H-%M-%S", gmtime()) 
+            
+    path = "%s/%s%s.json" % (path,name,suffix)         
+    
     with io.open(path,"w",encoding='utf8') as f:
         content = json.dumps(data,indent=4,ensure_ascii=False)
         if not isinstance(content, unicode):

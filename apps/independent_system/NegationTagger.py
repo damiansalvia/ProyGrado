@@ -113,7 +113,7 @@ class Network:
         
 
 
-def start_tagging():
+def start_tagging(tofile=False):
     
     def DisplayMenu():
         os.system('clear')
@@ -142,18 +142,19 @@ def start_tagging():
     def chunkstring(string, length):
         return (string[0+i:length+i] for i in range(0, len(string), length))
     
-    def ViewSave(result):
+    def ViewSave(result,source):
         os.system('clear')
         if not result:
             return
 
-        op = raw_input("Done! Save result? [y/n] > ")
+        op = raw_input("Done! Save result for %s? [y/n] > " % source)
         if op.lower() == 'n':
             op = raw_input("Are you sure? [y/n] > ")
             if op.lower() == 'y':
                 return
             
         dp.save_negations(result)
+        if tofile:save(result,"negtag_%s" % source,"./outputs/tmp",overwrite=False)
         
     # #------- Execute Function -------#
     
@@ -267,7 +268,7 @@ def start_tagging():
                        
                 # View and save results
                 if op == 0: continue
-                ViewSave(result)
+                ViewSave(result,source)
                 
             except Exception as e:
                 content = json.dumps(result,indent=4,ensure_ascii=False)
