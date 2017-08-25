@@ -269,14 +269,19 @@ def get_indep_lex_rules(treshold=0.9):
     items = db.reviews.find({})
     balance = int( round( sum( item['category'] for item in items ) / items.count() ) )
     words = db.reviews.aggregate([
-        { '$project': { '_id':0,'text':1, 'category':1 } },
-        { '$unwind': '$text' },
-        { '$project': {'lemma':'$text.lemma', 'category':1 } },
-        { '$group' : { 
-                '_id': '$category', 
-                'tokens': { '$push': '$lemma' } 
-           } 
-        }
+            { '$project': { '_id':0,'text':1, 'category':1 } },
+            { '$unwind': '$text' },
+            { '$project': {
+                    'lemma':'$text.lemma', 
+                    'category':{ 
+                        '$cond' : { 
+                            'if':'$text.negated', 
+                            'then':{'$subtract': [100,'$category']}, 
+                            'else':'$category' 
+                        } 
+                    } 
+                } 
+            }
     ])
     print balance;raw_input()
     pass
@@ -291,19 +296,24 @@ def get_vocabulary():
 
 
 replacements = [
-    (u'á',u'a'),(u'é',u'e'),(u'í',u'i'),(u'ó',u'o'),(u'ú',u'u'),
-    (u'a',u'á'),(u'e',u'é'),(u'i',u'í'),(u'o',u'ó'),(u'u',u'ú')
+    (u'á',u'a'),(u'é',u'e'),(u'í',u'i'),(u'ó',u'o'),(u'ú',u'u'),(u'ü',u'u'),
+    (u'a',u'á'),(u'e',u'é'),(u'i',u'í'),(u'o',u'ó'),(u'u',u'ú'),(u'u',u'ü')
 ]
 combinations = sum([map(list, combinations(replacements, i+1)) for i in range(len(replacements))], [])
-stats = { "ByWord":0,"BySingular":0,"ByLemma":0,"ByWordCorrection" :0,"ByLemmaCorrection":0,"IsNull":0,"Fails":0,"Total":0 }
+stats = { "ByWord":0,"BySingular":0,"ByLemma":0,"ByWordCorrection" :0,"IsNull":0,"Fails":0,"Total":0 }
 
 def update_embeddings(
         femb='../../embeddings/emb39-word2vec.npy',
         ftok='../../embeddings/emb39-word2vec.txt',
+        split_tolerance=1,
         verbose=False
     ):
-    
-    index_for   = { token.lower().replace("_",""):index for index, token in enumerate(open(ftok).read().splitlines()) }
+    with open(ftok) as fp:
+        content = fp.read()
+        content = content.lower()
+        content = content.replace("_","")
+        
+    index_for   = { token:index for index, token in enumerate(content.splitlines()) }
     embeddings  = np.load(femb)
     vector_size = len(embeddings[0])
     nullvector  = np.zeros(vector_size) 
@@ -317,47 +327,35 @@ def update_embeddings(
         
         if index_for.has_key(word):
             stats['ByWord'] += 1
-            return word , embeddings[ index_for[ word ] ] 
+            return embeddings[ index_for[ word ] ] 
         
-        if index_for.has_key(word[:-1]):
+        singular = word[:-1]
+        if index_for.has_key(singular):
             stats['BySingular'] += 1
-            return word , embeddings[ index_for[ word[:-1] ] ]  
-        
+            return embeddings[ index_for[ singular ] ]  
+         
         if index_for.has_key(lemma):
             stats['ByLemma'] += 1 
-            return lemma , embeddings[ index_for[ lemma ] ]
-        
-        
-        vector = nullvector
+            return embeddings[ index_for[ lemma ] ]
+         
+        vector = nullvector.copy()
         tokens = word.split('_')
         left = len(tokens)
         for token in tokens:            
-            for combination in combinations:                    
+            for combination in combinations: 
+                correct = token                   
                 for fr,to in combination:
-                    token = token.replace(fr,to)
-                if index_for.has_key(token):
-                    vector += embeddings[ index_for[ token ] ]
+                    correct = correct.replace(fr,to)
+                if index_for.has_key(correct):
+                    vector += embeddings[ index_for[ correct ] ]
                     left -= 1 
-        if left <= 1:
+                    break # Try next token
+        if left <= split_tolerance:
             stats['ByWordCorrection'] += 1
-            return word , vector                    
-        
-        vector = nullvector
-        tokens = lemma.split('_')
-        left = len(tokens)
-        for token in tokens:            
-            for combination in combinations:                    
-                for fr,to in combination:
-                    token = token.replace(fr,to)
-                if index_for.has_key(token):
-                    vector += embeddings[ index_for[ token ] ]
-                    left -= 1 
-        if left <= 1:
-            stats['ByLemmaCorrection'] += 1
-            return lemma , vector
+            return vector                    
         
         stats['IsNull'] += 1
-        return word , nullvector 
+        return nullvector 
     
         
     result = {}
@@ -370,14 +368,16 @@ def update_embeddings(
         lemma = item['lemma'] 
         if result.has_key(word) or result.has_key(lemma):
             continue
-        token,vector = get_vectors(word,lemma)
-        result.update({ token:vector })
+        vector = get_vectors(word,lemma)
+        result.update({ word:vector })
     
-    if verbose:    
-        for case in stats: print "%-17s : %i (%4.2f%%)" % (case,stats[case],100.0*stats[case]/stats['Total'])
-        raw_input()
+    if stats['Total']:
+        for case in stats:
+            log("Embeddings integration. %s : %i (%4.2f%%)" % (case,stats[case],100.0*stats[case]/stats['Total']),level='info')     
+            if verbose: print "%-17s : %i (%4.2f%%)" % (case,stats[case],100.0*stats[case]/stats['Total']) 
+        if verbose: raw_input("Press enter to continue...")    
     
-    result = [{ 'token':item, 'embedding':result[item].tolist() } for item in result]
+    result = [{ '_id':word, 'embedding':result[word].tolist() } for word in result]
     db.embeddings.insert_many(result)
 
 # ----------------------------------------------------------------------------------------------------------------------
