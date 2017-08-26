@@ -111,8 +111,8 @@ parameters = [
         "(.*)\s",
         "(yes|no)_",
         {
-            'no' : 0, 
-            'yes': 100
+            'no' : 20, 
+            'yes': 80
         },
         "PATH",
         None,
@@ -156,7 +156,7 @@ parameters = [
 
 # count = 0
 # for parameter in parameters: 
-#              
+#               
 #     opinions = cr.from_corpus(
 #             parameter[0], # source
 #             parameter[1], # path pattern to file
@@ -170,36 +170,30 @@ parameters = [
 #             decoding=parameter[9],
 #             tofile=True
 #         )
-#           
+#            
 #     analyzed = ta.analyze(
 #             opinions,
 #             tofile=True
 #         )
-#       
+#        
 #     count += len(analyzed)
-#       
+#        
 # raw_input("Total %i .Continue..." % count)
-
-dp.update_embeddings(verbose=True)
-raw_input()
-        
-nt.start_tagging(tofile=True) 
+#
+# dp.update_embeddings(verbose=True)
+#         
+# nt.start_tagging(tofile=True) 
  
-# ann = nt.Network(5)
-#     
-# opinions = dp.get_tagged('manual')
-# ann.fit(opinions,2,2)
-#    
-# X = dp.get_untagged()
-# Y = ann.predict(X,2,2)
-#    
-# dp.save_result(Y)
+ann = nt.NeuralNegationTagger(2,2)     
+ann.fit_tagged()
+ann.predict_untagged()    
+# dp.save_negation(Y,tagged_as='automatically')
 
-tolerance = 1.0
-li = dp.get_indepentent_lex(tolerance=tolerance)
-save(li,"independent_lexcon_-_tolerance_%i_percent" % (tolerance*100),"./outputs/lexicon")
-li = dp.get_indepentent_lex2(tolerance=tolerance)
-save(li,"independent_lexcon_2_-_tolerance_%i_percent" % (tolerance*100),"./outputs/lexicon")
+# tolerance = 1.0
+# li = dp.get_indepentent_lex(tolerance=tolerance)
+# save(li,"independent_lexcon_-_tolerance_%i_percent" % (tolerance*100),"./outputs/lexicon")
+# li = dp.get_indepentent_lex2(tolerance=tolerance)
+# save(li,"independent_lexcon_2_-_tolerance_%i_percent" % (tolerance*100),"./outputs/lexicon")
  
 
 

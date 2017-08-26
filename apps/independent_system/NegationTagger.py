@@ -8,6 +8,10 @@ from keras.layers import Dense
 from keras.callbacks import EarlyStopping,CSVLogger
 import DataProvider as dp 
 import os, json, io, glob, re
+import numpy as np
+
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
 
 
 
@@ -23,22 +27,37 @@ sources_size = len(sources)
 
 
 
-class Network:
+class NeuralNegationTagger:
      
     def __init__(self,
-            win_size,
+            win_left,
+            win_right,
             hidden_layers=2,
-            activation=['relu'],
+            activation=['relu','relu','relu','sigmoid'],
             loss='binary_crossentropy', 
             optimizer='adam', 
             metrics=['accuracy'],
-            early_monitor='val_loss',
+            early_monitor='loss',
             early_min_delta=0,
             early_patience=2,
             early_mode='auto',
-            neurons=(12,8)
         ):
         
+        # Check restrictions
+        min_activation_len = 2+hidden_layers
+        if len(activation) < min_activation_len:
+            raise Exception("Activation array size must be %i\n -- 1 input, %2 hidden, 1 output" % (min_activation_len,hidden_layers))
+        
+        # Parameters calculation
+        vec_size  = dp.get_size_embedding()        
+        input_dim = vec_size * (win_right + win_left + 1)
+        
+        # Attributes settings
+        self.right = win_right
+        self.left  = win_left
+        self.dim   = input_dim
+        
+        # Callbacks settings
         self.callbacks = []
         self.callbacks.append(
             EarlyStopping(
@@ -50,66 +69,60 @@ class Network:
             )
         )
         self.callbacks.append(
-            CSVLogger('training.log')
+            CSVLogger('./log/training.log')
         )
         
-        left = hidden_layers - len(activation)
-        
-        for _ in range(left):
-            activation.append(activation[0])
-             
+        # Model definition     
         self.model = Sequential()
         
-        self.model.add( Dense( neurons[0] , input_dim=win_size , activation=activation[0] ) )
-        for i in range(hidden_layers)[:-1]:
-            self.model.add( Dense( neurons[0] , activation=activation[i+1] ) )
-        self.model.add( Dense( 2 , activation=activation[i+1] ) )
+        # Input layer
+        out_dim = input_dim / 2
+        self.model.add( Dense( out_dim, input_dim=input_dim, activation=activation[0] )) 
         
+        # Hidden layers
+        for i in range(hidden_layers): 
+            out_dim = out_dim / 2
+            self.model.add( Dense( out_dim, activation=activation[i+1] )) 
+        
+        # Output layer - Binary: Negated or Not-negated
+        self.model.add( Dense( 1, activation=activation[min_activation_len-1] ))
+        
+        # Compile model from parameters
         self.model.compile(loss=loss, optimizer=optimizer , metrics=metrics)
      
      
-    def fit(self,opinions, window_left, window_right):
+    def fit_tagged(self):    
+        opinions = dp.get_tagged('manually') 
         X , Y = [] , []
         total = len(opinions)
-        for idx,op in enumerate(opinions):
+        for idx,opinion in enumerate(opinions):
             progress("Fitting negations",total,idx)
-            entry = get_vectors(op.text, window_left, window_right)
-            X.append(entry[0])
-            Y.append(entry[1])
-            
-        if not X:
-            raise Exception("Nothing to fit")
+            x,y = dp.get_embeddings( opinion['text'], self.left, self.right )
+            X += x
+            Y += y
+        X = np.array(X)
+        Y = np.array(Y)
         
-        self.model.fit(X,Y,callbacks=self.callbacks)
+        self.model.fit(X,Y,callbacks=self.callbacks,verbose=1)
         
-        scores = model.evaluate(X, Y)        
+        scores = self.model.evaluate(X,Y)        
         for i in range(len(scores)):
-            print "\n%s: %.2f%%" % (model.metrics_names[i], scores[i]*100)
+            print "\n%s: %.2f%%" % ( self.model.metrics_names[i], scores[i]*100 )
+            
     
-    def predict(self,opinions, window_left=2, window_right=2):
+    def predict_untagged(self):
+        opinions = dp.get_untagged()
         results = {}
         total = len(opinions)
-        for idx,op in enumerate(opinions):
+        for idx,opinion in enumerate(opinions):
             progress("Predicting negations",total,idx)
-            results[op._id] = [ self.model.predict(X) for X in get_vectors(op.text, window_left, window_right)[0] ]
+            for X in dp.get_embeddings( opinion['text'], self.left, self.right )[0]:
+                import pdb;pdb.set_trace()
+                raw_input()
+#                 X = X.reshape((-1, 1))
+                Y = self.model.predict(X)
+                results[ op['_id'] ] = Y
         return results
-    
-    def get_vectors(text, window_left=2, window_right=2):
-        vectors = []
-        tags = []
-        for idx, word in enumerate(text):
-            vec = []
-            for i in range(window_left + window_right + 1):
-                vec.append(get_entry(text, idx - window_left + i))
-            tags.append(text[idx].get('negated'))
-            vectors.append(vec)
-        return vectors, tags    
-    
-    def get_entry(text, idx):
-        if  0 <= idx < len(text) :
-            return text[idx]['word']
-        else :
-            return ''
         
 
 
@@ -153,7 +166,7 @@ def start_tagging(tofile=False):
             if op.lower() == 'y':
                 return
             
-        dp.save_negations(result)
+        dp.save_negations(result,tagged_as='manually')
         if tofile:save(result,"negtag_%s" % source,"./outputs/tmp",overwrite=False)
         
     # #------- Execute Function -------#
