@@ -10,7 +10,9 @@ import numpy as np
 from itertools import combinations
 
 
+
 log = Log("./log")
+
 
 
 print "Connecting Mongo database"
@@ -22,12 +24,29 @@ except ServerSelectionTimeoutError:
     raise Exception("Couldn't connect Mongo database")
 
 
+
 print "Creating Mongo indexes"
 db.reviews.create_index('idx', name='position_index')
 db.reviews.create_index('source', name='source_index')
 db.reviews.create_index('category', name='category_index')
 db.reviews.create_index('tagged', name='negation_index')
 
+        
+        
+def save_opinions(opinions):
+    if opinions:
+        db.reviews.insert_many(opinions)
+
+
+def save_negations(opinions,tagged_as):
+    if tagged_as not in ['manually','automatically']:
+        raise Exception("Values for 'tagged_as' must be 'manually' or 'automatically'")
+    for _id in opinions:
+        negation = { 'tagged' : tagged_as }
+        for idx, tag in enumerate(opinions[_id]):
+            negation['text.' + str(idx) + '.negated'] = tag
+        if opinions[_id]:
+            db.reviews.update( { '_id': _id } , { '$set': negation }  )
 
 def get_sources():
     return list(db.reviews.distinct("source"))
@@ -39,20 +58,6 @@ def get_opinion(id):
 
 def get_by_idx(source, idx):
     return db.reviews.find_one({'source': source, 'idx': idx})
-
-
-def save_opinions(opinions):
-    if opinions:
-        db.reviews.insert_many(opinions)
-
-
-def save_negations(opinions):
-    for _id in opinions:
-        negation = { 'tagged' : 'manually' }
-        for idx, tag in enumerate(opinions[_id]):
-            negation['text.' + str(idx) + '.negated'] = tag
-        if opinions[_id]:
-            db.reviews.update( { '_id': _id } , { '$set': negation }  )
 
 
 def get_sample(quantity, source, indexes = None):
@@ -68,29 +73,60 @@ def get_sample(quantity, source, indexes = None):
 
 
 def get_tagged(tagger,source=None):
-    if source:
-        return list(db.reviews.find({ "tagged" : tagger , "source" : source }))
-    return list(db.reviews.find({ "tagged" : tagger }))
+    query = { "tagged" : tagger  } 
+    if source and not source.isdigit(): # TO-DO : por algun motivo me llega un source=2
+        query.update({ "source" : source })
+    return list(db.reviews.find(query))
 
 
 def get_untagged():
     return list(db.reviews.find({ "tagged" : { "$exists" : False } }))
 
 
-def save_result(opinions):
-    for id in opinions:
-        options = { 'tagged' : 'automatically' }
-        for idx, tag in opinions[id]:
-            opinions['text.' + str(idx) + '.negated'] = tag
-        db.reviews.update( {'_id': id}, {'$set': options} )
+def get_size_embedding():
+    return list(db.embeddings.aggregate([
+        { '$limit' :1 },
+        { '$project': {'_id':0,'size': { '$size': '$embedding' } } }
+    ]))[0]['size']
+    
+
+def get_vector(word):
+    return db.embeddings.find_one({ "_id" : word })['embedding']
 
 
-def get_corproea_size():
-    return len(db.reviews.distinct("source"))
-
+def get_embeddings(text, wleft, wright):
+    
+    size_embedding = get_size_embedding()
+    
+    def get_entry(text, pos):
+        if  0 <= pos < len(text) :
+            word =  text[pos]['word'].lower()
+            res  = db.embeddings.find_one({ "_id" :word })
+            if res: return res['embedding']
+            raise Exception("Couldn't find embedding for '%s'" % text[pos]['word'])
+        else :
+            return np.zeros( size_embedding )
+    
+    data,pred = [],[]
+    
+    for idx, word in enumerate(text):
+    
+        embeddings = []        
+        for i in range(wleft + wright + 1):
+            embeddings.append( get_entry( text , idx-wleft+i ) )
+        
+        embeddings = np.array( embeddings ).flatten()
+        data.append(embeddings)
+        
+        if text[idx].has_key('negated'): # for training
+            pred.append( np.array(text[idx]['negated']) )
+    
+    return data, pred
+    
 
 def get_indepentent_lex(limit=None, tolerance=0, filter_neutral=False):
-    min_matches = int(round(get_corproea_size()*(1.0-tolerance),0))
+    sources_qty = len( get_sources() )
+    min_matches = int(round(sources_qty*(1.0-tolerance),0))
     query = [
         { '$unwind' : '$text' },{ 
             '$group': {
@@ -287,12 +323,18 @@ def get_indep_lex_rules(treshold=0.9):
     pass
 
 
-def get_vocabulary():
-    return list(db.reviews.aggregate([
+def get_vocabulary(get_by=None):
+    query = [
         { '$project': { '_id':0,'text':1 } },
-        { '$unwind': "$text" },
-        { '$project': { 'lemma':'$text.lemma', 'word':'$text.word' } }
-    ]))
+        { '$unwind': "$text" }
+    ]
+    if not get_by:
+        query.append( { '$project': { 'lemma':'$text.lemma', 'word':'$text.word' } } )
+    elif get_by not in ["word","lemma"]:
+        raise Exception("Values for get_by parameter must be 'word' or 'lemma'")
+    else:
+        query.append( { '$project': { get_by:'$text.%s'%get_by} } )
+    return list( db.reviews.aggregate(query) )
 
 
 replacements = [
@@ -321,8 +363,6 @@ def update_embeddings(
     
     def get_vectors(word,lemma):
         
-        word = word.lower()
-            
         stats['Total'] += 1
         
         if index_for.has_key(word):
@@ -364,11 +404,11 @@ def update_embeddings(
     
     for idx,item in enumerate(vocabulary):
         progress("Updating embeddings",total,idx)
-        word  = item['word']
-        lemma = item['lemma'] 
-        if result.has_key(word) or result.has_key(lemma):
+        word  = item['word'].lower()
+        lemma = item['lemma'].lower()
+        if result.has_key(word):
             continue
-        vector = get_vectors(word,lemma)
+        vector = get_vectors( word , lemma )
         result.update({ word:vector })
     
     if stats['Total']:
@@ -383,7 +423,7 @@ def update_embeddings(
 # ----------------------------------------------------------------------------------------------------------------------
 
 if __name__ == '__main__':
-    get_indep_lex_rules()
+    get_tagged_embeddings('manually')
 
 
 
