@@ -83,7 +83,7 @@ if __name__ == '__main__':
             'category': 1000, 
             'source': 'corpus_test', 
             'idx': 76, 
-            'text': u'Hola ( mundo !' # Este caso da error para FreeLing
+            'text': u'Hola ( mundo ! .' # Este caso da error para FreeLing
         }
     ]
 

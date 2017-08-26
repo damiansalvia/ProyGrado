@@ -48,6 +48,7 @@ def save_negations(opinions,tagged_as):
         if opinions[_id]:
             db.reviews.update( { '_id': _id } , { '$set': negation }  )
 
+
 def get_sources():
     return list(db.reviews.distinct("source"))
 
@@ -119,7 +120,8 @@ def get_embeddings(text, wleft, wright):
         data.append(embeddings)
         
         if text[idx].has_key('negated'): # for training
-            pred.append( np.array(text[idx]['negated']) )
+            prediction = np.array(text[idx]['negated'])
+            pred.append( prediction )
     
     return data, pred
     

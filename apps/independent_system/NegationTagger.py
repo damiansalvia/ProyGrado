@@ -9,6 +9,7 @@ from keras.callbacks import EarlyStopping,CSVLogger
 import DataProvider as dp 
 import os, json, io, glob, re
 import numpy as np
+np.random.seed(666)
 
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
@@ -36,7 +37,7 @@ class NeuralNegationTagger:
             activation=['relu','relu','relu','sigmoid'],
             loss='binary_crossentropy', 
             optimizer='adam', 
-            metrics=['accuracy'],
+            metrics=['accuracy','binary_accuracy'],#,'precision','recall','fmeasure'],
             early_monitor='loss',
             early_min_delta=0,
             early_patience=2,
@@ -77,21 +78,26 @@ class NeuralNegationTagger:
         
         # Input layer
         out_dim = input_dim / 2
-        self.model.add( Dense( out_dim, input_dim=input_dim, activation=activation[0] )) 
+        self.model.add( Dense( out_dim, input_dim=input_dim, activation=activation[0] ) ) 
         
         # Hidden layers
         for i in range(hidden_layers): 
             out_dim = out_dim / 2
-            self.model.add( Dense( out_dim, activation=activation[i+1] )) 
+            self.model.add( Dense( out_dim, activation=activation[i+1] ) ) 
+        
+        # Softmax layer
+        #self.model.add( Dense( 2, activation='softmax' ) )
         
         # Output layer - Binary: Negated or Not-negated
-        self.model.add( Dense( 1, activation=activation[min_activation_len-1] ))
+        self.model.add( Dense( 1, activation=activation[min_activation_len-1] ) )
         
         # Compile model from parameters
         self.model.compile(loss=loss, optimizer=optimizer , metrics=metrics)
+        
+        print self.model.summary()
      
      
-    def fit_tagged(self):    
+    def fit_tagged(self,testing_fraction=0.0,verbose=0):    
         opinions = dp.get_tagged('manually') 
         X , Y = [] , []
         total = len(opinions)
@@ -103,26 +109,30 @@ class NeuralNegationTagger:
         X = np.array(X)
         Y = np.array(Y)
         
-        self.model.fit(X,Y,callbacks=self.callbacks,verbose=1)
+        self.model.fit( X , Y , callbacks=self.callbacks , validation_split=testing_fraction , verbose=verbose )
         
         scores = self.model.evaluate(X,Y)        
         for i in range(len(scores)):
-            print "\n%s: %.2f%%" % ( self.model.metrics_names[i], scores[i]*100 )
+            print "%-20s: %.2f%%" % ( self.model.metrics_names[i], scores[i]*100 )
+        print "_________________________________________________________________"
             
     
-    def predict_untagged(self):
-        opinions = dp.get_untagged()
+    def predict_untagged(self,tofile=False):
+        opinions = dp.get_untagged()[:10] # TO-DO : Testing purposes
         results = {}
         total = len(opinions)
-        for idx,opinion in enumerate(opinions):
+        for idx,opinion in enumerate(opinions): 
             progress("Predicting negations",total,idx)
+            results[ opinion['_id'] ] = []
             for X in dp.get_embeddings( opinion['text'], self.left, self.right )[0]:
-                import pdb;pdb.set_trace()
-                raw_input()
-#                 X = X.reshape((-1, 1))
-                Y = self.model.predict(X)
-                results[ op['_id'] ] = Y
+                X = X.reshape((1, -1))
+                Y = self.model.predict( X )
+                Y = ( round(Y) == 1 ) # 0 <= Y <= 1 -- Round is ok?
+                results[ opinion['_id'] ].append( Y ) 
+        if tofile: save(results,"ann_predictions","./outputs/tmp")
+        #dp.save_negation(result,tagged_as='automatically')
         return results
+     
         
 
 
@@ -216,7 +226,7 @@ def start_tagging(tofile=False):
                     review  = sample['text']
                     
                     # Initialization (keep current words and empty categories)
-                    words = [item['word'] for item in review]
+                    words = [item['word'].encode('ascii','ignore') for item in review]
                     total = len(words)
                     tags  = ['  ' for _ in range(total)]
                     

@@ -154,40 +154,39 @@ parameters = [
     )
 ] 
 
-# count = 0
-# for parameter in parameters: 
-#               
-#     opinions = cr.from_corpus(
-#             parameter[0], # source
-#             parameter[1], # path pattern to file
-#             parameter[2], # review pattern
-#             parameter[3], # category pattern
-#             parameter[4], # category mapping
-#             parameter[5], # category mapping
-#             category_position=parameter[6],
-#             category_level=parameter[7],
-#             start=parameter[8],
-#             decoding=parameter[9],
-#             tofile=True
-#         )
-#            
-#     analyzed = ta.analyze(
-#             opinions,
-#             tofile=True
-#         )
-#        
-#     count += len(analyzed)
-#        
-# raw_input("Total %i .Continue..." % count)
-#
-# dp.update_embeddings(verbose=True)
-#         
-# nt.start_tagging(tofile=True) 
+count = 0
+for parameter in parameters: 
+               
+    opinions = cr.from_corpus(
+            parameter[0], # source
+            parameter[1], # path pattern to file
+            parameter[2], # review pattern
+            parameter[3], # category pattern
+            parameter[4], # category mapping
+            parameter[5], # category mapping
+            category_position=parameter[6],
+            category_level=parameter[7],
+            start=parameter[8],
+            decoding=parameter[9],
+            tofile=True
+        )
+            
+    analyzed = ta.analyze(
+            opinions,
+            tofile=True
+        )
+        
+    count += len(analyzed)
+        
+raw_input("Total %i .Continue..." % count)
+
+dp.update_embeddings(verbose=True)
+         
+nt.start_tagging(tofile=True) 
  
 ann = nt.NeuralNegationTagger(2,2)     
 ann.fit_tagged()
-ann.predict_untagged()    
-# dp.save_negation(Y,tagged_as='automatically')
+ann.predict_untagged(tofile=True)    
 
 # tolerance = 1.0
 # li = dp.get_indepentent_lex(tolerance=tolerance)
