@@ -44,7 +44,7 @@ class Log:
 
     def __call__(self,message, level='error'):
         time = strftime("%Y-%m-%d %H:%M:%S", gmtime())
-        self.log.write( "%s : %s at %s > %s \n" % ( level.upper() , time , inspect.stack()[1][0].f_code.co_name.upper() , message ) )
+        self.log.write( "\n%s : %s at %s > %s \n" % ( level.upper() , time , inspect.stack()[1][0].f_code.co_name.upper() , message ) )
         
     def __exit__(self):
         self.log.close()

@@ -2,19 +2,22 @@
 import sys
 sys.path.append('../utilities')
 from utilities import *
+from metrics import precision, recall, fmeasure
 
 from keras.models import Sequential
 from keras.layers import Dense
 from keras.callbacks import EarlyStopping,CSVLogger
+# from keras.utils import plot_model
+
 import DataProvider as dp 
+
 import os, json, io, glob, re
 import numpy as np
+
+
+
 np.random.seed(666)
-
-import os
 os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
-
-
 
 tmp = os.popen('stty size', 'r').read().split()
 WIDTH = int(tmp[1])-15 if tmp else 100
@@ -27,72 +30,79 @@ sources = dp.get_sources()
 sources_size = len(sources)
 
 
-
 class NeuralNegationTagger:
      
     def __init__(self,
-            win_left,
-            win_right,
+            win_left=None,
+            win_right=None,
+            target=None,
             hidden_layers=2,
             activation=['relu','relu','relu','sigmoid'],
             loss='binary_crossentropy', 
             optimizer='adam', 
-            metrics=['accuracy','binary_accuracy'],#,'precision','recall','fmeasure'],
+            metrics=['accuracy',precision, recall, fmeasure],
             early_monitor='loss',
             early_min_delta=0,
             early_patience=2,
             early_mode='auto',
         ):
         
-        # Check restrictions
-        min_activation_len = 2+hidden_layers
-        if len(activation) < min_activation_len:
-            raise Exception("Activation array size must be %i\n -- 1 input, %2 hidden, 1 output" % (min_activation_len,hidden_layers))
+        if target:
+            self.mode.load_model(target)
         
-        # Parameters calculation
-        vec_size  = dp.get_size_embedding()        
-        input_dim = vec_size * (win_right + win_left + 1)
-        
-        # Attributes settings
-        self.right = win_right
-        self.left  = win_left
-        self.dim   = input_dim
-        
-        # Callbacks settings
-        self.callbacks = []
-        self.callbacks.append(
-            EarlyStopping(
-                monitor=early_monitor,
-                min_delta=early_min_delta,
-                patience=early_patience, 
-                mode=early_mode,
-                verbose=0
+        else:            
+            # Check restrictions
+            if not win_left or not win_right:
+                raise Exception("Windows parameters are required")
+            
+            min_activation_len = 2+hidden_layers
+            if len(activation) < min_activation_len:
+                raise Exception("Activation array size must be %i\n -- 1 input, %2 hidden, 1 output" % (min_activation_len,hidden_layers))
+            
+            # Parameters calculation
+            vec_size  = dp.get_size_embedding()        
+            input_dim = vec_size * (win_right + win_left + 1)
+            
+            # Attributes settings
+            self.right = win_right
+            self.left  = win_left
+            self.dim   = input_dim
+            
+            # Callbacks settings
+            self.callbacks = []
+            self.callbacks.append(
+                EarlyStopping(
+                    monitor=early_monitor,
+                    min_delta=early_min_delta,
+                    patience=early_patience, 
+                    mode=early_mode,
+                    verbose=0
+                )
             )
-        )
-        self.callbacks.append(
-            CSVLogger('./log/training.log')
-        )
-        
-        # Model definition     
-        self.model = Sequential()
-        
-        # Input layer
-        out_dim = input_dim / 2
-        self.model.add( Dense( out_dim, input_dim=input_dim, activation=activation[0] ) ) 
-        
-        # Hidden layers
-        for i in range(hidden_layers): 
-            out_dim = out_dim / 2
-            self.model.add( Dense( out_dim, activation=activation[i+1] ) ) 
-        
-        # Softmax layer
-        #self.model.add( Dense( 2, activation='softmax' ) )
-        
-        # Output layer - Binary: Negated or Not-negated
-        self.model.add( Dense( 1, activation=activation[min_activation_len-1] ) )
-        
-        # Compile model from parameters
-        self.model.compile(loss=loss, optimizer=optimizer , metrics=metrics)
+            self.callbacks.append(
+                CSVLogger('./log/training.log')
+            )
+            
+            # Model definition     
+            self.model = Sequential()
+            
+            # Input layer
+            out_dim = input_dim / 2
+            self.model.add( Dense( out_dim, input_dim=input_dim, activation=activation[0] ) ) 
+            
+            # Hidden layers
+            for i in range(hidden_layers-1): 
+                out_dim = out_dim / 2
+                self.model.add( Dense( out_dim, activation=activation[i+1] ) ) 
+            
+            # Softmax layer
+            #self.model.add( Dense( 2, activation='softmax' ) )
+            
+            # Output layer - Binary: Negated or Not-negated
+            self.model.add( Dense( 1, activation=activation[min_activation_len-1] ) )
+            
+            # Compile model from parameters
+            self.model.compile(loss=loss, optimizer=optimizer , metrics=metrics)
         
         print self.model.summary()
      
@@ -103,7 +113,7 @@ class NeuralNegationTagger:
         total = len(opinions)
         for idx,opinion in enumerate(opinions):
             progress("Fitting negations",total,idx)
-            x,y = dp.get_embeddings( opinion['text'], self.left, self.right )
+            x,y = dp.get_text_embeddings( opinion['text'], self.left, self.right )
             X += x
             Y += y
         X = np.array(X)
@@ -111,9 +121,9 @@ class NeuralNegationTagger:
         
         self.model.fit( X , Y , callbacks=self.callbacks , validation_split=testing_fraction , verbose=verbose )
         
-        scores = self.model.evaluate(X,Y)        
-        for i in range(len(scores)):
-            print "%-20s: %.2f%%" % ( self.model.metrics_names[i], scores[i]*100 )
+        scores = self.model.evaluate(X,Y)
+        print        
+        for i in range(len(scores)): print "%-20s: %.2f%%" % ( self.model.metrics_names[i], scores[i]*100 )
         print "_________________________________________________________________"
             
     
@@ -132,8 +142,14 @@ class NeuralNegationTagger:
         if tofile: save(results,"ann_predictions","./outputs/tmp")
         #dp.save_negation(result,tagged_as='automatically')
         return results
+    
      
-        
+    def save(self,odir = './outputs/models'):
+        odir = odir if odir[-1] != "/" else odir[:-1]
+        if not os.path.isdir(odir): os.makedirs(odir)
+        self.model.save( odir+"/model_neg_l%i_r%i_dim%i.h5" % (self.left,self.right,self.dim) )
+#         plot_model( self.model, to_file=odir+'/model_neg_l%i_r%i_dim%i.png' % (self.left,self.right,self.dim) , show_shapes=True )    
+
 
 
 def start_tagging(tofile=False):
@@ -192,8 +208,8 @@ def start_tagging(tofile=False):
         op = int(op)
         if op == 0:
             break # Exit
-            raw_input("Opcion invalida")
         if op > sources_size:
+            raw_input("Opcion invalida")
             continue
         else:    
             result = {}
@@ -299,70 +315,17 @@ def start_tagging(tofile=False):
                 raw_input("Reason: %s\nEnter to continue..." % str(e))
     
     
-import re
-def manual_file_to_dp(source_dir):
-    for source in glob.glob(source_dir):
-        with open(source) as fp:
-            print source
-            opinions = json.load(fp)
-        negations = {}
-        errors = []
-        for idx, op in enumerate(opinions):
-            target = dp.get_by_idx(op['from'], op['id'])
-            if idx > len(target['text']) or u'negated' in target['text'][idx].keys(): # Skip if already re-tagged
-                break
-            tags  = [tag[-1] for tag in op['annotation'].split(' ')]
-            words = [item['word'].lower() for item in target['text']]
-            annot = [tag[:-2].lower() for tag in op['annotation'].split(' ')]
-            if words != annot:
-                size = len(words)
-                retags = [None for _ in range(size)]
-                idxW,idxA = 0,0
-                try:
-                    qW,qA = [],[]
-                    while True:
-                        os.system('clear')
-                        print op['from'], op['id']
-                        print "WORDS"
-                        print ' '.join(words),"\n"
-                        print "ANNOT"
-                        print ' '.join(annot),"\n" 
-                        if idxW >= len(words) or idxA >= len(annot):
-                           break 
-                        if words[idxW] == annot[idxA]:
-                            if idxW < len(retags) and idxA < len(tags):
-                                retags[idxW] = tags[idxA]
-                                qW.append(idxW)
-                                qA.append(idxA)
-                                idxW += 1
-                                idxA += 1
-                        elif annot[idxA] == '.':
-                            qA.append(idxA)
-                            idxA += 1 
-                        else:
-                            print "%-10s vs %10s" % (words[idxW],annot[idxA])
-                            opt = raw_input("(S)kip or (B)orrow ? Tap <enter> for previous or (N)ext > ")
-                            if opt == 'b': 
-                                retags[idxW] = tags[idxA]
-                                qW.append(idxW)
-                                idxW += 1
-                            elif opt == 's':
-                                qA.append(idxA)
-                                idxA += 1
-                            elif opt == 'n':
-                                break
-                            else:
-                                idxW = qW.pop()
-                                idxA = qA.pop()
-                except Exception as e:
-                    print str(e)
-                    print "words",idxW,len(words)
-                    print "annot",idxA,len(annot)
-                    print "tags",idxA, len(tags)
-                    raw_input()
-                tags = retags 
-            negations[target['_id']] = map(lambda x: x == 'i', tags)
+def load_neg_from_files(source_dir):
+    sources = glob.glob(source_dir)
+    total = len(sources)
+    for idx,source in enumerate(sources):
+        progress("Load negation tags from %s" % source,total,idx)
+        content = json.load( open(source) )    
+        dp.save_negations(content,tagged_as='manually')
         
-        dp.save_negations(negations)
+        
+        
+if __name__ == '__main__':
+    load_neg_from_files('./outputs/tmp/negtag_*.json')
     
     
