@@ -48,7 +48,7 @@ class NeuralNegationTagger:
         ):
         
         if target:
-            self.mode.load_model(target)
+            self.model.load_model(target)
         
         else:            
             # Check restrictions
