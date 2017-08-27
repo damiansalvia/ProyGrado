@@ -30,10 +30,12 @@ SUBSTITUTIONS = [
     (u"(?i)([lrce])\\1\\1+",u"\\1\\1"),
     (u"(?i)([lrce])\\1(\W)",u"\\1\\2"),
     # Replace emojis by a special tag
-    (u":\)",u"emoji_feliz"),(u"\(:",u"emoji_feliz"),
-    (u":\(",u"emoji_triste"),(u"\):",u"emoji_triste"),
+    (u":\)",u"emoji_feliz "),(u"\(:",u"emoji_feliz "),
+    (u":\(",u"emoji_triste "),(u"\):",u"emoji_triste "),
+    # Remove URIs with scheme http or https
+    (u"(https?:\/\/\S+)",u""),
     # Separate alphabetical character from non-alphabetical character by a blank space
-    (u"(?i)([0-9a-záéíóúñüÁÉÍÓÚÑÜ\\\]?)([^0-9a-záéíóúñüÁÉÍÓÚÑÜ_\\\\s]+)([0-9a-záéíóúñüÁÉÍÓÚÑÜ\\\]?)",u"\\1 \\2 \\3"),
+    (u"(?i)([0-9a-záéíóúñüÁÉÍÓÚÑÜ\\\]?)([^0-9a-záéíóúñüÁÉÍÓÚÑÜ_-\\\\s]+)([0-9a-záéíóúñüÁÉÍÓÚÑÜ\\\]?)",u"\\1 \\2 \\3"),
     # Remove redundant quote marks  -- replace, delete, undo
     (u"(\")([^\"]*?)(?(1)\")",u"&quote;\\2&quote;"),
     (u"[\"]",u""),
@@ -42,16 +44,15 @@ SUBSTITUTIONS = [
     # Remove redundant parenthesis -- replace, delete, undo
     (u"(\()([^\(]*?)(?(1)\))",u"&lquo;\\2&rquo;"),
     (u"[\(\)]",u""),
-    (u"&lquo;",u"("),(u"&rquo;",u")"),
+    (u"&lquo;",u"("),(u"&rquo;",u")"), 
     # Replace all non-alphabetical or special symbols by a whitespace
-    (u"(?i)[^0-9a-záéíóúñüÁÉÍÓÚÑÜ_¿\?¡!\(\),\.:;\"\$/]",u" "),
+    (u"(?i)[^0-9a-záéíóúñüÁÉÍÓÚÑÜ_¿\?¡!\(\),-\.:;\"\$/]",u" "),
     # Replace multiple blank spaces by one
     (u"(\s){2,}",u" ")
 ]
 
 
-def review_correction(
-    # Apply simple pattern correction in the input text
+def review_correction( # Apply simple pattern correction in the input text
         text # Text for applying the correction.
     ):
     if not isinstance(text,unicode):
@@ -59,6 +60,7 @@ def review_correction(
     text += u" ."
     for source,target in SUBSTITUTIONS:
         text = re.sub(source,target,text,flags=re.DOTALL)
+    text = text.lower() 
     return text    
 
     
