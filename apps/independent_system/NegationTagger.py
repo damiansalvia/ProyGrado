@@ -139,7 +139,7 @@ class NeuralNegationTagger:
                 Y = self.model.predict( X )
                 Y = ( round(Y) == 1 ) # 0 <= Y <= 1 -- Round is ok?
                 results[ opinion['_id'] ].append( Y ) 
-        if tofile: save(results,"ann_predictions","./outputs/tmp")
+        if tofile: save(results,"predict_untagged_l%i_r%i_d%i" % (self.left,self.right,self.dim),"./outputs/tmp")
         #dp.save_negation(result,tagged_as='automatically')
         return results
     
@@ -147,8 +147,8 @@ class NeuralNegationTagger:
     def save(self,odir = './outputs/models'):
         odir = odir if odir[-1] != "/" else odir[:-1]
         if not os.path.isdir(odir): os.makedirs(odir)
-        self.model.save( odir+"/model_neg_l%i_r%i_dim%i.h5" % (self.left,self.right,self.dim) )
-#         plot_model( self.model, to_file=odir+'/model_neg_l%i_r%i_dim%i.png' % (self.left,self.right,self.dim) , show_shapes=True )    
+        self.model.save( odir+"/model_neg_l%i_r%i_d%i.h5" % (self.left,self.right,self.dim) )
+#         plot_model( self.model, to_file=odir+'/model_neg_l%i_r%i_d%i.png' % (self.left,self.right,self.dim) , show_shapes=True )    
 
 
 
