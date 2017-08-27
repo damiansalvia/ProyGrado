@@ -85,26 +85,23 @@ def get_untagged():
 
 
 def get_size_embedding():
-    return list(db.embeddings.aggregate([
-        { '$limit' :1 },
-        { '$project': {'_id':0,'size': { '$size': '$embedding' } } }
-    ]))[0]['size']
+    return len(db.embeddings.find_one({},{ '_id':0 })['embedding'])
     
 
-def get_vector(word):
-    return db.embeddings.find_one({ "_id" : word })['embedding']
+def get_word_embedding(word):
+    res = db.embeddings.find_one({ "_id" : word })
+    if res: return res['embedding']
+    raise Exception("Couldn't find embedding for '%s'" % word)
 
 
-def get_embeddings(text, wleft, wright):
+def get_text_embeddings(text, wleft, wright):
     
     size_embedding = get_size_embedding()
     
     def get_entry(text, pos):
         if  0 <= pos < len(text) :
             word =  text[pos]['word'].lower()
-            res  = db.embeddings.find_one({ "_id" :word })
-            if res: return res['embedding']
-            raise Exception("Couldn't find embedding for '%s'" % text[pos]['word'])
+            return get_word_embedding(word)
         else :
             return np.zeros( size_embedding )
     
@@ -304,8 +301,7 @@ def get_indepentent_lex2(limit=None, tolerance=0, filter_neutral=False):
 
 
 def get_indep_lex_rules(treshold=0.9):
-    items = db.reviews.find({})
-    balance = int( round( sum( item['category'] for item in items ) / items.count() ) )
+    balance = get_stat_balanced()
     words = db.reviews.aggregate([
             { '$project': { '_id':0,'text':1, 'category':1 } },
             { '$unwind': '$text' },
@@ -321,7 +317,6 @@ def get_indep_lex_rules(treshold=0.9):
                 } 
             }
     ])
-    print balance;raw_input()
     pass
 
 
@@ -339,24 +334,21 @@ def get_vocabulary(get_by=None):
     return list( db.reviews.aggregate(query) )
 
 
-replacements = [
-    (u'á',u'a'),(u'é',u'e'),(u'í',u'i'),(u'ó',u'o'),(u'ú',u'u'),(u'ü',u'u'),
-    (u'a',u'á'),(u'e',u'é'),(u'i',u'í'),(u'o',u'ó'),(u'u',u'ú'),(u'u',u'ü')
-]
-combinations = sum([map(list, combinations(replacements, i+1)) for i in range(len(replacements))], [])
-stats = { "ByWord":0,"BySingular":0,"ByLemma":0,"ByWordCorrection" :0,"IsNull":0,"Fails":0,"Total":0 }
-
 def update_embeddings(
         femb='../../embeddings/emb39-word2vec.npy',
         ftok='../../embeddings/emb39-word2vec.txt',
         split_tolerance=1,
         verbose=False
     ):
-    with open(ftok) as fp:
-        content = fp.read()
-        content = content.lower()
-        content = content.replace("_","")
-        
+    
+    replacements = [
+        (u'á',u'a'),(u'é',u'e'),(u'í',u'i'),(u'ó',u'o'),(u'ú',u'u'),(u'ü',u'u'),
+        (u'a',u'á'),(u'e',u'é'),(u'i',u'í'),(u'o',u'ó'),(u'u',u'ú'),(u'u',u'ü')
+    ]
+    combinations = sum([map(list, combinations(replacements, i+1)) for i in range(len(replacements))], [])
+    stats = { "ByWord":0,"BySingular":0,"ByLemma":0,"ByWordCorrection" :0,"IsNull":0,"Fails":0,"Total":0 }
+    
+    content     = open(ftok).read().lower().replace("_","")    
     index_for   = { token:index for index, token in enumerate(content.splitlines()) }
     embeddings  = np.load(femb)
     vector_size = len(embeddings[0])
@@ -424,8 +416,17 @@ def update_embeddings(
 
 # ----------------------------------------------------------------------------------------------------------------------
 
+
+def get_stat_balanced(source=None):
+    query = {}
+    if source:
+         query.update({ 'source':source })
+    items = db.reviews.find(query)
+    balance = int( round( sum( item['category'] for item in items ) / items.count() ) )
+    return balance
+
 if __name__ == '__main__':
-    get_tagged_embeddings('manually')
+    pass
 
 
 
