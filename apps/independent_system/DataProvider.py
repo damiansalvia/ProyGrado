@@ -10,7 +10,9 @@ import numpy as np
 from itertools import combinations
 
 
+
 log = Log("./log")
+
 
 
 print "Connecting Mongo database"
@@ -22,11 +24,29 @@ except ServerSelectionTimeoutError:
     raise Exception("Couldn't connect Mongo database")
 
 
+
 print "Creating Mongo indexes"
 db.reviews.create_index('idx', name='position_index')
 db.reviews.create_index('source', name='source_index')
 db.reviews.create_index('category', name='category_index')
 db.reviews.create_index('tagged', name='negation_index')
+
+        
+        
+def save_opinions(opinions):
+    if opinions:
+        db.reviews.insert_many(opinions)
+
+
+def save_negations(opinions,tagged_as):
+    if tagged_as not in ['manually','automatically']:
+        raise Exception("Values for 'tagged_as' must be 'manually' or 'automatically'")
+    for _id in opinions:
+        negation = { 'tagged' : tagged_as }
+        for idx, tag in enumerate(opinions[_id]):
+            negation['text.' + str(idx) + '.negated'] = tag
+        if opinions[_id]:
+            db.reviews.update( { '_id': _id } , { '$set': negation }  )
 
 
 def get_sources():
@@ -39,20 +59,6 @@ def get_opinion(id):
 
 def get_by_idx(source, idx):
     return db.reviews.find_one({'source': source, 'idx': idx})
-
-
-def save_opinions(opinions):
-    if opinions:
-        db.reviews.insert_many(opinions)
-
-
-def save_negations(opinions):
-    for _id in opinions:
-        negation = { 'tagged' : 'manually' }
-        for idx, tag in enumerate(opinions[_id]):
-            negation['text.' + str(idx) + '.negated'] = tag
-        if opinions[_id]:
-            db.reviews.update( { '_id': _id } , { '$set': negation }  )
 
 
 def get_sample(quantity, source, indexes = None):
@@ -68,29 +74,58 @@ def get_sample(quantity, source, indexes = None):
 
 
 def get_tagged(tagger,source=None):
-    if source:
-        return list(db.reviews.find({ "tagged" : tagger , "source" : source }))
-    return list(db.reviews.find({ "tagged" : tagger }))
+    query = { "tagged" : tagger  } 
+    if source and not source.isdigit(): # TO-DO : por algun motivo me llega un source=2
+        query.update({ "source" : source })
+    return list(db.reviews.find(query))
 
 
 def get_untagged():
     return list(db.reviews.find({ "tagged" : { "$exists" : False } }))
 
 
-def save_result(opinions):
-    for id in opinions:
-        options = { 'tagged' : 'automatically' }
-        for idx, tag in opinions[id]:
-            opinions['text.' + str(idx) + '.negated'] = tag
-        db.reviews.update( {'_id': id}, {'$set': options} )
+def get_size_embedding():
+    return len(db.embeddings.find_one({},{ '_id':0 })['embedding'])
+    
+
+def get_word_embedding(word):
+    res = db.embeddings.find_one({ "_id" : word })
+    if res: return res['embedding']
+    raise Exception("Couldn't find embedding for '%s'" % word)
 
 
-def get_corproea_size():
-    return len(db.reviews.distinct("source"))
+def get_text_embeddings(text, wleft, wright):
+    
+    size_embedding = get_size_embedding()
+    
+    def get_entry(text, pos):
+        if  0 <= pos < len(text) :
+            word =  text[pos]['word'].lower()
+            return get_word_embedding(word)
+        else :
+            return np.zeros( size_embedding )
+    
+    data,pred = [],[]
+    
+    for idx, word in enumerate(text):
+    
+        embeddings = []        
+        for i in range(wleft + wright + 1):
+            embeddings.append( get_entry( text , idx-wleft+i ) )
+        
+        embeddings = np.array( embeddings ).flatten()
+        data.append(embeddings)
+        
+        if text[idx].has_key('negated'): # for training
+            prediction = np.array(text[idx]['negated'])
+            pred.append( prediction )
+    
+    return data, pred
+    
 
-
-def get_indepentent_lex(limit=None, tolerance=0, filter_neutral=False):
-    min_matches = int(round(get_corproea_size()*(1.0-tolerance),0))
+def get_indepentent_lex(limit=None, tolerance=0.0, filter_neutral=False):
+    sources_qty = len( get_sources() )
+    min_matches = int(round(sources_qty*(1.0-tolerance),0))
     query = [
         { '$unwind' : '$text' },{ 
             '$group': {
@@ -157,7 +192,7 @@ def get_indepentent_lex(limit=None, tolerance=0, filter_neutral=False):
     return list(db.reviews.aggregate(query))
 
 
-def get_indepentent_lex2(limit=None, tolerance=0, filter_neutral=False):
+def get_indepentent_lex2(limit=None, tolerance=0.0, filter_neutral=False):
     min_matches = int(round(get_corproea_size()*(1.0-tolerance),0))
     sum_pos = list(db.reviews.aggregate([
         { '$match': { 'category': { '$gt': 50 } } },
@@ -265,9 +300,8 @@ def get_indepentent_lex2(limit=None, tolerance=0, filter_neutral=False):
     return list(db.reviews.aggregate(query))
 
 
-def get_indep_lex_rules(treshold=0.9):
-    items = db.reviews.find({})
-    balance = int( round( sum( item['category'] for item in items ) / items.count() ) )
+def get_indep_lex_by_rules(treshold=0.9):
+    balance = get_stat_balanced()
     words = db.reviews.aggregate([
             { '$project': { '_id':0,'text':1, 'category':1 } },
             { '$unwind': '$text' },
@@ -283,24 +317,22 @@ def get_indep_lex_rules(treshold=0.9):
                 } 
             }
     ])
-    print balance;raw_input()
     pass
 
 
-def get_vocabulary():
-    return list(db.reviews.aggregate([
+def get_vocabulary(get_by=None):
+    query = [
         { '$project': { '_id':0,'text':1 } },
-        { '$unwind': "$text" },
-        { '$project': { 'lemma':'$text.lemma', 'word':'$text.word' } }
-    ]))
+        { '$unwind': "$text" }
+    ]
+    if not get_by:
+        query.append( { '$project': { 'lemma':'$text.lemma', 'word':'$text.word' } } )
+    elif get_by not in ["word","lemma"]:
+        raise Exception("Values for get_by parameter must be 'word' or 'lemma'")
+    else:
+        query.append( { '$project': { get_by:'$text.%s'%get_by} } )
+    return list( db.reviews.aggregate(query) )
 
-
-replacements = [
-    (u'á',u'a'),(u'é',u'e'),(u'í',u'i'),(u'ó',u'o'),(u'ú',u'u'),(u'ü',u'u'),
-    (u'a',u'á'),(u'e',u'é'),(u'i',u'í'),(u'o',u'ó'),(u'u',u'ú'),(u'u',u'ü')
-]
-combinations = sum([map(list, combinations(replacements, i+1)) for i in range(len(replacements))], [])
-stats = { "ByWord":0,"BySingular":0,"ByLemma":0,"ByWordCorrection" :0,"IsNull":0,"Fails":0,"Total":0 }
 
 def update_embeddings(
         femb='../../embeddings/emb39-word2vec.npy',
@@ -308,11 +340,15 @@ def update_embeddings(
         split_tolerance=1,
         verbose=False
     ):
-    with open(ftok) as fp:
-        content = fp.read()
-        content = content.lower()
-        content = content.replace("_","")
-        
+    
+    replacements = [
+        (u'á',u'a'),(u'é',u'e'),(u'í',u'i'),(u'ó',u'o'),(u'ú',u'u'),(u'ü',u'u'),
+        (u'a',u'á'),(u'e',u'é'),(u'i',u'í'),(u'o',u'ó'),(u'u',u'ú'),(u'u',u'ü')
+    ]
+    alternatives = sum([map(list, combinations(replacements, i+1)) for i in range(len(replacements))], [])
+    stats = { "ByWord":0,"BySingular":0,"ByLemma":0,"ByWordCorrection" :0,"IsNull":0,"Fails":0,"Total":0 }
+    
+    content     = open(ftok).read().lower().replace("_","")    
     index_for   = { token:index for index, token in enumerate(content.splitlines()) }
     embeddings  = np.load(femb)
     vector_size = len(embeddings[0])
@@ -321,8 +357,6 @@ def update_embeddings(
     
     def get_vectors(word,lemma):
         
-        word = word.lower()
-            
         stats['Total'] += 1
         
         if index_for.has_key(word):
@@ -333,26 +367,33 @@ def update_embeddings(
         if index_for.has_key(singular):
             stats['BySingular'] += 1
             return embeddings[ index_for[ singular ] ]  
-         
+          
         if index_for.has_key(lemma):
             stats['ByLemma'] += 1 
             return embeddings[ index_for[ lemma ] ]
-         
-        vector = nullvector.copy()
-        tokens = word.split('_')
-        left = len(tokens)
-        for token in tokens:            
-            for combination in combinations: 
-                correct = token                   
-                for fr,to in combination:
-                    correct = correct.replace(fr,to)
-                if index_for.has_key(correct):
-                    vector += embeddings[ index_for[ correct ] ]
-                    left -= 1 
-                    break # Try next token
-        if left <= split_tolerance:
-            stats['ByWordCorrection'] += 1
-            return vector                    
+#          
+#         vector = nullvector.copy()
+#         tokens = word.split('_')
+#         left = len(tokens)
+#         for token in tokens:            
+#             for replace_set in alternatives: 
+#                 correct = token                   
+#                 for fr,to in replace_set:
+#                     correct = correct.replace(fr,to)
+#                 if index_for.has_key(correct):
+#                     vector += embeddings[ index_for[ correct ] ]
+#                     left -= 1 
+#                     break # Try next token
+#         if left <= split_tolerance:
+#             stats['ByWordCorrection'] += 1
+#             return vector   
+            
+        for replace_set in alternatives: 
+            correct = token                   
+            for fr,to in replace_set:
+                correct = correct.replace(fr,to)
+            if index_for.has_key(correct):
+                return embeddings[ index_for[ correct ] ]                 
         
         stats['IsNull'] += 1
         return nullvector 
@@ -364,11 +405,11 @@ def update_embeddings(
     
     for idx,item in enumerate(vocabulary):
         progress("Updating embeddings",total,idx)
-        word  = item['word']
-        lemma = item['lemma'] 
-        if result.has_key(word) or result.has_key(lemma):
+        word  = item['word'].lower()
+        lemma = item['lemma'].lower()
+        if result.has_key(word):
             continue
-        vector = get_vectors(word,lemma)
+        vector = get_vectors( word , lemma )
         result.update({ word:vector })
     
     if stats['Total']:
@@ -382,7 +423,16 @@ def update_embeddings(
 
 # ----------------------------------------------------------------------------------------------------------------------
 
+
+def get_stat_balanced(source=None):
+    query = {}
+    if source:
+         query.update({ 'source':source })
+    items = db.reviews.find(query)
+    balance = int( round( sum( item['category'] for item in items ) / items.count() ) )
+    return balance
+
 if __name__ == '__main__':
-    get_indep_lex_rules()
+    pass
 
 

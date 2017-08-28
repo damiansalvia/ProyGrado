@@ -111,8 +111,8 @@ parameters = [
         "(.*)\s",
         "(yes|no)_",
         {
-            'no' : 0, 
-            'yes': 100
+            'no' : 20, 
+            'yes': 80
         },
         "PATH",
         None,
@@ -154,52 +154,51 @@ parameters = [
     )
 ] 
 
-# count = 0
-# for parameter in parameters: 
-#              
-#     opinions = cr.from_corpus(
-#             parameter[0], # source
-#             parameter[1], # path pattern to file
-#             parameter[2], # review pattern
-#             parameter[3], # category pattern
-#             parameter[4], # category mapping
-#             parameter[5], # category mapping
-#             category_position=parameter[6],
-#             category_level=parameter[7],
-#             start=parameter[8],
-#             decoding=parameter[9],
-#             tofile=True
-#         )
-#           
-#     analyzed = ta.analyze(
-#             opinions,
-#             tofile=True
-#         )
-#       
-#     count += len(analyzed)
-#       
-# raw_input("Total %i .Continue..." % count)
-
+count = 0
+for parameter in parameters: 
+                  
+    opinions = cr.from_corpus(
+            parameter[0], # source
+            parameter[1], # path pattern to file
+            parameter[2], # review pattern
+            parameter[3], # category pattern
+            parameter[4], # category mapping
+            parameter[5], # category mapping
+            category_position=parameter[6],
+            category_level=parameter[7],
+            start=parameter[8],
+            decoding=parameter[9],
+            tofile=True
+        )
+               
+    analyzed = ta.analyze(
+            opinions,
+            tofile=True
+        )
+           
+    count += len(analyzed)
+           
+raw_input("Total %i .Continue..." % count)
+  
 dp.update_embeddings(verbose=True)
-raw_input()
-        
+         
 nt.start_tagging(tofile=True) 
- 
-# ann = nt.Network(5)
-#     
-# opinions = dp.get_tagged('manual')
-# ann.fit(opinions,2,2)
-#    
-# X = dp.get_untagged()
-# Y = ann.predict(X,2,2)
-#    
-# dp.save_result(Y)
 
-tolerance = 1.0
-li = dp.get_indepentent_lex(tolerance=tolerance)
-save(li,"independent_lexcon_-_tolerance_%i_percent" % (tolerance*100),"./outputs/lexicon")
-li = dp.get_indepentent_lex2(tolerance=tolerance)
-save(li,"independent_lexcon_2_-_tolerance_%i_percent" % (tolerance*100),"./outputs/lexicon")
+config = {
+    "left" :2,
+    "right":2
+}
+ 
+ann = nt.NeuralNegationTagger( config['left'] , config['right'] )     
+ann.fit_tagged( testing_fraction=0.20 , verbose=1 )
+ann.save()
+ann.predict_untagged( tofile=True )    
+
+# tolerance = 1.0
+# li = dp.get_indepentent_lex(tolerance=tolerance)
+# save(li,"independent_lexcon_-_tolerance_%i_percent" % (tolerance*100),"./outputs/lexicon")
+# li = dp.get_indepentent_lex2(tolerance=tolerance)
+# save(li,"independent_lexcon_2_-_tolerance_%i_percent" % (tolerance*100),"./outputs/lexicon")
  
 
 
