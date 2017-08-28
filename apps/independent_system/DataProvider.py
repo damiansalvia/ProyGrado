@@ -123,7 +123,7 @@ def get_text_embeddings(text, wleft, wright):
     return data, pred
     
 
-def get_indepentent_lex(limit=None, tolerance=0, filter_neutral=False):
+def get_indepentent_lex(limit=None, tolerance=0.0, filter_neutral=False):
     sources_qty = len( get_sources() )
     min_matches = int(round(sources_qty*(1.0-tolerance),0))
     query = [
@@ -192,7 +192,7 @@ def get_indepentent_lex(limit=None, tolerance=0, filter_neutral=False):
     return list(db.reviews.aggregate(query))
 
 
-def get_indepentent_lex2(limit=None, tolerance=0, filter_neutral=False):
+def get_indepentent_lex2(limit=None, tolerance=0.0, filter_neutral=False):
     min_matches = int(round(get_corproea_size()*(1.0-tolerance),0))
     sum_pos = list(db.reviews.aggregate([
         { '$match': { 'category': { '$gt': 50 } } },
@@ -300,7 +300,7 @@ def get_indepentent_lex2(limit=None, tolerance=0, filter_neutral=False):
     return list(db.reviews.aggregate(query))
 
 
-def get_indep_lex_rules(treshold=0.9):
+def get_indep_lex_by_rules(treshold=0.9):
     balance = get_stat_balanced()
     words = db.reviews.aggregate([
             { '$project': { '_id':0,'text':1, 'category':1 } },
@@ -345,7 +345,7 @@ def update_embeddings(
         (u'á',u'a'),(u'é',u'e'),(u'í',u'i'),(u'ó',u'o'),(u'ú',u'u'),(u'ü',u'u'),
         (u'a',u'á'),(u'e',u'é'),(u'i',u'í'),(u'o',u'ó'),(u'u',u'ú'),(u'u',u'ü')
     ]
-    combinations = sum([map(list, combinations(replacements, i+1)) for i in range(len(replacements))], [])
+    alternatives = sum([map(list, combinations(replacements, i+1)) for i in range(len(replacements))], [])
     stats = { "ByWord":0,"BySingular":0,"ByLemma":0,"ByWordCorrection" :0,"IsNull":0,"Fails":0,"Total":0 }
     
     content     = open(ftok).read().lower().replace("_","")    
@@ -367,26 +367,33 @@ def update_embeddings(
         if index_for.has_key(singular):
             stats['BySingular'] += 1
             return embeddings[ index_for[ singular ] ]  
-         
+          
         if index_for.has_key(lemma):
             stats['ByLemma'] += 1 
             return embeddings[ index_for[ lemma ] ]
-         
-        vector = nullvector.copy()
-        tokens = word.split('_')
-        left = len(tokens)
-        for token in tokens:            
-            for combination in combinations: 
-                correct = token                   
-                for fr,to in combination:
-                    correct = correct.replace(fr,to)
-                if index_for.has_key(correct):
-                    vector += embeddings[ index_for[ correct ] ]
-                    left -= 1 
-                    break # Try next token
-        if left <= split_tolerance:
-            stats['ByWordCorrection'] += 1
-            return vector                    
+#          
+#         vector = nullvector.copy()
+#         tokens = word.split('_')
+#         left = len(tokens)
+#         for token in tokens:            
+#             for replace_set in alternatives: 
+#                 correct = token                   
+#                 for fr,to in replace_set:
+#                     correct = correct.replace(fr,to)
+#                 if index_for.has_key(correct):
+#                     vector += embeddings[ index_for[ correct ] ]
+#                     left -= 1 
+#                     break # Try next token
+#         if left <= split_tolerance:
+#             stats['ByWordCorrection'] += 1
+#             return vector   
+            
+        for replace_set in alternatives: 
+            correct = token                   
+            for fr,to in replace_set:
+                correct = correct.replace(fr,to)
+            if index_for.has_key(correct):
+                return embeddings[ index_for[ correct ] ]                 
         
         stats['IsNull'] += 1
         return nullvector 

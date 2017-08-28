@@ -25,7 +25,7 @@ def analyze(opinions,tofile=False):
     for idx, opinion in enumerate(opinions):
         progress("Analyzing %s (%05.2f%%)" %  ( opinion['source'], 100.0*fails/total ), total, idx )
         try:
-            
+                
             _id = md5.new(str(opinion['category']) + opinion['text'].encode('ascii', 'ignore')).hexdigest()
             
             if not dp.get_opinion(_id) and _id not in _ids:
@@ -48,7 +48,7 @@ def analyze(opinions,tofile=False):
                 } for token in tokens ]
                     
                 analyzed.append(analysis)
-                
+                    
         except Exception as e:
             fails += 1
             log("Reason : %s for '%s' (at %s)" % (str(e),opinion['text'].encode('ascii','ignore'),opinion['source']) )

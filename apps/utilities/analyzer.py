@@ -34,17 +34,17 @@ class Analyzer:
         # Activate morpho modules to be used in next call
         self.mf.set_active_options(
             False, # User Map
+            True,  # Number Detection 
+            True,  # Punctuation Detection 
+            False,  # Date Detection -- CHANGED
+            True,  # Dictionary Search 
             True,  # Affix Analysis
-            True,  # Multiword Detection
-            True,  # Number Detection
-            True,  # Punctuation Detection
-            True,  # Date Detection
-            False, # Quantities Detection
-            True,  # Dictionary Search
-            True,  # Probability Assignment
-            True,  # Compound Analysis
-            True,  # NER
-            True   # Retok Contractions
+            False, # Compound Analysis
+            True,  # Retok Contractions
+            False,  # Multiword Detection -- CHANGED
+            True,  # NER 
+            False,  # Quantities Detection -- CHANGED
+            True   # Probability Assignment
         )
 
         # create tagger, sense anotator, and parsers

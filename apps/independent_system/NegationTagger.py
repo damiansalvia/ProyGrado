@@ -35,7 +35,7 @@ class NeuralNegationTagger:
     def __init__(self,
             win_left=None,
             win_right=None,
-            target=None,
+            from_file=None,
             hidden_layers=2,
             activation=['relu','relu','relu','sigmoid'],
             loss='binary_crossentropy', 
@@ -47,8 +47,8 @@ class NeuralNegationTagger:
             early_mode='auto',
         ):
         
-        if target:
-            self.model.load_model(target)
+        if from_file:
+            self.model.load_model(from_file)
         
         else:            
             # Check restrictions
@@ -109,13 +109,17 @@ class NeuralNegationTagger:
      
     def fit_tagged(self,testing_fraction=0.0,verbose=0):    
         opinions = dp.get_tagged('manually') 
+        
+        if not opinions: raise Exception('Nothing to train')
+        
         X , Y = [] , []
         total = len(opinions)
         for idx,opinion in enumerate(opinions):
             progress("Fitting negations",total,idx)
-            x,y = dp.get_text_embeddings( opinion['text'], self.left, self.right )
-            X += x
-            Y += y
+            x_curr,y_curr = dp.get_text_embeddings( opinion['text'], self.left, self.right )
+            X += x_curr
+            Y += y_curr
+        
         X = np.array(X)
         Y = np.array(Y)
         
@@ -193,7 +197,7 @@ def start_tagging(tofile=False):
                 return
             
         dp.save_negations(result,tagged_as='manually')
-        if tofile:save(result,"negtag_%s" % source,"./outputs/tmp",overwrite=False)
+        if tofile:save(result,"negtag_%s" % source,"./outputs/negation",overwrite=False)
         
     # #------- Execute Function -------#
     
