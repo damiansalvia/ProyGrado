@@ -181,7 +181,6 @@ for parameter in parameters:
 raw_input("Total %i .Continue..." % count)
   
 dp.update_embeddings(verbose=True)
-         
 nt.start_tagging(tofile=True) 
 
 config = {
