@@ -56,6 +56,9 @@ def get_sources():
 def get_opinion(id):
     return db.reviews.find_one({'_id':id})
 
+def get_opinions(source=None):
+    query = {'source': source} if source else {}
+    return db.reviews.find(query)
 
 def get_by_idx(source, idx):
     return db.reviews.find_one({'source': source, 'idx': idx})
@@ -299,6 +302,20 @@ def get_indepentent_lex2(limit=None, tolerance=0.0, filter_neutral=False):
        
     return list(db.reviews.aggregate(query))
 
+def get_avg_category(source=None):
+    query = [
+        {'$group':{
+                '_id' : None,
+                'sum_cat': { '$sum': '$category'},
+                'size':    { '$sum': 1 }
+            }
+        },
+        {'$project': {'avg' : { '$divide': ['$sum_cat','$size'] } } }
+    ]
+    if source:
+        query.insert(0,{'$match': {'source':source}})
+    return list(db.reviews.aggregate(query))[0]['avg']
+
 
 def get_indep_lex_by_rules(treshold=0.9):
     balance = get_stat_balanced()
@@ -332,6 +349,15 @@ def get_vocabulary(get_by=None):
     else:
         query.append( { '$project': { get_by:'$text.%s'%get_by} } )
     return list( db.reviews.aggregate(query) )
+
+
+
+def get_soruce_vocabulary(source):
+    return list(db.reviews.aggregate([
+        { '$match': {'source': source}},
+        { '$unwind': "$text" },
+        { '$group': { '_id':'$text.lemma' } }
+    ]))
 
 
 def update_embeddings(

@@ -54,8 +54,17 @@ RUN ln -s /usr/bin/python2.7 /usr/bin/python
 
 # Install python dependencies for DUA
 
-RUN apt update && apt install -y \
-    python-nltk 
+RUN apt update && apt install -y python-pip
+RUN pip install --upgrade pip
+
+RUN pip install -U pymongo
+RUN pip install -U nltk
+RUN pip install -U tensorflow
+RUN pip install -U numpy scipy
+RUN pip install -U scikit-learn
+RUN pip install -U pillow
+RUN pip install -U h5py
+RUN pip install -U keras
 
 RUN python -c 'import nltk; nltk.download("wordnet")'
 RUN python -c 'import nltk; nltk.download("punkt")'
@@ -67,11 +76,7 @@ RUN locale-gen "en_US.UTF-8"
 
 # Add Files
 RUN mkdir ProyGrado
-ADD apps ProyGrado/apps 
-ADD tools ProyGrado/tools
-ADD corpus ProyGrado/corpus
-
-
+ADD . ProyGrado
 
 ###################### For DEV ######################
 RUN apt update && apt install -y \

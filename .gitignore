@@ -6,3 +6,4 @@ Docker/FreeLing-4.0
 *.pydevproject
 /corpus/
 /embeddings/
+/apps/independent_system/outputs/
