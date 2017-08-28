@@ -1,0 +1,25 @@
+ERROR : 2017-08-25 18:34:59 at START_TAGGING > Reason : 'ascii' codec can't encode character u'\xf1' in position 13: ordinal not in range(128) (at corpus_apps_android) [7164] '{
+    "a9f2d2fb35ea985ce9300da047d03488": [
+        false, 
+        false, 
+        false, 
+        false, 
+        false, 
+        false, 
+        false, 
+        false, 
+        false, 
+        false, 
+        false, 
+        false, 
+        false
+    ], 
+    "a65dbab850f21bf08e6c457b4a6f1616": [
+        false, 
+        false
+    ]
+}' 
+ERROR : 2017-08-25 19:01:20 at START_TAGGING > Reason : 'ascii' codec can't encode character u'\xe9' in position 2: ordinal not in range(128) (at corpus_cine) [2285] '{}' 
+ERROR : 2017-08-25 19:01:33 at START_TAGGING > Reason : 'ascii' codec can't encode character u'\xe1' in position 3: ordinal not in range(128) (at corpus_restaurantes) [7417] '{}' 
+ERROR : 2017-08-25 19:02:14 at START_TAGGING > Reason : 'ascii' codec can't encode character u'\xf3' in position 6: ordinal not in range(128) (at corpus_cine) [3256] '{}' 
+ERROR : 2017-08-26 18:03:06 at START_TAGGING > Reason : 'ascii' codec can't encode character u'\xe1' in position 2: ordinal not in range(128) (at corpus_cine) [2153] '{}' 
