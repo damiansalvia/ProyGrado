@@ -35,8 +35,7 @@ db.reviews.create_index('tagged', name='negation_index')
         
         
 def save_opinions(opinions):
-    if opinions:
-        db.reviews.insert_many(opinions)
+    if opinions: db.reviews.insert_many(opinions)
 
 
 def save_negations(opinions,tagged_as):
@@ -57,9 +56,11 @@ def get_sources():
 def get_opinion(id):
     return db.reviews.find_one({'_id':id})
 
+
 def get_opinions(source=None):
     query = {'source': source} if source else {}
     return db.reviews.find(query)
+
 
 def get_by_idx(source, idx):
     return db.reviews.find_one({'source': source, 'idx': idx})
@@ -125,256 +126,15 @@ def get_text_embeddings(text, wleft, wright):
             pred.append( prediction )
     
     return data, pred
-    
-
-def get_indepentent_lex(limit=None, tolerance=0.0, filter_neutral=False):
-    sources_qty = len( get_sources() )
-    min_matches = int(round(sources_qty*(1.0-tolerance),0))
-    query = [
-        { '$unwind' : '$text' },{ 
-            '$group': {
-                '_id'  : { 'source': '$source', 'lemma': '$text.lemma'},
-                'sent' : { '$avg' : { 
-                        '$cond' : {
-                            'if'  :  '$text.neg',
-                            'then': { '$subtract': [ 100 , "$category"] },
-                            'else': '$category'
-                        }
-                    } 
-                }      
-            }
-        },{
-            '$group': {
-                '_id' : '$_id.lemma',
-                'polarities' : {
-                    '$push' : {
-                        '$switch' : { 'branches' : [
-                            {'case' : { '$gte' : ['$sent', 60] }, 'then': '+'},    
-                            {'case' : { '$lte' : ['$sent', 30] }, 'then': '-'},    
-                            {'case' : True, 'then': '0'},    
-                        ]}
-                    }
-                }
-            }
-        },
-        {
-            '$project' : {
-                'lemma' : "$_id",
-                'corpus_len' : { '$size': "$polarities" } ,
-                'pol' : { '$arrayElemAt': [ "$polarities", 0] },
-                'accepted' : {
-                   '$let': {
-                       'vars': {
-                          'first': { '$arrayElemAt': [ "$polarities", 0] },
-                       },
-                       'in': { 
-                            '$reduce' : {
-                                'input': "$polarities",
-                                'initialValue': True,
-                                'in': { '$and': ["$$value", { '$eq' : ["$$this", "$$first" ]}] }
-                            } 
-                        }
-                    }
-                },
-                'polarities' : "$polarities"
-            }
-        },
-        { '$match' : { 'accepted': True, 'corpus_len' : { '$gte' : min_matches } } }
-    ] 
-
-    if filter_neutral:
-        query.append({ '$match' : {'pol': {'$ne': '0'} } })
-        
-    query.extend([
-        { '$project' : {'_id': 0, 'accepted' : 0} },
-        { '$sort' : { 'corpus_len' : -1 } }
-    ])
-    
-    if limit:
-       query.append({ '$limit': limit }) 
-       
-    return list(db.reviews.aggregate(query))
 
 
-def get_indepentent_lex2(limit=None, tolerance=0.0, filter_neutral=False):
-    min_matches = int(round(get_corproea_size()*(1.0-tolerance),0))
-    sum_pos = list(db.reviews.aggregate([
-        { '$match': { 'category': { '$gt': 50 } } },
-        { '$unwind' : '$text' },
-        {
-            '$group': {
-                '_id':None,
-                'value': { '$sum': '$category'}
-            }
-        }
-    ]))[0].get('value')
-    sum_neg = list(db.reviews.aggregate([
-        { '$match': { 'category': { '$lt': 50 } } },
-        { '$unwind' : '$text' },
-        {
-            '$group': {
-                '_id':None,
-                'value': { '$sum': '$category'}
-            }
-        }
-    ]))[0].get('value')
-    query = [
-        { '$unwind' : '$text' },
-        { 
-            '$project' : {
-                "_id"      : 1,
-                'category' : { '$subtract': ['$category', -50] },
-                "source"   : 1,
-                "idx"      : 1,
-                "text"     : 1,
-                "tagged"   : 1
-            
-            }
-        },{ 
-            '$group': {
-                '_id'  : { 'source': '$source', 'lemma': '$text.lemma'},
-                'sent' : { 
-                    '$sum': { 
-                        '$cond': [ {'$gt': ['$category',50]}, 
-                            { '$divide': [ 
-                                {'$subtract': ['$category', 50]}, 
-                                sum_pos 
-                            ]},   
-                            {'$cond': [{'$lt': ['$category',50]},
-                                { '$divide': [ 
-                                    {'$subtract': [0,{'$subtract': [50,'$category']}]}, 
-                                    sum_neg 
-                                ]},
-                                0,
-                            ]}
-                        ]
-                    } 
-                }
-            }
-        },{
-            '$group': {
-                '_id' : '$_id.lemma',
-                'polarities' : {
-                    '$push' : {
-                        '$switch' : { 'branches' : [
-                            {'case' : { '$gt' : ['$sent', 0] }, 'then': '+'},    
-                            {'case' : { '$lt' : ['$sent', 0] }, 'then': '-'},    
-                            {'case' : True, 'then': '0'},    
-                        ]}
-                    }
-                }
-            }
-        },
-        {
-            '$project' : {
-                'lemma' : "$_id",
-                'corpus_len' : { '$size': "$polarities" } ,
-                'pol' : { '$arrayElemAt': [ "$polarities", 0] },
-                'accepted' : {
-                   '$let': {
-                       'vars': {
-                          'first': { '$arrayElemAt': [ "$polarities", 0] },
-                       },
-                       'in': { 
-                            '$reduce' : {
-                                'input': "$polarities",
-                                'initialValue': True,
-                                'in': { '$and': ["$$value", { '$eq' : ["$$this", "$$first" ]}] }
-                            } 
-                        }
-                    }
-                },
-                'polarities' : "$polarities"
-            }
-        },
-        { '$match' : { 'accepted': True, 'corpus_len' : { '$gte' : min_matches } } }
-    ] 
-
-    if filter_neutral:
-        query.append({ '$match' : {'pol': {'$ne': '0'} } })
-        
-    query.extend([
-        { '$project' : {'_id': 0, 'accepted' : 0} },
-        { '$sort' : { 'corpus_len' : -1 } }
-    ])
-    
-    if limit:
-       query.append({ '$limit': limit }) 
-       
-    return list(db.reviews.aggregate(query))
-
-def get_avg_category(source=None):
-    query = [
-        {'$group':{
-                '_id' : None,
-                'sum_cat': { '$sum': '$category'},
-                'size':    { '$sum': 1 }
-            }
-        },
-        {'$project': {'avg' : { '$divide': ['$sum_cat','$size'] } } }
-    ]
-    if source:
-        query.insert(0,{'$match': {'source':source}})
-    return list(db.reviews.aggregate(query))[0]['avg']
-
-
-def get_indep_lex_by_rules(treshold=0.9):
-    balance = get_stat_balanced()
-    words = db.reviews.aggregate([
-            { '$project': { '_id':0,'text':1, 'category':1 } },
-            { '$unwind': '$text' },
-            { '$project': {
-                    'lemma':'$text.lemma', 
-                    'category':{ 
-                        '$cond' : { 
-                            'if':'$text.negated', 
-                            'then':{'$subtract': [100,'$category']}, 
-                            'else':'$category' 
-                        } 
-                    } 
-                } 
-            }
-    ])
-    pass
-
-
-def get_vocabulary(get_by=None):
-    query = [
-        { '$project': { '_id':0,'text':1 } },
-        { '$unwind': "$text" }
-    ]
-    if not get_by:
-        query.append( { '$project': { 'lemma':'$text.lemma', 'word':'$text.word' } } )
-    elif get_by not in ["word","lemma"]:
-        raise Exception("Values for get_by parameter must be 'word' or 'lemma'")
-    else:
-        query.append( { '$project': { get_by:'$text.%s'%get_by} } )
-    return list( db.reviews.aggregate(query) )
-
-
-
-def get_soruce_vocabulary(source):
-    return list(db.reviews.aggregate([
-        { '$match': {'source': source}},
-        { '$unwind': "$text" },
-        { '$group': { '_id':'$text.lemma' } }
-    ]))
-
-
-import re
 def update_embeddings(
         femb='../../embeddings/emb39-word2vec.npy',
         ftok='../../embeddings/emb39-word2vec.txt',
         split_tolerance=1,
         verbose=False
     ):
-    
-    replacements = [
-        (u'á',u'a'),(u'é',u'e'),(u'í',u'i'),(u'ó',u'o'),(u'ú',u'u'),(u'ü',u'u'),
-        (u'a',u'á'),(u'e',u'é'),(u'i',u'í'),(u'o',u'ó'),(u'u',u'ú'),(u'u',u'ü'),
-        (u'_',u'')
-    ]
-    alternatives = sum([map(list, combinations(replacements, i+1)) for i in range(len(replacements))], [])  
+      
     stats = { "ByWord":0,"ByClosest":0,"IsNull":0,"Fails":0,"Total":0 }
     
     content     = open(ftok).read().lower().replace("_","")
@@ -383,10 +143,9 @@ def update_embeddings(
     embeddings  = np.load(femb)
     vector_size = len(embeddings[0])
     nullvector  = np.zeros(vector_size)
-    vocabulary  = [ item['word'] for item in get_vocabulary('word') ] 
+    vocabulary  = db.reviews.distinct("text.word")  
     dif_keys    = set(index_for.keys()) - set(vocabulary)
     for key in list(dif_keys): index_for.pop(key,None)
-#     import pdb; pdb.set_trace()
     
     def get_vectors(word):
         
@@ -404,8 +163,8 @@ def update_embeddings(
                 stats['ByClosest'] += 1
                 return embeddings[ index_for[ match[0] ] ]
         
-#         if size > 1:
-#             print "\n", word;import pdb; pdb.set_trace()
+        if size > 1:
+            print "\n", word;import pdb; pdb.set_trace()
         
         stats['IsNull'] += 1
         return nullvector 
