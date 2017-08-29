@@ -147,6 +147,7 @@ def get_indepentent_lexicon_by_average(limit=None, tolerance=0.0, filter_neutral
 
 #--------------------------------------------------------------------------------------
 
+
 def get_indepentent_lexicon_by_weight_function(limit=None, tolerance=0.0, filter_neutral=False):
     sources_qty = len( dp.get_sources() )
     min_matches = int(round(sources_qty*(1.0-tolerance),0))
@@ -255,6 +256,27 @@ def get_indepentent_lexicon_by_weight_function(limit=None, tolerance=0.0, filter
        
     result = list(db.reviews.aggregate(query))
     return {item['lemma']:item['pol'] for item in result} 
+
+
+def get_independent_lexicon_by_rules(treshold=0.9):
+    balance = get_stat_balanced()
+    words = db.reviews.aggregate([
+            { '$project': { '_id':0,'text':1, 'category':1 } },
+            { '$unwind': '$text' },
+            { '$project': {
+                    'lemma':'$text.lemma', 
+                    'category':{ 
+                        '$cond' : { 
+                            'if':'$text.negated', 
+                            'then':{'$subtract': [100,'$category']}, 
+                            'else':'$category' 
+                        } 
+                    } 
+                } 
+            }
+    ])
+    pass
+
 
 if __name__ == '__main__':
     print ' ----------------------------- MATRICES -----------------------------'
