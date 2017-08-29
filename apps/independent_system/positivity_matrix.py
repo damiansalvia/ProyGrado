@@ -46,6 +46,13 @@ def get_matrices(source):
                         neg_matrix[vocabulary.index(target[0])][vocabulary.index(w[0])] += 50 - target_cat
 
 
+
+    return pos_matrix, neg_matrix
+
+#=====================================================================================================
+if __name__ == "__main__":
+
+    pos_matrix, neg_matrix = get_matrices(SOURCE)
     np.save(output_dir + 'pos_matrix', pos_matrix)
     np.save(output_dir + 'neg_matrix', neg_matrix)
 
@@ -56,6 +63,3 @@ def get_matrices(source):
         inner_product[idx] = np.inner(pos_matrix, neg_matrix)
         norm_rest[idx] = np.linalg.norm(pos_matrix[idx]) - np.linalg.norm(neg_matrix[idx])
 
-pos_matrix, neg_matrix = get_matrices(SOURCE)
-np.linalg.norm(pos_matrix[0])
-np.inner(a, b)
