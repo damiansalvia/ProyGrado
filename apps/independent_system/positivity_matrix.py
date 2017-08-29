@@ -50,16 +50,16 @@ def get_matrices(source):
     return pos_matrix, neg_matrix
 
 #=====================================================================================================
-if __name__ == "__main__":
+# if __name__ == "__main__":
 
-    pos_matrix, neg_matrix = get_matrices(SOURCE)
-    np.save(output_dir + 'pos_matrix', pos_matrix)
-    np.save(output_dir + 'neg_matrix', neg_matrix)
+#     pos_matrix, neg_matrix = get_matrices(SOURCE)
+#     np.save(output_dir + 'pos_matrix', pos_matrix)
+#     np.save(output_dir + 'neg_matrix', neg_matrix)
 
-    inner_product = {}
-    norm_rest = {}
+#     inner_product = {}
+#     norm_rest = {}
 
-    for idx in range(vocabulary_size):
-        inner_product[idx] = np.inner(pos_matrix, neg_matrix)
-        norm_rest[idx] = np.linalg.norm(pos_matrix[idx]) - np.linalg.norm(neg_matrix[idx])
+#     for idx in range(vocabulary_size):
+#         inner_product[idx] = np.inner(pos_matrix, neg_matrix)
+#         norm_rest[idx] = np.linalg.norm(pos_matrix[idx]) - np.linalg.norm(neg_matrix[idx])
 
