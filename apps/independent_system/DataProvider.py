@@ -137,17 +137,28 @@ def update_embeddings(
       
     stats = { "ByWord":0,"ByClosest":0,"IsNull":0,"Fails":0,"Total":0 }
     
+    # Load vectors and its words
     content     = open(ftok).read().lower().replace("_","")
     content     = unicode(content,'utf8')    
     index_for   = { token:index for index, token in enumerate(content.splitlines()) }
     embeddings  = np.load(femb)
-    vector_size = len(embeddings[0])
-    nullvector  = np.zeros(vector_size)
-    vocabulary  = db.reviews.distinct("text.word")  
-    dif_keys    = set(index_for.keys()) - set(vocabulary)
+    
+    # Get simension and create the null vector
+    dimension  = len(embeddings[0])
+    nullvector = np.zeros(dimension)
+    
+    # Get vocabulary
+    vocabulary = db.reviews.distinct("text.word")  
+    
+    # Get difference of vector-words and vocabulary-words 
+    # for improving get_close_matches performance
+    dif_keys = set(index_for.keys()) - set(vocabulary)
     for key in list(dif_keys): index_for.pop(key,None)
     
-    def get_vectors(word):
+    
+    def get_vectors( # Get the associated vector of a word
+            word
+        ):
         
         stats['Total'] += 1
         
@@ -169,7 +180,8 @@ def update_embeddings(
         stats['IsNull'] += 1
         return nullvector 
     
-        
+    
+    # For each word find its embedding    
     result = {}
     total = len(vocabulary)
     
@@ -180,12 +192,16 @@ def update_embeddings(
         vector = get_vectors( word )
         result.update({ word:vector })
     
-    if stats['Total']:
-        for case in stats:
-            log("Embeddings integration. %s : %i (%4.2f%%)" % (case,stats[case],100.0*stats[case]/stats['Total']),level='info')     
-            if verbose: print "%-17s : %i (%4.2f%%)" % (case,stats[case],100.0*stats[case]/stats['Total']) 
-        if verbose: raw_input("Press enter to continue...")    
+    # Save statistics results
+    log("Embeddings integration result. %s" % str(stats),level='info')
+    if verbose:
+        if stats['Total']:
+            for case in stats: print "%-17s : %i (%4.2f%%)" % (case,stats[case],100.0*stats[case]/stats['Total']) 
+            raw_input("Press enter to continue...")
+        else:
+            print "No embeddings has been processed"    
     
+    # Save results in database
     result = [{ '_id':word, 'embedding':result[word].tolist() } for word in result]
     db.embeddings.insert_many(result)
 
