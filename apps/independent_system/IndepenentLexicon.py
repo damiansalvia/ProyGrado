@@ -155,7 +155,7 @@ parameters = [
 ] 
 
 count = 0
-for parameter in parameters: 
+for parameter in parameters[:0]: 
                   
     opinions = cr.from_corpus(
             parameter[0], # source
@@ -181,6 +181,7 @@ for parameter in parameters:
 raw_input("Total %i .Continue..." % count)
   
 dp.update_embeddings(verbose=True)
+
 nt.start_tagging(tofile=True) 
 
 config = {

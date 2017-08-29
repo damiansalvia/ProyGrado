@@ -8,6 +8,7 @@ from pymongo import MongoClient
 from pymongo.errors import ServerSelectionTimeoutError
 import numpy as np
 from itertools import combinations
+from difflib import get_close_matches
 
 
 
@@ -360,6 +361,7 @@ def get_soruce_vocabulary(source):
     ]))
 
 
+import re
 def update_embeddings(
         femb='../../embeddings/emb39-word2vec.npy',
         ftok='../../embeddings/emb39-word2vec.txt',
@@ -369,73 +371,54 @@ def update_embeddings(
     
     replacements = [
         (u'á',u'a'),(u'é',u'e'),(u'í',u'i'),(u'ó',u'o'),(u'ú',u'u'),(u'ü',u'u'),
-        (u'a',u'á'),(u'e',u'é'),(u'i',u'í'),(u'o',u'ó'),(u'u',u'ú'),(u'u',u'ü')
+        (u'a',u'á'),(u'e',u'é'),(u'i',u'í'),(u'o',u'ó'),(u'u',u'ú'),(u'u',u'ü'),
+        (u'_',u'')
     ]
-    alternatives = sum([map(list, combinations(replacements, i+1)) for i in range(len(replacements))], [])
-    stats = { "ByWord":0,"BySingular":0,"ByLemma":0,"ByWordCorrection" :0,"IsNull":0,"Fails":0,"Total":0 }
+    alternatives = sum([map(list, combinations(replacements, i+1)) for i in range(len(replacements))], [])  
+    stats = { "ByWord":0,"ByClosest":0,"IsNull":0,"Fails":0,"Total":0 }
     
-    content     = open(ftok).read().lower().replace("_","")    
+    content     = open(ftok).read().lower().replace("_","")
+    content     = unicode(content,'utf8')    
     index_for   = { token:index for index, token in enumerate(content.splitlines()) }
     embeddings  = np.load(femb)
     vector_size = len(embeddings[0])
-    nullvector  = np.zeros(vector_size) 
+    nullvector  = np.zeros(vector_size)
+    vocabulary  = [ item['word'] for item in get_vocabulary('word') ] 
+    dif_keys    = set(index_for.keys()) - set(vocabulary)
+    for key in list(dif_keys): index_for.pop(key,None)
+#     import pdb; pdb.set_trace()
     
-    
-    def get_vectors(word,lemma):
+    def get_vectors(word):
         
         stats['Total'] += 1
         
         if index_for.has_key(word):
             stats['ByWord'] += 1
-            return embeddings[ index_for[ word ] ] 
+            return embeddings[ index_for[ word ] ]
+
+        size = len(word)
+        if size > 1 and size < 15 and ('_' not in word):
+            possibilities = filter( lambda x: size-2 < len(x) < size+2 , index_for.keys() )
+            match = get_close_matches( word , possibilities , 1 , 0.60 )
+            if match:
+                stats['ByClosest'] += 1
+                return embeddings[ index_for[ match[0] ] ]
         
-        singular = word[:-1]
-        if index_for.has_key(singular):
-            stats['BySingular'] += 1
-            return embeddings[ index_for[ singular ] ]  
-          
-        if index_for.has_key(lemma):
-            stats['ByLemma'] += 1 
-            return embeddings[ index_for[ lemma ] ]
-#          
-#         vector = nullvector.copy()
-#         tokens = word.split('_')
-#         left = len(tokens)
-#         for token in tokens:            
-#             for replace_set in alternatives: 
-#                 correct = token                   
-#                 for fr,to in replace_set:
-#                     correct = correct.replace(fr,to)
-#                 if index_for.has_key(correct):
-#                     vector += embeddings[ index_for[ correct ] ]
-#                     left -= 1 
-#                     break # Try next token
-#         if left <= split_tolerance:
-#             stats['ByWordCorrection'] += 1
-#             return vector   
-            
-        for replace_set in alternatives: 
-            correct = token                   
-            for fr,to in replace_set:
-                correct = correct.replace(fr,to)
-            if index_for.has_key(correct):
-                return embeddings[ index_for[ correct ] ]                 
+#         if size > 1:
+#             print "\n", word;import pdb; pdb.set_trace()
         
         stats['IsNull'] += 1
         return nullvector 
     
         
     result = {}
-    vocabulary = get_vocabulary()
     total = len(vocabulary)
     
-    for idx,item in enumerate(vocabulary):
-        progress("Updating embeddings",total,idx)
-        word  = item['word'].lower()
-        lemma = item['lemma'].lower()
+    for idx,word in enumerate(vocabulary):
+        progress("Updating embeddings (%i,%i,%i)" % ( stats['ByWord'],stats['ByClosest'],stats['IsNull'] ),total,idx)
         if result.has_key(word):
             continue
-        vector = get_vectors( word , lemma )
+        vector = get_vectors( word )
         result.update({ word:vector })
     
     if stats['Total']:
