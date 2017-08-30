@@ -150,13 +150,14 @@ def update_embeddings(
     # Get vocabulary
     vocabulary = db.reviews.distinct("text.word")  
     
-    # Get difference of vector-words and vocabulary-words 
-    # for improving get_close_matches performance
+    # Get difference of vector-words and vocabulary-words for improving get_close_matches performance 
+    # PROBLEM: 'pizería' could be excluded and 'pizerías' (in the vocabulary) won't have a closest match
     dif_keys = set(index_for.keys()) - set(vocabulary)
+#     mean_word_len = sum(len(w) for w in vocabulary)/len(vocabulary)
+#     dif_keys = dif_keys - set( word for word in index_for.keys() if len(word) >= mean_word_len-1 and len(word) <= mean_word_len+1 )
     for key in list(dif_keys): index_for.pop(key,None)
     
-    
-    def get_vectors( # Get the associated vector of a word
+    def get_vectors( # Get the associated vector of a word and its match (null if it is the same or null vector)
             word
         ):
         
@@ -164,33 +165,37 @@ def update_embeddings(
         
         if index_for.has_key(word):
             stats['ByWord'] += 1
-            return embeddings[ index_for[ word ] ]
+            return None , embeddings[ index_for[ word ] ]
 
         size = len(word)
-        if size > 1 and size < 15 and ('_' not in word):
+        if size > 1 and size < 20 and ('_' not in word): # Prevents unnecessary calculation
             possibilities = filter( lambda x: size-2 < len(x) < size+2 , index_for.keys() )
-            match = get_close_matches( word , possibilities , 1 , 0.60 )
+            match = get_close_matches( word , possibilities , 1 , 0.75 )
             if match:
                 stats['ByClosest'] += 1
-                return embeddings[ index_for[ match[0] ] ]
+                return match[0] , embeddings[ index_for[ match[0] ] ]
         
-        if size > 1:
-            print "\n", word;import pdb; pdb.set_trace()
+#         if size > 1 and size < 20 and not any( map( lambda chr : chr.isdigit() , word ) ):
+#             import pdb; pdb.set_trace()
         
         stats['IsNull'] += 1
-        return nullvector 
+        return None , nullvector 
     
     
-    # For each word find its embedding    
-    result = {}
+    # For each word in vocabulary find its embedding    
+    result = []
     total = len(vocabulary)
     
     for idx,word in enumerate(vocabulary):
         progress("Updating embeddings (%i,%i,%i)" % ( stats['ByWord'],stats['ByClosest'],stats['IsNull'] ),total,idx)
-        if result.has_key(word):
-            continue
-        vector = get_vectors( word )
-        result.update({ word:vector })
+#         if result.has_key(word):
+#             continue
+        nearest , vector = get_vectors( word )
+        result.append({ 
+            '_id'      :word,
+            'embedding':vector.tolist(),
+            'nearestOf':nearest 
+        })
     
     # Save statistics results
     log("Embeddings integration result. %s" % str(stats),level='info')
@@ -202,7 +207,6 @@ def update_embeddings(
             print "No embeddings has been processed"    
     
     # Save results in database
-    result = [{ '_id':word, 'embedding':result[word].tolist() } for word in result]
     db.embeddings.insert_many(result)
 
 # ----------------------------------------------------------------------------------------------------------------------
