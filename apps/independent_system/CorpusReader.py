@@ -30,8 +30,8 @@ SUBSTITUTIONS = [
     (u"(?i)([lrce])\\1\\1+",u"\\1\\1"),
     (u"(?i)([lrce])\\1(\W)",u"\\1\\2"),
     # Replace emojis by a special tag
-    (u":\)",u"emoji_feliz "),(u"\(:",u"emoji_feliz "),
-    (u":\(",u"emoji_triste "),(u"\):",u"emoji_triste "),
+    (u":\)",u" emoji_feliz "),(u"\(:",u" emoji_feliz "),
+    (u":\(",u" emoji_triste "),(u"\):",u" emoji_triste "),
     # Remove URIs with scheme http or https
     (u"(https?:\/\/\S+)",u""),
     # Separate alphabetical character from non-alphabetical character by a blank space
