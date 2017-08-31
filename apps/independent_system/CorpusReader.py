@@ -76,7 +76,7 @@ def from_corpus(
         category_level=None,    # Indicates where the category_pattern should match in the path pattern (extension). Apply for PATH location.
         start=0,                # Indicates where should start reading the file. Useful for excluding a header in a .csv file (value 1).
         decoding='utf8',        # Format for decoding the corpus file. By default "ut8", but it can be "cp1252", "unicode-escape", etc.
-        tofile=False            # Save result in a tmp file
+        tofile=None             # Save result in a tmp file
     ):
     # Checking prerequisites
     if not source: 
@@ -172,7 +172,7 @@ def from_corpus(
                 'text'     : review_correction(rev), 
                 'category' : category_mapping[cat] 
             })   
-    if tofile: save(opinion_data,"from_%s" % corpus_name,"./outputs/tmp")
+    if tofile: save(opinion_data,"from_%s" % corpus_name,tofile)
     return opinion_data
 
 if __name__ == '__main__':
