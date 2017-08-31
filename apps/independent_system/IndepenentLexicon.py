@@ -154,8 +154,11 @@ parameters = [
     )
 ] 
 
+op = raw_input("Parse a(ll) or enter for none > ")
+op = len(parameters) if op.lower() == 'a' else 0
+
 count = 0
-for parameter in parameters[:0]: 
+for parameter in parameters[:op]: 
                   
     opinions = cr.from_corpus(
             parameter[0], # source
@@ -168,31 +171,31 @@ for parameter in parameters[:0]:
             category_level=parameter[7],
             start=parameter[8],
             decoding=parameter[9],
-            tofile=True
+            tofile="./outputs/tmp"
         )
                
     analyzed = ta.analyze(
             opinions,
-            tofile=True
+            tofile="./outputs/tmp"
         )
            
     count += len(analyzed)
            
-raw_input("Total %i .Continue..." % count)
+raw_input("Total %i. Continue..." % count)
   
 dp.update_embeddings(verbose=True)
-
-nt.start_tagging(tofile=True) 
+ 
+nt.start_tagging(tofile="./outputs/negation") 
 
 config = {
-    "left" :2,
-    "right":2
+    "left" :3,
+    "right":1
 }
  
 ann = nt.NeuralNegationTagger( config['left'] , config['right'] )     
 ann.fit_tagged( testing_fraction=0.20 , verbose=1 )
-ann.save()
-ann.predict_untagged( tofile=True )    
+# ann.save()
+ann.predict_untagged( tofile="./outputs/tmp" )    
 
 # tolerance = 1.0
 # li = dp.get_indepentent_lex(tolerance=tolerance)

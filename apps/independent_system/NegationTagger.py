@@ -6,7 +6,9 @@ from metrics import precision, recall, fmeasure
 
 from keras.models import Sequential
 from keras.layers import Dense
+from keras.layers.core import Dropout
 from keras.callbacks import EarlyStopping,CSVLogger
+from keras.utils import to_categorical
 # from keras.utils import plot_model
 
 import DataProvider as dp 
@@ -33,81 +35,71 @@ sources_size = len(sources)
 class NeuralNegationTagger:
      
     def __init__(self,
-            win_left=None,
-            win_right=None,
-            from_file=None,
-            hidden_layers=2,
-            activation=['relu','relu','relu','sigmoid'],
-            loss='binary_crossentropy', 
-            optimizer='adam', 
-            metrics=['accuracy',precision, recall, fmeasure],
-            early_monitor='loss',
-            early_min_delta=0,
-            early_patience=2,
-            early_mode='auto',
+            win_left,
+            win_right,
+            layers_dims     = [750,500],
+            activation      = ['relu','relu','sigmoid'],
+            loss            = 'binary_crossentropy', 
+            optimizer       = 'adam', 
+            metrics         = ['accuracy', precision, recall, fmeasure],
+            early_monitor   ='val_acc',
+            early_min_delta = 0,
+            early_patience  = 2,
+            early_mode      = 'auto',
+            drop_rate       = [0.2,0.0],
         ):
         
-        if from_file:
-            self.model.load_model(from_file)
+        assert len(layers_dims) == len(drop_rate)
+        assert len(layers_dims)+1 == len(activation)
+                    
+        # Parameters calculation
+        vec_size  = dp.get_size_embedding()        
+        input_dim = vec_size * (win_right + win_left + 1)
         
-        else:            
-            # Check restrictions
-            if not win_left or not win_right:
-                raise Exception("Windows parameters are required")
-            
-            min_activation_len = 2+hidden_layers
-            if len(activation) < min_activation_len:
-                raise Exception("Activation array size must be %i\n -- 1 input, %2 hidden, 1 output" % (min_activation_len,hidden_layers))
-            
-            # Parameters calculation
-            vec_size  = dp.get_size_embedding()        
-            input_dim = vec_size * (win_right + win_left + 1)
-            
-            # Attributes settings
-            self.right = win_right
-            self.left  = win_left
-            self.dim   = input_dim
-            
-            # Callbacks settings
-            self.callbacks = []
-            self.callbacks.append(
-                EarlyStopping(
-                    monitor=early_monitor,
-                    min_delta=early_min_delta,
-                    patience=early_patience, 
-                    mode=early_mode,
-                    verbose=0
-                )
-            )
-            self.callbacks.append(
-                CSVLogger('./log/training.log')
-            )
-            
-            # Model definition     
-            self.model = Sequential()
-            
-            # Input layer
-            out_dim = input_dim / 2
-            self.model.add( Dense( out_dim, input_dim=input_dim, activation=activation[0] ) ) 
-            
-            # Hidden layers
-            for i in range(hidden_layers-1): 
-                out_dim = out_dim / 2
-                self.model.add( Dense( out_dim, activation=activation[i+1] ) ) 
-            
-            # Softmax layer
-            #self.model.add( Dense( 2, activation='softmax' ) )
-            
-            # Output layer - Binary: Negated or Not-negated
-            self.model.add( Dense( 1, activation=activation[min_activation_len-1] ) )
-            
-            # Compile model from parameters
-            self.model.compile(loss=loss, optimizer=optimizer , metrics=metrics)
+        # Attributes settings
+        self.right = win_right
+        self.left  = win_left
+        self.dim   = input_dim
         
+        # Callbacks settings
+        self.callbacks = []
+        self.callbacks.append(
+            EarlyStopping(
+                monitor   = early_monitor,
+                min_delta = early_min_delta,
+                patience  = early_patience, 
+                mode      = early_mode,
+                verbose   = 0
+            )
+        )
+        self.callbacks.append(
+            CSVLogger('./log/training.log')
+        )
+        
+        # Model definition     
+        self.model = Sequential()
+        
+        # Input layer
+        self.model.add( Dense( layers_dims[0], input_dim=input_dim, activation=activation[0] ) )
+        self.model.add( Dropout( drop_rate[0] ) )
+        
+        # Intermediate layers
+        for i in enumerate( layers_dims[1:] ):
+            self.model.add( Dense( layers_dims[i+1], activation=activation[i+1] ) )
+            self.model.add( Dropout( drop_rate[i+1] ) ) 
+        
+        # Output layer
+        self.model.add( Dense( 1, activation=activation[-1] ) )
+        
+        # Compile model from parameters
+        self.model.compile( loss=loss, optimizer=optimizer , metrics=metrics )
+        
+        # Result
+        log('MODEL ARQUITECTURE\n'+self.model.to_json(indent=4),level='info')
         print self.model.summary()
      
      
-    def fit_tagged(self,testing_fraction=0.0,verbose=0):    
+    def fit_tagged(self,testing_fraction=0.2,verbose=0):    
         opinions = dp.get_tagged('manually') 
         
         if not opinions: raise Exception('Nothing to train')
@@ -122,28 +114,32 @@ class NeuralNegationTagger:
         
         X = np.array(X)
         Y = np.array(Y)
+#         Y = to_categorical(Y)
         
         self.model.fit( X , Y , callbacks=self.callbacks , validation_split=testing_fraction , verbose=verbose )
         
         scores = self.model.evaluate(X,Y)
+        scores = ["%.2f%%" % (score*100) for score in scores]
+        scores = zip( self.model.metrics_names , scores )
+        log('MODEL EVALUATION\n'+str(scores),level='info')
         print        
-        for i in range(len(scores)): print "%-20s: %.2f%%" % ( self.model.metrics_names[i], scores[i]*100 )
+        for metric,score in scores: print "%-20s: %s" % ( metric, score )
         print "_________________________________________________________________"
             
     
-    def predict_untagged(self,tofile=False):
-        opinions = dp.get_untagged()[:10] # TO-DO : Testing purposes
+    def predict_untagged(self,tofile=None):
+        opinions = dp.get_untagged()[:10] # !!!!!!!!!!!!!!!!!!!!!!!!! TO-DO : Testing purposes
         results = {}
         total = len(opinions)
         for idx,opinion in enumerate(opinions): 
             progress("Predicting negations",total,idx)
             results[ opinion['_id'] ] = []
-            for X in dp.get_embeddings( opinion['text'], self.left, self.right )[0]:
+            for X in dp.get_text_embeddings( opinion['text'], self.left, self.right )[0]:
                 X = X.reshape((1, -1))
                 Y = self.model.predict( X )
                 Y = ( round(Y) == 1 ) # 0 <= Y <= 1 -- Round is ok?
                 results[ opinion['_id'] ].append( Y ) 
-        if tofile: save(results,"predict_untagged_l%i_r%i_d%i" % (self.left,self.right,self.dim),"./outputs/tmp")
+        if tofile: save(results,"predict_untagged_l%i_r%i_d%i" % (self.left,self.right,self.dim),tofile)
         #dp.save_negation(result,tagged_as='automatically')
         return results
     
@@ -156,7 +152,7 @@ class NeuralNegationTagger:
 
 
 
-def start_tagging(tofile=False):
+def start_tagging(tofile=None):
     
     def DisplayMenu():
         os.system('clear')
@@ -197,7 +193,7 @@ def start_tagging(tofile=False):
                 return
             
         dp.save_negations(result,tagged_as='manually')
-        if tofile:save(result,"negtag_%s" % source,"./outputs/negation",overwrite=False)
+        if tofile:save(result,"negtag_%s" % source,tofile,overwrite=False)
         
     # #------- Execute Function -------#
     
