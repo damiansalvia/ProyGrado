@@ -154,6 +154,8 @@ parameters = [
     )
 ] 
 
+###################################################################
+
 op = raw_input("Parse a(ll) or enter for none > ")
 op = len(parameters) if op.lower() == 'a' else 0
 
@@ -181,21 +183,33 @@ for parameter in parameters[:op]:
            
     count += len(analyzed)
            
-raw_input("Total %i. Continue..." % count)
-  
-dp.update_embeddings(verbose=True)
- 
-nt.start_tagging(tofile="./outputs/negation") 
+if op: raw_input("Total %i. Continue..." % count)
+
+###################################################################
+
+op = raw_input("Update embeddings? [y/n] > ")
+op = op.lower()
+if op == 'y': dp.update_embeddings(verbose=True)
+
+###################################################################
+
+op = raw_input("Start manual tagging? [y/n] > ")
+op = op.lower() 
+if op == 'y': nt.start_tagging(tofile="./outputs/negation") 
+
+###################################################################
 
 config = {
     "left" :3,
     "right":1
 }
- 
+  
 ann = nt.NeuralNegationTagger( config['left'] , config['right'] )     
 ann.fit_tagged( testing_fraction=0.20 , verbose=1 )
 # ann.save()
 ann.predict_untagged( tofile="./outputs/tmp" )    
+
+###################################################################
 
 # tolerance = 1.0
 # li = dp.get_indepentent_lex(tolerance=tolerance)

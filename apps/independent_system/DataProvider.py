@@ -1,6 +1,7 @@
  # -*- coding: utf-8 -*-
 
 import sys
+from pprint import _id
 sys.path.append('../utilities')
 from utilities import *
 
@@ -45,8 +46,33 @@ def save_negations(opinions,tagged_as):
         negation = { 'tagged' : tagged_as }
         for idx, tag in enumerate(opinions[_id]):
             negation['text.' + str(idx) + '.negated'] = tag
-        if opinions[_id]:
+            
+        opinion = get_opinion(_id)
+        
+        # Exists and not tagged, then update
+        if opinion and 'tagged' not in opinion.keys():
             db.reviews.update( { '_id': _id } , { '$set': negation }  )
+        
+        # Exists and tagged, then colision to be resolved
+        elif opinion:
+            currtags = [ item['negated'] for item in opinion['text'] ] 
+            if opinions[_id] == currtags: # skip if all tags equal
+                continue
+            print "%s vs. %s" % ( opinion['tagged'].upper() , negation['tagged'].upper() )
+            text = ' '.join(
+                "%s%s/%s\033[0m" % (
+                    item['word'],
+                    "\033[91m" if item['negated'] != negation['text.' + str(idx) + '.negated'] else "\033[92m",
+                    "(%s,%s)" % ( 'i' if item['negated'] else 'n' , 'i' if negation['text.' + str(idx) + '.negated'] else 'n')
+                ) for idx,item in enumerate(opinion['text']) )
+            print "' %s '" % text
+            op = raw_input("R(eplace) by new or (K)eep old > ")
+            if op.lower() == 'r':
+                db.reviews.update( { '_id': _id } , { '$set': negation }  )
+        
+        # Not exists
+        else: 
+            log("Opinion %s skipped (not found)" %  _id , level='error')
 
 
 def get_sources():

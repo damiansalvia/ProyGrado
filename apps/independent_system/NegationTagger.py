@@ -233,7 +233,7 @@ def start_tagging(tofile=None):
                 
                 # Tag every review
                 left = quantity
-                skipped = False
+                quit = False
                 while left != 0:   
                                      
                     # Retrieve relevant data from the sample
@@ -264,7 +264,7 @@ def start_tagging(tofile=None):
                         
                         # Ask for input
                         tooltip  = "\nTag with N(ormal) or I(nverted). "
-                        tooltip += "Enter A(bort), B(ack) S(kip) or <intro> for "
+                        tooltip += "Enter A(bort), B(ack) S(kip), Q(uit) or <intro> for "
                         tooltip += "repeating last action (%s) > " % (cat.upper() if cat else "None")
                         tag = raw_input(tooltip)
                         
@@ -276,12 +276,15 @@ def start_tagging(tofile=None):
                         
                         # Action from decision
                         cat = cat.lower()
-                        if not cat or cat not in 'nibas':
+                        if not cat or cat not in 'nibasq':
                             print "Option",cat,"is not correct." ;raw_input()
                             continue
-                        if cat == 's':
-                            skipped = True
+                        if cat == 'q':
+                            quit = True
                             break
+                        if cat == 's':
+                            left -= 1
+                            continue
                         elif cat == 'b': # Back
                             idx = idx - 1 if idx != 0 else 0
                             tags[idx] = '  '
@@ -293,7 +296,7 @@ def start_tagging(tofile=None):
                             tags[idx] = cat
                             idx = idx + 1
                     
-                    if skipped:
+                    if quit:
                         break
                             
                     # Once the text is tagged, add it to the result
@@ -326,6 +329,5 @@ def load_neg_from_files(source_dir):
         
         
 if __name__ == '__main__':
-    load_neg_from_files('./outputs/tmp/negtag_*.json')
-    
+    load_neg_from_files('./outputs/negation/negtag_*.json')
     
