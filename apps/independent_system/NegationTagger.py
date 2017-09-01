@@ -84,9 +84,9 @@ class NeuralNegationTagger:
         self.model.add( Dropout( drop_rate[0] ) )
         
         # Intermediate layers
-        for i in enumerate( layers_dims[1:] ):
-            self.model.add( Dense( layers_dims[i+1], activation=activation[i+1] ) )
-            self.model.add( Dropout( drop_rate[i+1] ) ) 
+        for i in range( 1 , len(layers_dims) ):
+            self.model.add( Dense( layers_dims[i], activation=activation[i] ) )
+            self.model.add( Dropout( drop_rate[i] ) ) 
         
         # Output layer
         self.model.add( Dense( 1, activation=activation[-1] ) )
