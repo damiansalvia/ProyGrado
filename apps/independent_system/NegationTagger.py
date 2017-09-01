@@ -107,7 +107,7 @@ class NeuralNegationTagger:
         X , Y = [] , []
         total = len(opinions)
         for idx,opinion in enumerate(opinions):
-            progress("Fitting negations",total,idx)
+            progress("Loading training data",total,idx)
             x_curr,y_curr = dp.get_text_embeddings( opinion['text'], self.left, self.right )
             X += x_curr
             Y += y_curr
@@ -128,11 +128,11 @@ class NeuralNegationTagger:
             
     
     def predict_untagged(self,tofile=None):
-        opinions = dp.get_untagged()[:10] # !!!!!!!!!!!!!!!!!!!!!!!!! TO-DO : Testing purposes
+        opinions = dp.get_untagged()
         results = {}
         total = len(opinions)
         for idx,opinion in enumerate(opinions): 
-            progress("Predicting negations",total,idx)
+            progress("Predicting on new data",total,idx)
             results[ opinion['_id'] ] = []
             for X in dp.get_text_embeddings( opinion['text'], self.left, self.right )[0]:
                 X = X.reshape((1, -1))
