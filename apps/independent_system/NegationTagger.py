@@ -284,11 +284,9 @@ def start_tagging(tofile=None):
                             print "Option",cat,"is not correct." ;raw_input()
                             continue
                         if cat == 'q':
-                            quit = True
                             break
                         if cat == 's':
-                            left -= 1
-                            continue
+                            break
                         elif cat == 'b': # Back
                             idx = idx - 1 if idx != 0 else 0
                             tags[idx] = '  '
@@ -300,8 +298,11 @@ def start_tagging(tofile=None):
                             tags[idx] = cat
                             idx = idx + 1
                     
-                    if quit:
+                    if cat == 'q':
                         break
+                    if cat == 's':
+                        left -= 1
+                        continue
                             
                     # Once the text is tagged, add it to the result
                     tags = map(lambda cat : cat =='i', tags)
