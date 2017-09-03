@@ -2,12 +2,12 @@
 import sys
 sys.path.append('../utilities')
 from utilities import *
-from metrics import precision, recall, fmeasure
+from metrics import precision, recall, fmeasure, cosine, mse, bce, binacc
 
 from keras.models import Sequential
 from keras.layers import Dense
 from keras.layers.core import Dropout
-from keras.callbacks import EarlyStopping,CSVLogger
+from keras.callbacks import EarlyStopping
 from keras.utils import to_categorical
 # from keras.utils import plot_model
 
@@ -32,60 +32,59 @@ sources = dp.get_sources()
 sources_size = len(sources)
 
 
+
 class NeuralNegationTagger:
      
     def __init__(self,
-            win_left,
-            win_right,
-            layers_dims     = [750,500],
+            wleft,
+            wright,
+            out_dims        = [750,500],
             activation      = ['relu','relu','sigmoid'],
             loss            = 'binary_crossentropy', 
             optimizer       = 'adam', 
-            metrics         = ['accuracy', precision, recall, fmeasure],
-            early_monitor   ='val_acc',
+            metrics         = [binacc, precision, recall, fmeasure, mse, bce],
+            early_monitor   ='val_binary_accuracy',
             early_min_delta = 0,
             early_patience  = 2,
             early_mode      = 'auto',
-            drop_rate       = [0.2,0.0],
+            drop_rate       = [0.2,0.2],
         ):
         
-        assert len(layers_dims) == len(drop_rate)
-        assert len(layers_dims)+1 == len(activation)
+        assert len(out_dims) == len(drop_rate)
+        assert len(out_dims)+1 == len(activation)
                     
         # Parameters calculation
         vec_size  = dp.get_size_embedding()        
-        input_dim = vec_size * (win_right + win_left + 1)
+        input_dim = vec_size * (wright + wleft + 1)
         
         # Attributes settings
-        self.right = win_right
-        self.left  = win_left
-        self.dim   = input_dim
+        self.wright = wright
+        self.wleft  = wleft
+        self.dim    = input_dim
         
         # Callbacks settings
         self.callbacks = []
-        self.callbacks.append(
-            EarlyStopping(
-                monitor   = early_monitor,
-                min_delta = early_min_delta,
-                patience  = early_patience, 
-                mode      = early_mode,
-                verbose   = 0
+        if early_monitor:
+            self.callbacks.append(
+                EarlyStopping(
+                    monitor   = early_monitor,
+                    min_delta = early_min_delta,
+                    patience  = early_patience, 
+                    mode      = early_mode,
+                    verbose   = 0
+                )
             )
-        )
-        self.callbacks.append(
-            CSVLogger('./log/training.log')
-        )
         
         # Model definition     
         self.model = Sequential()
         
         # Input layer
-        self.model.add( Dense( layers_dims[0], input_dim=input_dim, activation=activation[0] ) )
+        self.model.add( Dense( out_dims[0], input_dim=input_dim, activation=activation[0] ) )
         self.model.add( Dropout( drop_rate[0] ) )
         
         # Intermediate layers
-        for i in range( 1 , len(layers_dims) ):
-            self.model.add( Dense( layers_dims[i], activation=activation[i] ) )
+        for i in range( 1 , len(out_dims) ):
+            self.model.add( Dense( out_dims[i], activation=activation[i] ) )
             self.model.add( Dropout( drop_rate[i] ) ) 
         
         # Output layer
@@ -108,38 +107,43 @@ class NeuralNegationTagger:
         total = len(opinions)
         for idx,opinion in enumerate(opinions):
             progress("Loading training data",total,idx)
-            x_curr,y_curr = dp.get_text_embeddings( opinion['text'], self.left, self.right )
+            x_curr,y_curr = dp.get_text_embeddings( opinion['text'], self.wleft, self.wright )
             X += x_curr
             Y += y_curr
         
         X = np.array(X)
         Y = np.array(Y)
-#         Y = to_categorical(Y)
         
-        self.model.fit( X , Y , callbacks=self.callbacks , validation_split=testing_fraction , verbose=verbose )
+        self.model.fit( X, Y, 
+            callbacks=self.callbacks , 
+            batch_size=10 , epochs=100 , 
+            validation_split=testing_fraction , 
+            verbose=verbose 
+        )
         
-        scores = self.model.evaluate(X,Y)
-        scores = ["%.2f%%" % (score*100) for score in scores]
+        scores = self.model.evaluate(X,Y,batch_size=10,verbose=verbose)
+        scores = [ round(score*100,1) for score in scores ]
         scores = zip( self.model.metrics_names , scores )
         log('MODEL EVALUATION\n'+str(scores),level='info')
         print        
-        for metric,score in scores: print "%-20s: %s" % ( metric, score )
+        for metric,score in scores: print "%-20s: %.1f%%" % ( metric, score )
         print "_________________________________________________________________"
+        return scores
             
     
-    def predict_untagged(self,tofile=None):
-        opinions = dp.get_untagged()
+    def predict_untagged(self,limit=None,tofile=None):
+        opinions = dp.get_untagged()[:limit]
         results = {}
         total = len(opinions)
         for idx,opinion in enumerate(opinions): 
             progress("Predicting on new data",total,idx)
             results[ opinion['_id'] ] = []
-            for X in dp.get_text_embeddings( opinion['text'], self.left, self.right )[0]:
+            for X in dp.get_text_embeddings( opinion['text'], self.wleft, self.wright )[0]:
                 X = X.reshape((1, -1))
                 Y = self.model.predict( X )
                 Y = ( round(Y) == 1 ) # 0 <= Y <= 1 -- Round is ok?
                 results[ opinion['_id'] ].append( Y ) 
-        if tofile: save(results,"predict_untagged_l%i_r%i_d%i" % (self.left,self.right,self.dim),tofile)
+        if tofile: save(results,"predict_untagged_l%i_r%i_d%i" % (self.wleft,self.wright,self.dim),tofile)
         #dp.save_negation(result,tagged_as='automatically')
         return results
     
@@ -317,6 +321,7 @@ def start_tagging(tofile=None):
                 log("Reason : %s (at %s) [%i] '%s'" % ( str(e) , source , sample['idx'] , content ))
                 raw_input("Reason: %s\nEnter to continue..." % str(e))
     
+  
     
 def load_neg_from_files(source_dir):
     sources = glob.glob(source_dir)
