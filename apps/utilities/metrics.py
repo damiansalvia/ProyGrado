@@ -1,6 +1,25 @@
 import numpy as np
 import keras.backend as K
 
+
+def binary_accuracy(y_true, y_pred):
+    return K.mean(K.equal(y_true, K.round(y_pred)), axis=-1)
+
+
+def cosine_proximity(y_true, y_pred):
+    y_true = K.l2_normalize(y_true, axis=-1)
+    y_pred = K.l2_normalize(y_pred, axis=-1)
+    return -K.mean(y_true * y_pred)
+
+
+def binary_crossentropy(y_true, y_pred):
+    return K.mean(K.binary_crossentropy(y_pred, y_true))
+
+
+def mean_squared_error(y_true, y_pred):
+    return K.mean(K.square(y_pred - y_true))
+
+
 def precision(y_true, y_pred):
     '''Calculates the precision, a metric for multi-label classification of
     how many selected items are relevant.
@@ -54,7 +73,12 @@ def fmeasure(y_true, y_pred):
     return fbeta_score(y_true, y_pred, beta=1)
 
 
-# aliases
-f1_score = fmeasure
+# Aliases
+binacc = binary_accuracy
+f1score = fscore = f1_score = fmeasure 
 precision_score = precision
 recall_score = recall
+mse = MSE = mean_squared_error
+bce = binary_crossentropy
+cosine = cosine_proximity
+
