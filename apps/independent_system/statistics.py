@@ -10,13 +10,39 @@ NEGATORS = [
 
 # ----------------------------------------- source -----------------------------------------
 
-
+# Review sizes
 def size_corporea():
     return db.reviews.find({}).count()
+
+def size_corporea_by_source():
+    return list(db.reviews.aggregate([
+        {"$group"   : { "_id":"$source", "count":{ "$sum":1 } }},
+        {"$project" : {"_id":0, "source":"$_id", "count":1}}
+    ]))
+
+# Vocabulary sizes
+def size_vocabulary():
+    return list(db.reviews.aggregate([
+        {"$group":{"_id":None,"count":{"$sum":{"$size":"$text"}}}}
+    ]))[0]['count']
+    
+def size_vocabulary_by_word():
+    return len(db.reviews.distinct("text.word"))
+
+def size_vocabulary_by_lemma():
+    return len(db.reviews.distinct("text.lemma"))
 
 def size_embeddings():
     return db.embeddings.find({}).count()
 
+# Reviews per category
+def size_reviews_category():
+    return list(db.reviews.aggregate([
+        {"$group":{ "_id":"$category", "count":{ "$sum":1 } }},
+        {"$project" : {"_id":0, "category":"$_id", "count":1}}
+    ]))
+
+# Tagged sizes
 def size_manually_tagged():
     try: 
         return list(db.reviews.aggregate([
@@ -29,7 +55,7 @@ def size_manually_tagged():
             }
         ]))[0]['total']
     except:
-        return 0
+        return None
 
 def size_manually_tagged_by_cat():
     try: 
@@ -41,10 +67,10 @@ def size_manually_tagged_by_cat():
                 'total': { '$sum' : 1 }
                 } 
             },
-            {'project' : {'total' :'$total', 'category': '$_id'}}
+            {'$project' : {'total' :'$total', 'category': '$_id','_id':0}}
         ]))
     except:
-        return 0
+        return None
 
 # Count all negated words  
 def size_nagated_words():
@@ -144,13 +170,6 @@ def size_positive_words():
         { '$group': {'_id':None, 'total': {'$sum':1} } }
     ]))[0]['total']
 
-# Vocabulary size:
-def size_vocabulary():
-    return db.reviews.distinct("text.word").count()
-
-def size_vocabulary_by_lemma():
-    return db.reviews.distinct("text.lemma").count()
-
 def get_balance():
     return list(db.reviews.aggregate([
         {'$group': {
@@ -173,35 +192,37 @@ def get_balance_by_source() :
         {'$project': {'balance': {'$divide' :['$total','$size'] } } }
     ]))
 
-
-
-def size_loose_match():
+def size_near_match():
     return db.embeddings.find({"nearestOf":{'$ne':None}}).count()
 
-def size_null_embedings():
+def size_null_match():
     return db.embeddings.find({"embedding":{ '$all':[0.0]}}).count()
 
-def size_exact_match_embeddins():
+def size_exact_match():
     return db.embeddings.find({"embedding":{ "$not":{ '$all':[0.0]} }, "nearestOf":{'$eq':None}}).count()
 
 #=====================================================================================================
 if __name__ == "__main__":
 
     # print 'Size nagated words', size_nagated_words()
-    print 'Size negative words', size_negative_words()
-    print 'Size negators', size_negators()
-    print 'Size neutral reviews', size_neutral_reviews()
-    print 'Size neutral words', size_neutral_words()
-    print 'Size positive reviews', size_positive_reviews()
-    print 'Size positive words', size_positive_words()
-    print 'Size vocabulary', size_vocabulary()
-    print 'Size manually tagged', size_manually_tagged()
-    print 'Size corporea', size_corporea()
-    print 'Size embeddings', size_embeddings()
-    print 'Size manually tagged', size_manually_tagged()
-    print 'Size manually tagged by cat', size_manually_tagged_by_cat()
-    print 'Get balance', get_balance()
-    print 'Get balance by source', get_balance_by_source() 
-    print 'Size loose match embedings' , size_loose_match()
-    print 'Size null embedings' , size_null_embedings()
-    print 'Size exact match embeddins' , size_exact_match_embeddins()
+    print '%28s : %s' % ('Size vocabulary',             str(size_vocabulary()) )
+    print '%28s : %s' % ('Size vocabulary by word',     str(size_vocabulary_by_word()) )
+    print '%28s : %s' % ('Size vocabulary by lemma',    str(size_vocabulary_by_lemma()) )
+    print '%28s : %s' % ('Size manually tagged',        str(size_manually_tagged()) )
+    print '%28s : %s' % ('Size corporea',               str(size_corporea()) )
+    print '%28s : %s' % ('Size corporea by source',     str(size_corporea_by_source()) )
+    print '%28s : %s' % ('Size category per source',    str(size_reviews_category()) )
+    print '%28s : %s' % ('Size embeddings',             str(size_embeddings()) )
+    print '%28s : %s' % ('Size manually tagged',        str(size_manually_tagged()) )
+    print '%28s : %s' % ('Size manually tagged by cat', str(size_manually_tagged_by_cat()) )
+    print '%28s : %s' % ( 'Size negative words',        str(size_negative_words()) )
+    print '%28s : %s' % ( 'Size negators',              str(size_negators()) )
+    print '%28s : %s' % ( 'Size neutral reviews',       str(size_neutral_reviews()) )
+    print '%28s : %s' % ('Size neutral words',          str(size_neutral_words()) )
+    print '%28s : %s' % ('Size positive reviews',       str(size_positive_reviews()) ) 
+    print '%28s : %s' % ('Size positive words',         str(size_positive_words()) )
+    print '%28s : %s' % ('Global balance',              str(get_balance()) )
+    print '%28s : %s' % ('Local balance by source',     str(get_balance_by_source()) ) 
+    print '%28s : %s' % ('Size loose match embedings' , str(size_near_match()) )
+    print '%28s : %s' % ('Size null embedings' ,        str(size_null_match()) )
+    print '%28s : %s' % ('Size exact match embeddins' , str(size_exact_match()) )
