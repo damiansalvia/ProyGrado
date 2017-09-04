@@ -10,7 +10,8 @@ from sklearn.model_selection import GridSearchCV
 import CorpusReader as cr 
 import DataProvider as dp
 import NegationTagger as nt
-import TextAnalyzer as ta        
+import TextAnalyzer as ta
+import LexiconGenerator as lg        
 from Settings import *
 
 #################################################################
@@ -82,15 +83,23 @@ for config in config_set[:op]:
     ann.predict_untagged( limit = 10, tofile="./outputs/tmp" )
 
 print "Summary"
-for nth,stat in enumerate(stats): print "Option",nt,stat
+for nth,stat in enumerate(stats): print "Option",nth,stat
 
 ###################################################################
 
-# tolerance = 1.0
-# li = dp.get_indepentent_lex(tolerance=tolerance)
-# save(li,"independent_lexcon_-_tolerance_%i_percent" % (tolerance*100),"./outputs/lexicon")
-# li = dp.get_indepentent_lex2(tolerance=tolerance)
-# save(li,"independent_lexcon_2_-_tolerance_%i_percent" % (tolerance*100),"./outputs/lexicon")
+tolerance = 0.8
+
+title('MATRICES')
+result = lg.get_indepentent_lexicon_by_polarity_matrices(limit=20, tolerance=tolerance)
+save(result,"LI_ByMatrix_at_%i" % (tolerance*100),"./outputs/lexicon")
+
+title('AVERAGE')
+result = lg.get_indepentent_lexicon_by_average(limit=20, tolerance=tolerance)
+save(result,"LI_ByMatrix_at_%i" % (tolerance*100),"./outputs/lexicon")
+
+title('WEIGHT FUNCTION')
+result = lg.get_indepentent_lexicon_by_weight_function(limit=20, tolerance=tolerance)
+save(result,"LI_ByMatrix_at_%i" % (tolerance*100),"./outputs/lexicon")
  
 
 
