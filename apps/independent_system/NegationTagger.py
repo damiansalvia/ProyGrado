@@ -116,12 +116,12 @@ class NeuralNegationTagger:
         
         self.model.fit( X, Y, 
             callbacks=self.callbacks , 
-            batch_size=10 , epochs=100 , 
+            batch_size=32 , epochs=100 , 
             validation_split=testing_fraction , 
             verbose=verbose 
         )
         
-        scores = self.model.evaluate(X,Y,batch_size=10,verbose=verbose)
+        scores = self.model.evaluate(X,Y,batch_size=32,verbose=verbose)
         scores = [ round(score*100,1) for score in scores ]
         scores = zip( self.model.metrics_names , scores )
         log('MODEL EVALUATION\n'+str(scores),level='info')
@@ -160,7 +160,7 @@ def start_tagging(tofile=None):
     
     def DisplayMenu():
         os.system('clear')
-        print "*"*10," MENU ","*"*10
+        title("MENU")
         print "0 . exit"
         for i in range(sources_size):
             qty = len(dp.get_tagged('manually',sources[i])) 
