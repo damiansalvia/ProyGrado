@@ -58,17 +58,8 @@ def save_negations(opinions,tagged_as):
             currtags = [ item['negated'] for item in opinion['text'] ] 
             if opinions[_id] == currtags: # skip if all tags equal
                 continue
-            print "%s vs. %s" % ( opinion['tagged'].upper() , negation['tagged'].upper() )
-            text = ' '.join(
-                "%s%s/%s\033[0m" % (
-                    item['word'],
-                    "\033[91m" if item['negated'] != negation['text.' + str(idx) + '.negated'] else "\033[92m",
-                    "(%s,%s)" % ( 'i' if item['negated'] else 'n' , 'i' if negation['text.' + str(idx) + '.negated'] else 'n')
-                ) for idx,item in enumerate(opinion['text']) )
-            print "' %s '" % text
-            op = raw_input("R(eplace) by new or (K)eep old > ")
-            if op.lower() == 'r':
-                db.reviews.update( { '_id': _id } , { '$set': negation }  )
+            negation = do_correction(opinion,negation)
+            db.reviews.update( { '_id': _id } , { '$set': negation }  )
         
         # Not exists
         else: 
@@ -159,7 +150,7 @@ def get_soruce_vocabulary(source):
         { '$match': {'source': source}},
         { '$unwind': "$text" },
         { '$group': { '_id':'$text.lemma' } }
-    ]))
+     ]))
 
 
 def update_embeddings(
@@ -254,21 +245,40 @@ def get_stat_balanced(source=None):
     balance = int( round( sum( item['category'] for item in items ) / items.count() ) )
     return balance
 
-if __name__ == '__main__':
-    tagged = db.reviews.find({'tagged': 'manually'})
-    negated_slices = []
-    for t in tagged:
-        length = 0
-        for w in t['text']:
-            if w['negated']:
-                length += 1
-            elif length > 0:
-                negated_slices.append(length)
-                length = 0
-    print 'Negated slices: ' , negated_slices
-    print '\nMax slice size: ' , max(negated_slices)
-    print '\nMin slice size: ' , min(negated_slices)
-    print '\nAvg slice size: ' , sum(negated_slices)/len(negated_slices)
+def do_correction(opinion,negation):
+    diff = []
+    print "\n%s vs. %s" % ( opinion['tagged'].upper() , negation['tagged'].upper() )
+    for idx,item in enumerate(opinion['text']):
+        print "%s%s" % (
+                item['word'],
+                "\033[91m/(%s:%s)[%i]\033[0m"%(
+                    'i' if item['negated'] else 'n' , 
+                    'i' if negation['text.' + str(idx) + '.negated'] else 'n',
+                    idx
+                ) if item['negated'] != negation['text.' + str(idx) + '.negated'] else "",
+            ),
+        if item['negated'] != negation['text.' + str(idx) + '.negated']: diff.append(idx)
+    print
+    diff = list(reversed(diff))
+    queue = []
+    while diff:
+        idx = diff.pop()
+        op = raw_input("B(ack), L(eft) or R(ight) for [%i] > " % idx)
+        op = op.lower()
+        if op == 'l':
+            queue.append(idx)
+            negation['text.' + str(idx) + '.negated'] = opinion['text'][idx]['negated']
+        elif op == 'r':
+            queue.append(idx)
+            negation['text.' + str(idx) + '.negated'] = negation['text.' + str(idx) + '.negated']
+        elif op == 'b':
+            diff.append(idx)
+            if queue: diff.append(queue.pop())
+        else:
+            diff.append(idx)
+    return negation
 
+if __name__ == '__main__':
+    pass
 
 
