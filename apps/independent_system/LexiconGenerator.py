@@ -1,3 +1,8 @@
+# -*- coding: utf-8 -*-
+import sys
+sys.path.append('../utilities')
+from utilities import *
+
 from DataProvider import db
 import DataProvider as dp
 import numpy as np
@@ -35,11 +40,13 @@ def get_indepentent_lexicon_by_polarity_matrices(limit=None, tolerance=0.0, wind
         pos_matrix = np.zeros((vocabulary_size,vocabulary_size))
         neg_matrix = np.zeros((vocabulary_size,vocabulary_size))
         opinions = dp.get_opinions(source)
+        total = opinions.count()
         for idx, op in enumerate(opinions):
+            progress("Building matrix for %s" % source,total,idx)
             cat = op['category']
             vectors = get_vectors(op['text'], window_left, window_right) 
             for v in vectors:
-                target = v[0]
+                target  = v[0]
                 context = v[1]
                 target_cat = 100 - cat if target[1] else cat
                 for w in context:
@@ -48,9 +55,6 @@ def get_indepentent_lexicon_by_polarity_matrices(limit=None, tolerance=0.0, wind
                             pos_matrix[vocabulary.index(target[0])][vocabulary.index(w[0])] += target_cat - 50
                         else:
                             neg_matrix[vocabulary.index(target[0])][vocabulary.index(w[0])] += 50 - target_cat
-
-
-
         return pos_matrix, neg_matrix
 
     def all_equal(list):
@@ -63,7 +67,9 @@ def get_indepentent_lexicon_by_polarity_matrices(limit=None, tolerance=0.0, wind
     for source in sources:
         vocabulary = [ elem['_id'] for elem in dp.get_soruce_vocabulary(source)]
         pos_matrix, neg_matrix = get_matrices(source, vocabulary)
-        for idx in range(len(pos_matrix)):
+        total = len(pos_matrix)
+        for idx in range(total):
+            progress("Assigning polarities in words for %s" % source,total,idx)
             if np.linalg.norm(pos_matrix[idx]) - np.linalg.norm(neg_matrix[idx]) > 0:
                 polarities[vocabulary[idx]] = '+'
             else:
@@ -258,6 +264,9 @@ def get_indepentent_lexicon_by_weight_function(limit=None, tolerance=0.0, filter
     return {item['lemma']:item['pol'] for item in result} 
 
 
+#--------------------------------------------------------------------------------------
+
+
 def get_independent_lexicon_by_rules(treshold=0.9):
     balance = get_stat_balanced()
     words = db.reviews.aggregate([
@@ -276,6 +285,9 @@ def get_independent_lexicon_by_rules(treshold=0.9):
             }
     ])
     pass
+
+
+#--------------------------------------------------------------------------------------
 
 
 if __name__ == '__main__':
