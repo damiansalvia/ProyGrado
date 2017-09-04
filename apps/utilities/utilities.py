@@ -29,10 +29,16 @@ def progress(prompt, total, current, width=width):
     current += 1
     bar_length = width-len(prompt)
     percent = float(current) / total
-    hashes = '#' * int(round(percent * bar_length))
-    spaces = ' ' * (bar_length - len(hashes))
-    print "\r{0} [{1}] {2}%".format(prompt, hashes + spaces, round(percent * 100,2)),
-    if current==total: print
+    hashes = '=' * int(round(percent * bar_length))
+    spaces = '.' * ( bar_length - len(hashes) - 1 )
+    print "\r{0} [{1}] {2}%".format(prompt, hashes + '>' + spaces, round(percent * 100,2)),
+    if current==total: print "\r{0} [{1}] Done%".format(prompt, hashes + '='),
+
+
+def title(title,width=width):
+    size = width - len(title) + 2
+    size = size / 2 
+    print "*"*size,title.upper(),"*"*size
         
 
 class Log:
