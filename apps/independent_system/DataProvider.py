@@ -246,38 +246,42 @@ def get_stat_balanced(source=None):
     return balance
 
 def do_correction(opinion,negation):
+    negs = {x:negation[x] for x in negation}
     diff = []
-    print "\n%s vs. %s" % ( opinion['tagged'].upper() , negation['tagged'].upper() )
+    print "\n%s vs. %s" % ( opinion['tagged'].upper() , negs['tagged'].upper() )
     for idx,item in enumerate(opinion['text']):
         print "%s%s" % (
                 item['word'],
                 "\033[91m/(%s:%s)[%i]\033[0m"%(
                     'i' if item['negated'] else 'n' , 
-                    'i' if negation['text.' + str(idx) + '.negated'] else 'n',
+                    'i' if negs['text.' + str(idx) + '.negated'] else 'n',
                     idx
-                ) if item['negated'] != negation['text.' + str(idx) + '.negated'] \
+                ) if item['negated'] != negs['text.' + str(idx) + '.negated'] \
                 else "\033[1m/%s\033[0m" % ('i' if item['negated'] else 'n'),
             ),
-        if item['negated'] != negation['text.' + str(idx) + '.negated']: diff.append(idx)
+        if item['negated'] != negs['text.' + str(idx) + '.negated']: diff.append(idx)
     print
     diff = list(reversed(diff))
     queue = []
     while diff:
         idx = diff.pop()
-        op = raw_input("B(ack), L(eft) or R(ight) for [%i] > " % idx)
+        op = raw_input("Q(uit), B(ack), L(eft) or R(ight) for [%i] > " % idx)
         op = op.lower()
-        if op == 'l':
+        if op == 'q':
+            negs = negation
+            break  
+        elif op == 'l':
             queue.append(idx)
-            negation['text.' + str(idx) + '.negated'] = opinion['text'][idx]['negated']
+            negs['text.' + str(idx) + '.negated'] = opinion['text'][idx]['negated']
         elif op == 'r':
             queue.append(idx)
-            negation['text.' + str(idx) + '.negated'] = negation['text.' + str(idx) + '.negated']
+            negs['text.' + str(idx) + '.negated'] = negs['text.' + str(idx) + '.negated']
         elif op == 'b':
             diff.append(idx)
             if queue: diff.append(queue.pop())
         else:
             diff.append(idx)
-    return negation
+    return negs
 
 if __name__ == '__main__':
     pass
