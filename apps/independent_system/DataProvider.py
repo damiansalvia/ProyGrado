@@ -154,6 +154,14 @@ def get_text_embeddings(text, wleft, wright):
     return data, pred
 
 
+def get_soruce_vocabulary(source):
+    return list(db.reviews.aggregate([
+        { '$match': {'source': source}},
+        { '$unwind': "$text" },
+        { '$group': { '_id':'$text.lemma' } }
+    ]))
+
+
 def update_embeddings(
         femb='../../embeddings/emb39-word2vec.npy',
         ftok='../../embeddings/emb39-word2vec.txt',
