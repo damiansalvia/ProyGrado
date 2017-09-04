@@ -146,12 +146,10 @@ def size_positive_words():
 
 # Vocabulary size:
 def size_vocabulary():
-    return list(db.reviews.aggregate([
-        { '$unwind': "$text" },
-        { '$project' : { "text.lemma" : 1, "_id":0  }},
-        { '$group' : { '_id' : "$text.lemma" } },
-        { '$group' : {'_id':1, 'count': {'$sum' : 1 }}}
-    ]))[0]['count']
+    return db.reviews.distinct("text.word").count()
+
+def size_vocabulary_by_lemma():
+    return db.reviews.distinct("text.lemma").count()
 
 def get_balance():
     return list(db.reviews.aggregate([
@@ -175,10 +173,20 @@ def get_balance_by_source() :
         {'$project': {'balance': {'$divide' :['$total','$size'] } } }
     ]))
 
+
+
+def size_loose_match():
+    return db.embeddings.find({"nearestOf":{'$ne':None}}).count()
+
+def size_null_embedings():
+    return db.embeddings.find({"embedding":{ '$all':[0.0]}}).count()
+
+def size_exact_match_embeddins():
+    return db.embeddings.find({"embedding":{ "$not":{ '$all':[0.0]} }, "nearestOf":{'$eq':None}}).count()
+
 #=====================================================================================================
 if __name__ == "__main__":
 
-    print 'Size corpus words', size_corporea()
     # print 'Size nagated words', size_nagated_words()
     print 'Size negative words', size_negative_words()
     print 'Size negators', size_negators()
@@ -193,4 +201,7 @@ if __name__ == "__main__":
     print 'Size manually tagged', size_manually_tagged()
     print 'Size manually tagged by cat', size_manually_tagged_by_cat()
     print 'Get balance', get_balance()
-    print 'Get balance by source', get_balance_by_source()
+    print 'Get balance by source', get_balance_by_source() 
+    print 'Size loose match embedings' , size_loose_match()
+    print 'Size null embedings' , size_null_embedings()
+    print 'Size exact match embeddins' , size_exact_match_embeddins()

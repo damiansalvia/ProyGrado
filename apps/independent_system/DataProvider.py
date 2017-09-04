@@ -255,6 +255,20 @@ def get_stat_balanced(source=None):
     return balance
 
 if __name__ == '__main__':
-    pass
+    tagged = db.reviews.find({'tagged': 'manually'})
+    negated_slices = []
+    for t in tagged:
+        length = 0
+        for w in t['text']:
+            if w['negated']:
+                length += 1
+            elif length > 0:
+                negated_slices.append(length)
+                length = 0
+    print 'Negated slices: ' , negated_slices
+    print '\nMax slice size: ' , max(negated_slices)
+    print '\nMin slice size: ' , min(negated_slices)
+    print '\nAvg slice size: ' , sum(negated_slices)/len(negated_slices)
+
 
 
