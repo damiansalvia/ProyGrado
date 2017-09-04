@@ -255,7 +255,8 @@ def do_correction(opinion,negation):
                     'i' if item['negated'] else 'n' , 
                     'i' if negation['text.' + str(idx) + '.negated'] else 'n',
                     idx
-                ) if item['negated'] != negation['text.' + str(idx) + '.negated'] else "",
+                ) if item['negated'] != negation['text.' + str(idx) + '.negated'] \
+                else "\033[1m/%s\033[0m" % ('i' if item['negated'] else 'n'),
             ),
         if item['negated'] != negation['text.' + str(idx) + '.negated']: diff.append(idx)
     print
