@@ -117,7 +117,7 @@ class NeuralNegationTagger:
         X , Y = [] , []
         total = opinions.count()
         for idx,opinion in enumerate(opinions):
-            progress("Getting embeddings",total,idx)
+            progress("Getting embeddings (%i words)"  % len(opinion['text']),total,idx)
             x_curr,y_curr = dp.get_text_embeddings( opinion['text'], self.wleft, self.wright )
             X += x_curr
             Y += y_curr
