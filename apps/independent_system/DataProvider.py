@@ -9,6 +9,7 @@ from pymongo import MongoClient
 from pymongo.errors import ServerSelectionTimeoutError
 import numpy as np
 from itertools import combinations
+import random
 from difflib import get_close_matches
 
 
@@ -99,11 +100,16 @@ def get_tagged(tagger,source=None):
     query = { "tagged" : tagger  } 
     if source and not source.isdigit(): # TO-DO : por algun motivo me llega un source=2
         query.update({ "source" : source })
-    return list(db.reviews.find(query))
+    return db.reviews.find(query)
 
 
-def get_untagged():
-    return list(db.reviews.find({ "tagged" : { "$exists" : False } }))
+def get_untagged(limit=None,seed=None):
+    result = db.reviews.find({ "tagged" : { "$exists" : False } }) 
+    if limit:
+        random.seed(seed)  
+        rand = int( random.random() * db.reviews.find({}).count() ) 
+        result = result.skip(rand).limit(limit)
+    return result
 
 
 def get_size_embedding():
@@ -213,14 +219,13 @@ def update_embeddings(
     
     for idx,word in enumerate(vocabulary):
         progress("Updating embeddings (%i,%i,%i)" % ( stats['ByWord'],stats['ByClosest'],stats['IsNull'] ),total,idx)
-#         if result.has_key(word):
-#             continue
-        nearest , vector = get_vectors( word )
-        result.append({ 
-            '_id'      :word,
-            'embedding':vector.tolist(),
-            'nearestOf':nearest 
-        })
+        if not db.embeddings.find_one({'_id':word}):
+            nearest , vector = get_vectors( word )
+            result.append({ 
+                '_id'      :word,
+                'embedding':vector.tolist(),
+                'nearestOf':nearest 
+            })
     
     # Save statistics results
     log("Embeddings integration result. %s" % str(stats),level='info')
