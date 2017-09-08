@@ -262,6 +262,7 @@ def load_corpus_negation(sources='../../corpus/corpus_variado_sfu_neg/*/*.xml'):
             opinion['category'] = category
             opinion['idx']      = idx+1
             opinion['source']   = 'corpus_variado_sfu'
+            opinion['tagged']   = 'manually',
             opinion['text']     = [{
                 'word'   : token['form'],
                 'lemma'  : token['lemma'],
