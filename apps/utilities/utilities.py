@@ -32,7 +32,7 @@ def progress(prompt, total, current, width=width):
     hashes = '=' * int(round(percent * bar_length))
     spaces = '.' * ( bar_length - len(hashes) - 1 )
     print "\r{0} [{1}] {2}%".format(prompt, hashes + '>' + spaces, round(percent * 100,2)),
-    if current==total: print "\r{0} [{1}] Done".format(prompt, hashes + '=')
+    if current==total: print "\r{0} [{1}] Done  ".format(prompt, hashes + '=')
 
 
 def title(title,width=width):
