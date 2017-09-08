@@ -25,7 +25,7 @@ def save(data,name,path,overwrite=True):
     print "Saved at",path
 
 
-def progress(prompt, total, current, width=width):
+def progress(prompt, total, current, width=width, end=True):
     current += 1
     size_status = 2*len(str(total))+3 
     bar_length = width-len(prompt)-size_status
@@ -34,7 +34,7 @@ def progress(prompt, total, current, width=width):
     spaces = '.' * ( bar_length - len(hashes) - 1 )
     status = "(%i/%i)" % (current,total)
     print "\r{0} {1} [{2}] {3}%".format(status,prompt, hashes + '>' + spaces,round(percent * 100,2)),
-    if current==total: print
+    if current==total and end: print
 
 
 def title(title,width=width):
