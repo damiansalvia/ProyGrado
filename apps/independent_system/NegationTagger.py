@@ -168,7 +168,7 @@ class NeuralNegationTagger:
 
 
 
-def load_corpus_negation(sources='../../corpus/corpus_variado_sfu_neg/*/*.xml'):
+def load_corpus_negation(sources='../../corpus/corpus_variado_sfu_neg/*/*.xml',tofile=None):
     sources = glob.glob(sources)
     total = len(sources)
     isneg, tmpisneg = False, None
@@ -264,14 +264,15 @@ def load_corpus_negation(sources='../../corpus/corpus_variado_sfu_neg/*/*.xml'):
             opinion['source']   = 'corpus_variado_sfu'
             opinion['tagged']   = 'manually',
             opinion['text']     = [{
-                'word'   : token['form'],
-                'lemma'  : token['lemma'],
+                'word'   : token['form'].lower(),
+                'lemma'  : token['lemma'].lower(),
                 'tag'    : token['tag'],
                 'negated': token['negated']
             } for token in tokens ]
             opinions.append(opinion)
     
     dp.save_opinions(opinions) 
+    if tofile: save(opinion_data,"from_corpus_sfu_negation",tofile)
     return len(opinions)
     
     
