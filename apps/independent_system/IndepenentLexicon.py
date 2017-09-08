@@ -44,8 +44,16 @@ for config in config_set[:op]:
         )
            
     count += len(analyzed)
+
+###################################################################
+
+op = raw_input("Update negation for train? [y/n] > ")
+op = op.lower()
+if op == 'y': count += nt.load_corpus_negation()
            
-if op: raw_input("Total %i. Continue..." % count)
+###################################################################
+
+if count: raw_input("Total %i. Continue..." % count)
 
 ###################################################################
 
@@ -81,22 +89,22 @@ for config in config_set[:op]:
     stat = ann.fit_tagged( testing_fraction=0.20 , verbose=1 )
     stats.append(stat)
     ann.predict_untagged( limit = 10, tofile="./outputs/tmp" )
-
+ 
 print "Summary"
 for nth,stat in enumerate(stats): print "Option",nth,stat
 
 ###################################################################
 
 tolerance = 0.8
-
+ 
 title('MATRICES')
 result = lg.get_indepentent_lexicon_by_polarity_matrices(limit=20, tolerance=tolerance)
 save(result,"LI_ByMatrix_at_%i" % (tolerance*100),"./outputs/lexicon")
-
+ 
 title('AVERAGE')
 result = lg.get_indepentent_lexicon_by_average(limit=20, tolerance=tolerance)
 save(result,"LI_ByMatrix_at_%i" % (tolerance*100),"./outputs/lexicon")
-
+ 
 title('WEIGHT FUNCTION')
 result = lg.get_indepentent_lexicon_by_weight_function(limit=20, tolerance=tolerance)
 save(result,"LI_ByMatrix_at_%i" % (tolerance*100),"./outputs/lexicon")

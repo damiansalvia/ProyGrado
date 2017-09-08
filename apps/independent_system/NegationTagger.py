@@ -7,13 +7,15 @@ from metrics import precision, recall, fmeasure, cosine, mse, bce, binacc
 from keras.models import Sequential
 from keras.layers import Dense
 from keras.layers.core import Dropout
+from keras.layers.recurrent import LSTM
+from keras.layers.wrappers import Bidirectional
 from keras.callbacks import EarlyStopping
 from keras.utils import to_categorical
 # from keras.utils import plot_model
 
 import DataProvider as dp 
 
-import os, json, io, glob, re
+import os, json, io, glob, re, md5
 import numpy as np
 
 
@@ -61,6 +63,15 @@ class NeuralNegationTagger:
         self.wright = wright
         self.wleft  = wleft
         self.dim    = input_dim
+        self.name   = "predict_l%i_r%i_%s_%s_o%s_e%s_d%s" % (
+            wleft,
+            wright,
+            ''.join('d'+str(dim) for dim in out_dims),
+            ''.join(act[0].upper() for act in activation),
+            optimizer[0].upper(),
+            "Y" if early_monitor else "N",
+            "Y" if drop_rate else "N"
+        )
         
         # Callbacks settings
         self.callbacks = []
@@ -80,13 +91,13 @@ class NeuralNegationTagger:
         
         # Input layer
         self.model.add( Dense( out_dims[0], input_dim=input_dim, activation=activation[0] ) )
-        self.model.add( Dropout( drop_rate[0] ) )
-        
+        self.model.add( Dropout( drop_rate[0] , seed=666 ) )
+         
         # Intermediate layers
         for i in range( 1 , len(out_dims) ):
             self.model.add( Dense( out_dims[i], activation=activation[i] ) )
-            self.model.add( Dropout( drop_rate[i] ) ) 
-        
+            self.model.add( Dropout( drop_rate[i] , seed=666 ) ) 
+         
         # Output layer
         self.model.add( Dense( 1, activation=activation[-1] ) )
         
@@ -104,9 +115,9 @@ class NeuralNegationTagger:
         if not opinions: raise Exception('Nothing to train')
         
         X , Y = [] , []
-        total = len(opinions)
+        total = opinions.count()
         for idx,opinion in enumerate(opinions):
-            progress("Loading training data",total,idx)
+            progress("Getting embeddings",total,idx)
             x_curr,y_curr = dp.get_text_embeddings( opinion['text'], self.wleft, self.wright )
             X += x_curr
             Y += y_curr
@@ -132,9 +143,10 @@ class NeuralNegationTagger:
             
     
     def predict_untagged(self,limit=None,tofile=None):
-        opinions = dp.get_untagged()[:limit]
+        opinions = dp.get_untagged(limit,666)
         results = {}
-        total = len(opinions)
+        total = opinions.count(with_limit_and_skip=True)
+        print 'limit =',limit,", total =",total;raw_input()
         for idx,opinion in enumerate(opinions): 
             progress("Predicting on new data",total,idx)
             results[ opinion['_id'] ] = []
@@ -143,7 +155,7 @@ class NeuralNegationTagger:
                 Y = self.model.predict( X )
                 Y = ( round(Y) == 1 ) # 0 <= Y <= 1 -- Round is ok?
                 results[ opinion['_id'] ].append( Y ) 
-        if tofile: save(results,"predict_untagged_l%i_r%i_d%i" % (self.wleft,self.wright,self.dim),tofile)
+        if tofile: save(results,"%s" % self.name,tofile)
         #dp.save_negation(result,tagged_as='automatically')
         return results
     
@@ -151,10 +163,117 @@ class NeuralNegationTagger:
     def save(self,odir = './outputs/models'):
         odir = odir if odir[-1] != "/" else odir[:-1]
         if not os.path.isdir(odir): os.makedirs(odir)
-        self.model.save( odir+"/model_neg_l%i_r%i_d%i.h5" % (self.left,self.right,self.dim) )
+        self.model.save( odir+"/model_%s.h5" % self.name )
 #         plot_model( self.model, to_file=odir+'/model_neg_l%i_r%i_d%i.png' % (self.left,self.right,self.dim) , show_shapes=True )    
 
 
+
+def load_corpus_negation(sources='../../corpus/corpus_variado_sfu_neg/*/*.xml'):
+    sources = glob.glob(sources)
+    total = len(sources)
+    isneg, tmpisneg = False, None
+    opinions = []
+    
+    for idx,source in enumerate(sources):
+        
+        progress("Reading negation corpus_variado_sfu (%s)" % source.split('/')[-2],total,idx) 
+        lines = open(source).readlines()
+        tokens = []
+        text = ""
+        for line in lines:
+            content = line.strip()
+            if not isinstance(content,unicode):
+                content = unicode(content,'utf8')            
+            
+            if content.startswith("<?xml"):
+                regex = re.compile("polarity=\"(.*?)\"",re.DOTALL)
+                category = regex.findall(content)[0]
+                category = 20 if category=='negative' else 80
+                continue
+            
+            elif content.startswith("<scope"):
+                isneg = True
+                continue               
+                
+            elif content.startswith("</scope"):
+                isneg = False
+                continue
+            
+            elif content.startswith("<negexp"):
+                tmpisneg = isneg
+                isneg = None
+                continue               
+                
+            elif content.startswith("</negexp"):
+                isneg = tmpisneg
+                tmpisneg = None
+                continue
+            
+            elif content.startswith("<v ") or\
+                content.startswith("<s ") or\
+                content.startswith("<f ") or\
+                content.startswith("<p ") or\
+                content.startswith("<r ") or\
+                content.startswith("<a ") or\
+                content.startswith("<d ") or\
+                content.startswith("<c ") or\
+                content.startswith("<n ") or\
+                content.startswith("<w ") or\
+                content.startswith("<z ") or\
+                content.startswith("<i "):
+                   
+                forms = re.compile("wd=\"(.*?)\"",re.DOTALL).findall(content)
+                lemma = re.compile("lem=\"(.*?)\"",re.DOTALL).findall(content)
+                tag   = re.compile("pos=\"(.*?)\"",re.DOTALL).findall(content)
+                
+                if forms and lemma:
+                    forms = forms[0]
+                    lemma = lemma[0]
+                elif lemma: 
+                    forms = lemma[0]
+                    lemma = lemma[0]
+                else: # mathsign, solo tiene POS
+                    continue                       
+                
+                if not tag:
+                    tag   = "cs"
+                else:
+                    tag = tag[0]
+                
+                forms = forms.split('_') if not tag.startswith("NP") else forms
+                
+                for form in forms:  
+                    tokens.append({
+                        'form':form,
+                        'lemma':lemma,
+                        'tag':tag.upper(),
+                        'negated': isneg,
+                    })    
+                    
+                    text += " "+form
+            else: # Casos raros como &gt;
+                pass
+                
+        _id = md5.new(str(category) + text.encode('ascii', 'ignore')).hexdigest()
+        
+        if not dp.get_opinion(_id):
+            opinion = {}         
+            opinion['_id']      = _id
+            opinion['category'] = category
+            opinion['idx']      = idx+1
+            opinion['source']   = 'corpus_variado_sfu'
+            opinion['text']     = [{
+                'word'   : token['form'],
+                'lemma'  : token['lemma'],
+                'tag'    : token['tag'],
+                'negated': token['negated']
+            } for token in tokens ]
+            opinions.append(opinion)
+    
+    dp.save_opinions(opinions) 
+    return len(opinions)
+    
+    
 
 def start_tagging(tofile=None):
     
@@ -330,10 +449,19 @@ def load_neg_from_files(source_dir):
     for idx,source in enumerate(sources):
         progress("Load negation tags from %s" % source,total,idx)
         content = json.load( open(source) )    
-        dp.save_negations(content,tagged_as='manually')
+        dp.save_negations(content,tagged_as='manually')        
+        
+
+def nprint(file):
+    tags = json.load(open(file))
+    for _id in tags:
+        opinion = dp.get_opinion(_id)
+        print ' '.join(["%s" % ("\033[91m"+wd+"\033[0m" if tg else wd) for wd,tg in zip([text['word'] for text in opinion['text']],tags[_id]) ])
+        raw_input("Next...")
         
         
         
 if __name__ == '__main__':
-    load_neg_from_files('./outputs/negation/negtag_*.json')
+#     load_neg_from_files('./outputs/negation/negtag_*.json')
+    load_corpus_negation()
     
