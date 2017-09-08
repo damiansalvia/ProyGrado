@@ -237,7 +237,7 @@ def update_embeddings(
             print "No embeddings has been processed"    
     
     # Save results in database
-    db.embeddings.insert_many(result)
+    if result: db.embeddings.insert_many(result)
 
 # ----------------------------------------------------------------------------------------------------------------------
 
