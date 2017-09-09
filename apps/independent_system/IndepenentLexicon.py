@@ -71,7 +71,7 @@ if op == 'y': nt.start_tagging(tofile="./outputs/negation")
   
 config_set = config_set_neural_negation_tagger()
 
-op = raw_input("Traing-predict a(ll) or enter for none > ")
+op = raw_input("Training-predict a(ll) > ")
 op = len(config_set) if op.lower() == 'a' else 0
 
 stats = []
@@ -86,7 +86,8 @@ for config in config_set[:op]:
         early_monitor = config['early_monitor'], 
         drop_rate     = config['drop_rate'] 
     )     
-    stat = ann.fit_tagged( testing_fraction=0.20 , verbose=1 )
+    # TO-DO Decidir que hacer con los negadores (null, true o false)
+    stat = ann.fit_tagged( neg_as=False , testing_fraction=0.20 , verbose=1 )
     stats.append(stat)
     ann.predict_untagged( limit = 10, tofile="./outputs/tmp" )
  

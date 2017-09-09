@@ -109,21 +109,19 @@ class NeuralNegationTagger:
         print self.model.summary()
      
      
-    def fit_tagged(self,testing_fraction=0.2,verbose=0):    
-        opinions = dp.get_tagged('manually') 
-        
-        if not opinions: raise Exception('Nothing to train')
+    def fit_tagged(self,neg_as,testing_fraction=0.2,verbose=0):    
+        opinions = dp.get_tagged('manually')
+        total = opinions.count(with_limit_and_skip=True)       
+        if total == 0: raise Exception('Nothing to train')
         
         X , Y = [] , []
-        total = opinions.count()
         for idx,opinion in enumerate(opinions):
-            progress("Getting embeddings (%i words)"  % len(opinion['text']),total,idx)
-            x_curr,y_curr = dp.get_text_embeddings( opinion['text'], self.wleft, self.wright )
+            progress("Getting embeddings for trainning (%i words)"  % len(opinion['text']),total,idx)
+            x_curr,y_curr = dp.get_text_embeddings( opinion['text'], self.wleft, self.wright ,neg_as=neg_as )
             X += x_curr
-            Y += y_curr
-        
+            Y += y_curr         
         X = np.array(X)
-        Y = np.array(Y)
+        Y = np.array(Y)   
         
         self.model.fit( X, Y, 
             callbacks=self.callbacks , 
@@ -146,7 +144,6 @@ class NeuralNegationTagger:
         opinions = dp.get_untagged(limit,666)
         results = {}
         total = opinions.count(with_limit_and_skip=True)
-        print 'limit =',limit,", total =",total;raw_input()
         for idx,opinion in enumerate(opinions): 
             progress("Predicting on new data",total,idx)
             results[ opinion['_id'] ] = []

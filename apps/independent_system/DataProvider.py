@@ -97,10 +97,11 @@ def get_sample(quantity, source, indexes = None):
 
 
 def get_tagged(tagger,source=None):
-    query = { "tagged" : tagger  } 
-    if source and not source.isdigit(): # TO-DO : por algun motivo me llega un source=2
+    query = { "tagged" : tagger  }
+    if source:
         query.update({ "source" : source })
-    return db.reviews.find(query)
+    result = db.reviews.find(query)
+    return result
 
 
 def get_untagged(limit=None,seed=None):
@@ -122,32 +123,42 @@ def get_word_embedding(word):
     raise Exception("Couldn't find embedding for '%s'" % word)
 
 
-def get_text_embeddings(text, wleft, wright):
-    
+def get_text_embeddings(text, wleft, wright, neg_as=None):    
     size_embedding = get_size_embedding()
     
-    def get_entry(text, pos):
-        if  0 <= pos < len(text) :
-            word =  text[pos]['word'].lower()
-            return get_word_embedding(word)
+    def get_entry(text, idx):
+        if  0 <= idx < len(text) :
+            return get_word_embedding( text[idx]['word'] )
         else :
-            return np.zeros( size_embedding )
+            return list(np.zeros( size_embedding ))
     
     data,pred = [],[]
     
+    total = len(text)
     for idx, word in enumerate(text):
-    
+#         progress("Getting embedding",total,idx,end=False)
+        
         embeddings = []        
         for i in range(wleft + wright + 1):
-            embeddings.append( get_entry( text , idx-wleft+i ) )
+            embeddings += get_entry( text , idx-wleft+i )
         
         embeddings = np.array( embeddings ).flatten()
-        data.append(embeddings)
+        data.append( embeddings )
         
         if text[idx].has_key('negated'): # for training
-            prediction = np.array(text[idx]['negated'])
+            prediction = text[idx]['negated']
+            if prediction == True:
+                prediction = 1
+            elif prediction == False:
+                prediction = 0
+            elif neg_as == True:
+                prediction = 1
+            elif neg_as == False:
+                prediction = 0
+            else: # prediction=None and neg_as=None
+                prediction = 2
             pred.append( prediction )
-    
+            
     return data, pred
 
 
