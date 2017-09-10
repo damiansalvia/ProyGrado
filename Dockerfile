@@ -54,7 +54,12 @@ RUN ln -s /usr/bin/python2.7 /usr/bin/python
 
 # Install python dependencies for DUA
 
-RUN apt update && apt install -y python-pip
+RUN apt update && apt install -y \
+    python-pip \
+    graphviz \
+    libgraphviz-dev \
+    pkg-config 
+
 RUN pip install --upgrade pip
 
 RUN pip install -U pymongo
@@ -65,6 +70,7 @@ RUN pip install -U scikit-learn
 RUN pip install -U pillow
 RUN pip install -U h5py
 RUN pip install -U keras
+RUN pip install -U pydot
 
 RUN python -c 'import nltk; nltk.download("wordnet")'
 RUN python -c 'import nltk; nltk.download("punkt")'
