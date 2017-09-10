@@ -150,16 +150,6 @@ def config_set_neural_negation_tagger():
     # Optimizers:  adam, sgd, rmsprop
     # Monitors: None, val_binary_accuracy o val_precision
     return [
-        {
-            'wleft'         :2,
-            'wright'        :2,
-            'out_dims'      :[750],
-            'activation'    :['relu','sigmoid'],
-            'loss'          :'binary_crossentropy',
-            'optimizer'     :'adam',
-            'early_monitor' :'val_binary_accuracy',
-            'drop_rate'     :[0.2]
-        },
 #         {
 #             'wleft'         :3,
 #             'wright'        :3,
