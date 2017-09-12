@@ -164,28 +164,31 @@ class NeuralNegationTagger:
         an = Analyzer()
         
         while True:
-            os.system('clear')
-            print '\n\033[4mYOUR SENTENCE\033[0m'
-            sentence = raw_input("> ")
-            if not sentence: # exit
-                os.system('clear') ; break
-            sentence = review_correction(sentence)
-            analized_sentence = an.analyze(sentence)
-            analized_sentence = [ {'word': item['form']} for item in analized_sentence ]
-            
-            result = []
-            for X in dp.get_text_embeddings( analized_sentence , self.wleft , self.wright )[0]:
-                X = X.reshape((1, -1))
-                Y = self.model.predict( X )
-                Y = ( round(Y) == 1 )
-                result.append( Y )
-            
-            os.system('clear') 
-            print '\n\033[4mPREDICTION RESULT\033[0m'        
-            print '>',' '.join([
-                "%s" % ("\033[91m"+wd+"\033[0m" if tg else wd) 
-                for wd,tg in zip( [text['word'] for text in analized_sentence] , result ) 
-            ])  
+            try:
+                os.system('clear')
+                print '\n\033[4mYOUR SENTENCE\033[0m'
+                sentence = raw_input("> ")
+                if not sentence: # exit
+                    os.system('clear') ; break
+                sentence = review_correction(sentence)
+                analized_sentence = an.analyze(sentence)
+                analized_sentence = [ {'word': item['form']} for item in analized_sentence ]
+                
+                result = []
+                for X in dp.get_text_embeddings( analized_sentence , self.wleft , self.wright )[0]:
+                    X = X.reshape((1, -1))
+                    Y = self.model.predict( X )
+                    Y = ( round(Y) == 1 )
+                    result.append( Y )
+                
+                os.system('clear') 
+                print '\n\033[4mPREDICTION RESULT\033[0m'        
+                print '>',' '.join([
+                    "%s" % ("\033[91m"+wd+"\033[0m" if tg else wd) 
+                    for wd,tg in zip( [text['word'] for text in analized_sentence] , result ) 
+                ])
+            except :
+                print 'An error has ocurred during processing. Ensure that your sentence finishes with dot.'  
             raw_input("\nPress enter to continue...")
             
 
