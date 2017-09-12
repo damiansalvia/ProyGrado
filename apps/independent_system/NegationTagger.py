@@ -58,7 +58,14 @@ class NeuralNegationTagger:
         
     
     def load_model(self,source):
-        self.model = load_model(source)
+        self.model = load_model(source , custom_objects={
+            'binary_accuracy':binacc,
+            'precision': precision,
+            'recall':recall,
+            'fmeasure':fmeasure,
+            'mean_squared_error':mse,
+            'binary_crossentropy':bce,
+        })
     
     
     def set_model(self,
