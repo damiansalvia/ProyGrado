@@ -150,16 +150,26 @@ def config_set_neural_negation_tagger():
     # Optimizers:  adam, sgd, rmsprop
     # Monitors: None, val_binary_accuracy o val_precision
     return [
-#         {
-#             'wleft'         :3,
-#             'wright'        :3,
-#             'out_dims'      :[1200],
-#             'activation'    :['relu','sigmoid'],
-#             'loss'          :'binary_crossentropy',
-#             'optimizer'     :'adam',
-#             'early_monitor' :'val_binary_accuracy',
-#             'drop_rate'     :[0.2]
-#         },
+        {
+            'wleft'         :2,
+            'wright'        :2,
+            'out_dims'      :[750],
+            'activation'    :['relu','sigmoid'],
+            'loss'          :'binary_crossentropy',
+            'optimizer'     :'adam',
+            'early_monitor' :'val_binary_accuracy',
+            'drop_rate'     :[0.2]
+        },
+        {
+            'wleft'         :3,
+            'wright'        :3,
+            'out_dims'      :[1200],
+            'activation'    :['relu','sigmoid'],
+            'loss'          :'binary_crossentropy',
+            'optimizer'     :'adam',
+            'early_monitor' :'val_binary_accuracy',
+            'drop_rate'     :[0.2]
+        },
 #         {
 #             'wleft'         :4,
 #             'wright'        :2,
@@ -184,7 +194,7 @@ def config_set_neural_negation_tagger():
 #             'wleft'         :2,
 #             'wright'        :2,
 #             'out_dims'      :[750,500],
-#             'activation'    :['relu','relu','sigmoid'],
+#             'activation'    :['selu','selu','sigmoid'],
 #             'loss'          :'binary_crossentropy',
 #             'optimizer'     :'adam',
 #             'early_monitor' :'val_binary_accuracy',
@@ -194,7 +204,7 @@ def config_set_neural_negation_tagger():
 #             'wleft'         :3,
 #             'wright'        :3,
 #             'out_dims'      :[1200,700],
-#             'activation'    :['relu','relu','sigmoid'],
+#             'activation'    :['selu','selu','sigmoid'],
 #             'loss'          :'binary_crossentropy',
 #             'optimizer'     :'adam',
 #             'early_monitor' :'val_binary_accuracy',
@@ -215,26 +225,6 @@ def config_set_neural_negation_tagger():
 #             'wright'        :3,
 #             'out_dims'      :[1300,800],
 #             'activation'    :['relu','relu','sigmoid'],
-#             'loss'          :'binary_crossentropy',
-#             'optimizer'     :'adam',
-#             'early_monitor' :'val_binary_accuracy',
-#             'drop_rate'     :[0.2,0.2]
-#         },
-#         {
-#             'wleft'         :2,
-#             'wright'        :2,
-#             'out_dims'      :[750,500],
-#             'activation'    :['selu','selu','sigmoid'],
-#             'loss'          :'binary_crossentropy',
-#             'optimizer'     :'adam',
-#             'early_monitor' :'val_binary_accuracy',
-#             'drop_rate'     :[0.2,0.2]
-#         },
-#         {
-#             'wleft'         :3,
-#             'wright'        :3,
-#             'out_dims'      :[1200,700],
-#             'activation'    :['selu','selu','sigmoid'],
 #             'loss'          :'binary_crossentropy',
 #             'optimizer'     :'adam',
 #             'early_monitor' :'val_binary_accuracy',
