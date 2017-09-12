@@ -7,7 +7,6 @@ from utilities import *
 from keras.models import Sequential
 from keras.layers import Dense, LSTM
 from keras.callbacks import EarlyStopping,CSVLogger
-from keras.utils import plot_model
 from metrics import precision, recall, fmeasure, mse, bce, binacc
 
 import DataProvider as dp 
@@ -15,7 +14,7 @@ import DataProvider as dp
 import os
 import numpy as np
 
-
+import InteractiveNegator as IN
 
 np.random.seed(005)
 os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
@@ -72,7 +71,7 @@ class ANN:
         self.model.add( LSTM(750, activation=activation, dropout=drop_rate ,  input_shape=(self.window, self.vec_size), use_bias=True ) )
         
         # Output layer
-        self.model.add( Dense( 10, activation='sigmoid') )
+        self.model.add( Dense( window, activation='sigmoid') )
         
         # Compile model from parameters
         self.model.compile( loss=loss, 
@@ -83,10 +82,9 @@ class ANN:
         # Result
         log('MODEL ARQUITECTURE\n'+self.model.to_json(indent=4),level='info')
         print self.model.summary()
-        plot_model(self.model, to_file='./outputs/tmp/bidirectional_model.png')
      
      
-    def fit_tagged(self,testing_fraction=0.2,verbose=2):    
+    def fit_tagged(self,testing_fraction=0.2,verbose=2, neg_as=False):    
         
         opinions = dp.get_tagged('manually') 
         if not opinions: raise Exception('Nothing to train')
@@ -97,8 +95,7 @@ class ANN:
             progress("Loading training data",total,idx)
 
             x_curr = [np.array(dp.get_word_embedding(token['word'])) for token in opinion['text'] ]
-            y_curr = [token['negated'] for token in opinion['text'] ]
-
+            y_curr = [token['negated'] if token['negated'] is not None else neg_as for token in opinion['text'] ]
             rest = self.window - len(x_curr) % self.window 
             if rest > 0:
                 x_curr.extend([self.end_vecotr for i in range(rest)])
@@ -150,17 +147,20 @@ class ANN:
         if tofile: save(results,"predict_untagged_LMST_window_%i" % (self.windows),tofile)
         return results
     
-     
-    # def save(self,odir = './outputs/models'):
-    #     odir = odir if odir[-1] != "/" else odir[:-1]
-    #     if not os.path.isdir(odir): os.makedirs(odir)
-    #     self.model.save( odir+"/model_neg_l%i_r%i_d%i.h5" % (self.left,self.right,self.dim) )
-#         plot_model( self.model, to_file=odir+'/model_neg_l%i_r%i_d%i.png' % (self.left,self.right,self.dim) , show_shapes=True )    
-
+     def predict_opinion(opinion):
+        x =  [np.array(dp.get_word_embedding(token)) for token in opinion ]
+        rest = self.window - len(x_curr) % self.window 
+        if rest > 0:
+            x_curr.extend([self.end_vecotr for i in range(rest)])
+        X = np.array([ x_curr[i*self.window : (i+1)*self.window] for i in range(len(x_curr)/self.window) ])
+        Y = self.model.predict( X ).flatten()
+        return [ round(Y) == 1 for y in Y.tolist()[:len(opinion)] ]
         
         
 if __name__ == '__main__':
-    ann = ANN( 10 )
-    ann.fit_tagged()
-    ann.predict_untagged( tofile="./outputs/tmp" )   
+
+    window, config = IN.get_params('mono')
+    ann = ANN(window,**config)
+    ann.fit_tagged( testing_fraction=0.20 , verbose=1 )
+    start_evaluator(ann.predict_opinion)
         

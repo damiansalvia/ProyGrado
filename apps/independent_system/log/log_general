@@ -5685,3 +5685,2674 @@ INFO : 2017-09-10 01:22:23 at __INIT__ > MODEL ARQUITECTURE
 
 INFO : 2017-09-10 01:25:17 at FIT_TAGGED > MODEL EVALUATION
 [('loss', 26.1), ('binary_accuracy', 90.6), ('precision', 0.0), ('recall', 0.0), ('fmeasure', 0.0), ('mean_squared_error', 7.4), ('binary_crossentropy', 265.6)] 
+
+INFO : 2017-09-10 01:32:47 at __INIT__ > MODEL ARQUITECTURE
+{
+    "class_name": "Sequential", 
+    "keras_version": "2.0.7", 
+    "config": [
+        {
+            "class_name": "LSTM", 
+            "config": {
+                "recurrent_activation": "hard_sigmoid", 
+                "dtype": "float32", 
+                "trainable": true, 
+                "recurrent_initializer": {
+                    "class_name": "Orthogonal", 
+                    "config": {
+                        "seed": null, 
+                        "gain": 1.0
+                    }
+                }, 
+                "use_bias": true, 
+                "bias_regularizer": null, 
+                "return_state": false, 
+                "unroll": false, 
+                "activation": "relu", 
+                "bias_initializer": {
+                    "class_name": "Zeros", 
+                    "config": {}
+                }, 
+                "units": 750, 
+                "batch_input_shape": [
+                    null, 
+                    10, 
+                    300
+                ], 
+                "activity_regularizer": null, 
+                "recurrent_dropout": 0.0, 
+                "kernel_initializer": {
+                    "class_name": "VarianceScaling", 
+                    "config": {
+                        "distribution": "uniform", 
+                        "scale": 1.0, 
+                        "seed": null, 
+                        "mode": "fan_avg"
+                    }
+                }, 
+                "kernel_constraint": null, 
+                "dropout": 0.2, 
+                "stateful": false, 
+                "unit_forget_bias": true, 
+                "recurrent_regularizer": null, 
+                "name": "lstm_1", 
+                "bias_constraint": null, 
+                "go_backwards": false, 
+                "implementation": 0, 
+                "kernel_regularizer": null, 
+                "return_sequences": false, 
+                "recurrent_constraint": null
+            }
+        }, 
+        {
+            "class_name": "Dense", 
+            "config": {
+                "kernel_initializer": {
+                    "class_name": "VarianceScaling", 
+                    "config": {
+                        "distribution": "uniform", 
+                        "scale": 1.0, 
+                        "seed": null, 
+                        "mode": "fan_avg"
+                    }
+                }, 
+                "name": "dense_1", 
+                "kernel_constraint": null, 
+                "bias_regularizer": null, 
+                "bias_constraint": null, 
+                "activation": "sigmoid", 
+                "trainable": true, 
+                "kernel_regularizer": null, 
+                "bias_initializer": {
+                    "class_name": "Zeros", 
+                    "config": {}
+                }, 
+                "units": 10, 
+                "use_bias": true, 
+                "activity_regularizer": null
+            }
+        }
+    ], 
+    "backend": "tensorflow"
+} 
+
+INFO : 2017-09-10 01:35:17 at FIT_TAGGED > MODEL EVALUATION
+[('loss', 25.9), ('binary_accuracy', 90.6), ('precision', 0.0), ('recall', 0.0), ('fmeasure', 0.0), ('mean_squared_error', 7.4), ('binary_crossentropy', 258.4)] 
+
+ERROR : 2017-09-10 18:41:32 at ANALYZE > Reason : Empty analysis for 'sin duda , cuando hace unos aos wes craven dirigi esta pelcula , dudo mucho que se viera influenciado por conseguir un hit de taquilla . antes , este tipo de pelculas , sangrientas y de miedo , tenan un pblico muy especfico . ahora se intenta abrir la horquilla lo ms posible , para que la vea un adulto , y tambin un chaval de 16 aos que va en pandilla al cine . se pierde la chispa que tena la versin original , y se convierte en un producto palomitero , para quien tiene estmago , claro . por supuesto esta versin de " las colinas tienen ojos " es infintamente superior a la versin de " la matanza de texas ", y de ese chiste que era " la casa de cera ", aqu nadie se corta un pelo , y en ocasiones se roza la brutalidad ( aron stanford cubierto de sangre ), pero eso no la hace una pelcula imprescindible . eso s , es la pelcula de terror con maysculas del verano , sin duda . si te gusta la sangre a borbotones , vas a disfrutar , porque aqu el liquido corre con una alegra extrema . la historia es bien fcil : ua familia en ruta por el desierto hacia california acaba cogiendo un atajo que les llevar a una zona habitada por humanos alterados por radiacin nuclear que slo saben matar , violar o descuartizar a cada infeliz que se cruza en su camino . as , padre , madre , hijo adolescente , hija adolescente , hija mayor , marido de hija mayor y bebe conforman ese bonito ncleo familiar despistado que servir de divertimento para tales hijos de su madre . el reparto est plagado de secundarios recurrentes , tales como aron stanford ( pyro de los " x men "), emilie de ravin ( claire de " perdidos "), kathleen quinlan (" apollo 13 8243 ;) o ted levine (" memorias de una geisha ), y por lo menos el director no es uwe bol . lo dirige un desconocido alexandre aja , que ha dulcificado el original . existen dos minutos de metraje que el director cort para poder ser calificada r en los usa . me gustara saber de que van , aunque seguramente el dvd los incluir como extras . si son ms bestias que algunas de las escenas del montaje final , prefiero no verlas . esta pelcula no es aburrida , pero si inquietante , a veces desagradable , pero tal vez se deba a estar tan acosumbrados a versiones light y producciones de terror descafeinadas , ha sido un exito de taquilla en los usa . no me extraa pues es tal vez la mejor versin que se ha hecho de una pelcula de terror en los ltimos cinco aos . an as , y como deca antes , puedes evitar correr a verla al cine , y esperar su estreno en dvd para tener cerca un cojn , o incluso pausarla para no tener indigestiones espontneas . ' (at corpus_cine) 
+
+ERROR : 2017-09-10 18:41:34 at ANALYZE > Reason : Empty analysis for ' lt ; a onblur " try parent . deselectblogerimagegracefully (); catch ( e ) " href " htp :/ bp1 . bloger . com / _wjwsqh0zy9m / rwe5eus8vi / apm / z8 nxmyamsu / s160 h / flash point poster 1 . jpg " gt ; lt ; img style " margin : 0px auto 10px ; display : block ; text align : center ; cursor : pointer ;" src " htp :/ bp1 . bloger . com / _wjwsqh0zy9m / rwe5eus8vi / apm / z8 nxmyamsu / s40 / flash point poster 1 . jpg " alt " id " bloger_photo_id_5164340497936530 " border " 0 " / gt ; lt ;/ a gt ; esta nueva muestra del talento para el cine de accin del director wilson yip despus de sus recomendables " dragon tiger gate " y " spl ( duelo de dragones )", sobretodo esta ltima , nos situa en la piel de dos policias de hong kong , uno de ellos con mtodos cuestionados por sus superiores , el tpico caso de emplearse con excesiva dureza con los criminales , y un infiltrado en las mafia de hong kong cuya tarea no pasa de ser el chico de los recados . durante el primer tramo de pelcula , la pelcula nos situa a cada uno de los personajes a ambos lados de la ley , todo de una manera muy simple y sin grandes alardes de profundidad , como suele ser lgico en este tipo de producciones , mostrndonos al grupo de mafiosos , en el cual se arriesga el cuello cada dia louis ko como infiltrado , como un grupo de refugiados vietnamitas que han evolucionado hasta el punto de amenazar por medio de la extorsin , el asesinato o la violencia ms salvaje a las tradas chinas . cuando el cabecilla del grupo mafioso vietnamita es arrestado , y habiendo sido descubierto justo en ese momento ko como un infiltrado de la policia de hong kong , tanto l como otros testigos de grupos mafiosos se disponen a testificar para encerrarlo por sus mltiples crmenes cometidos . a partir de ese momento todo testigo corre peligro de no llegar con vida al juicio , a celebrarse en 3 meses . ko y el personaje de poli duro interpretado por el artista marcial donie yen debern emplearse a fondo no solo para acabar con ellos , sino tambin para sobrevivir y llegar al juicio . lt ; a onblur " try parent . deselectblogerimagegracefully (); catch ( e ) " href " htp :/ bp3 . bloger . com / _wjwsqh0zy9m / rwe45os8vui / ape / rj 8nfxwem8 / s160 h / 25656 . s3 . jpg " gt ; lt ; img style " margin : 0px auto 10px ; display : block ; text align : center ; cursor : pointer ;" src " htp :/ bp3 . bloger . com / _wjwsqh0zy9m / rwe45os8vui / ape / rj 8nfxwem8 / s320 / 25656 . s3 . jpg " alt " id " bloger_photo_id_51643207410840898 " border " 0 " / gt ; lt ;/ a gt ; puestos a analizar un poco los elementos de la pelcula , de antemano hay que decir que si alguien pretende buscar en este tipo de producciones una historia profunda y trabajada de gran nivel actoral , mejor que ni se plante una pelcula como esta . el guin es esquemtico hasta el extremo , dos polis buenos , una banda de malhechores , chica del poli en peligro , venganza final . asi podra resumirse en pocas palabras el nuevo film de yip . si por contra sois fans de este tipo de cine como evasin , como manera de desconectar de vez en cuando de otro tipo de pelculas ( como un servidor que disfruta una barbaridad con este tipo de producciones sin pretensiones ), entonces " flashpoint " puede ser vuestra pelcula . en el apartado bueno de aspectos del film , una vez ms como en gran parte del reciente cine asitico , un aspecto visual sensacional , con un hong kong futurista , haciendo especial hincapi en los aspectos visuales , dndole al conjunto un toque muy col , incluso el vestuario de los personajes parece sacado de un catlogo de moda urbana . el otro aspecto que justifica en cierta manera por si mismo la visualizacin de un film de estas caractersticas es el gran nivel de las escenas de accin , y vaya escenas , desde luego est claro que hay cinematografias que poseen virtudes en determinados gneros , y hong kong basa la suya en los thrillers de accin . una mezcla del cine de gangsters que durante aos ha reinado en esta zona de asia ( de john wo al genial johnie to ) con un aspecto visual y de ritmo que haria palidecer de envidia a la mayoria de pelculas de accin de cualquier otro lugar del planeta . y ahi est su gran baza , la excepcional planificacin de todas y cada una de las impecables escenas de accin , donde siempre saben donde colocar la cmara para que los enfrentamientos resulten tan cercanos y fsicos que introducen al espectador de pleno en medio de toda esa accin . el tema actoral resulta como suele ser habitual en este tipo de producciones simplemente correcto y cumplidor , lo que no impide que la historia se siga sin problemas y con una cierta empata con los personajes . la puesta en escena por parte de wilson yip siempre busca los grandes planos , los movimientos con grua o planos largos , para precisamente hacer muy visuales los combates , al contrario que el cine usa , donde nunca nos enteramos de nada cuando hay una pelea muy fsica . lt ; a onblur " try parent . deselectblogerimagegracefully (); catch ( e ) " href " htp :/ bp1 . bloger . com / _wjwsqh0zy9m / rwe4tus8vti / ao8 / u3lsde1a3x8 / s160 h / 25656 . s6 . jpg " gt ; lt ; img style " margin : 0px auto 10px ; display : block ; text align : center ; cursor : pointer ;" src " htp :/ bp1 . bloger . com / _wjwsqh0zy9m / rwe4tus8vti / ao8 / u3lsde1a3x8 / s320 / 25656 . s6 . jpg " alt " id " bloger_photo_id_516430984234526 " border " 0 " / gt ; lt ;/ a gt ; pretender indagar ms en la historia seria de una inutilidad aplastante , porque eso es lo que hay , eso es lo que nos ofrece esta divertidsima ( repito , para los fans del gnero ) muestra de genialidad marcial del cine de hong kong , con un sensacional donie yen ( quedan lejos aquellos maravillosos tiempos de " iron monkey " o la saga de " in the line of duty , sin que por ello yen pierda sus habilidades pese a la edad ). puro y duro entretenimiento , escaso guin , actores que se desenvuelven mejor en escenas violentas que introspectivas , y un aspecto visual impecable , todo ello en una historia que ni se molesta en preocuparse por huecos de lgica en la historia , porque sencillamente , les da igual . atencin especial durante su visionado a la costumbre en hong kong de no cortarse un pelo , o una oreja , como ustedes prefieran , a escenas violentas hasta el extremo . ' (at corpus_cine) 
+
+ERROR : 2017-09-10 18:44:55 at ANALYZE > Reason : Empty analysis for 's , reconozco que me gust " talladega nights " ( brillantemente traducida aqu como " pasado de vueltas "). no ser un clsico de la comedia , pero tena los suficientes gags divertidos , unos excelentes secundarios rayando el surrealismo ( gary cole , john c . reilly , sacha baron cohen ) y una aceptable recreacin del paleto mundillo del nascar americano . no es una de esas pelculas inolvidables , pero ms que suficiente para pasar una calurosa tarde de verano . con esas expectativas parta al ver " blades of glory " (" patinazo a la gloria " en frica del norte ), el ltimo producto de la factora ferrel . y una vez ms no sal defraudado de la experiencia : " patinazo a la gloria " es una muy efectiva comedia de trazo grueso , con momentos de verdadera vergenza ajena ( fjense en el atuendo de pavo real de john heder , por amor de dios ) y delirantes dilogos ( algunos incluso improvisados ) a cargo del dueo de la funcin , wil ferrel . la historia , por ensima vez , responde al clich del genuinamente americano gnero de superacin , subgnero deportivo bautizado acertadamente como " hero to zero to hero " emoji_triste dolos de masas cados en desgracia que deben aprender a trabajar en equipo para volver a lo ms alto . las variaciones , dos : el deporte elegido esta vez es el patinaje sobre hielo ( que ya haba sido llevado a la pantalla en la cutronga " pasin por el triunfo ") y el nmero de hroes , dos a falta de uno : el angelical huerfanito jimy macelroy ( absurdo y divertido john heder ) y el rebelde adicto al sexo chaz michael michaels ( imparable y delirante wil ferrel ). ambos , campeones mundiales de patinaje venidos a menos , volvern a luchar por el oro en la competicin por parejas , donde les esperan sus archirrivales , los hermanos stranz y fairchild van waldenberg ( genialmente ridculos wil " arrested development " arnet y amy " snl " poehler ), para impedir su triunfo por los medios habituales en este bello deporte . la verdad es que la pelcula no resiste un anlisis dramtico ni estilstico serio . pero la verdad es que importa poco , en este caso . en las alucingenas coreografas sobre hielo de los protagonistas , con sus impagables pintas y sus macarnicas canciones elegidas (" don " t wana mis a thing " de aerosmith , " flash " de queen , o  marky mark the funky bunch !), los hortersimas comentarios de los cronistas deportivos , incluso los efectos por ordenador , todo raya a gran altura durante las competiciones , lstima que no haya ms . adems cuenta con otros momentos realmente grandes , como la surrealista persecucin sobre patines de hielo o la presentacin de la tcnica del " loto de hierro ". tremendo . resumiendo , " blades of glory no ofrece nada ms ni nada menos que diversin a costa de uno de esos deportes horteras en s mismos y a cargo de el nmero uno de la comedia americana del momento . no busques ms motivos para verla si te apetece ni excusas para aborrecerla si no te gusta ( sabas a lo que venas ). ' (at corpus_cine) 
+
+ERROR : 2017-09-10 18:46:08 at ANALYZE > Reason : Empty analysis for 'recuerdo que siendo un zagal me acerqu al cine a ver jfk y que sal del cine aterrorizado . vale , pues esa misma sensacin me asalta hoy tras ver zodiac , no s si la mejor pelcula de david fincher , pero si la ms " clsica " y contenida ( y la ms larga ). al grano : el que espere ver a donie darko y a iron man callejeando en busca de un enigmtico asesino , que se quede en casa , porque esto se parece ms a todos los hombres del presidente o a un buen thriller poltico setentero ( y un peln a esa genialidad de spike le que era sumer of sam ) que a se7en , lo que no es ni bueno ni malo , solo diferente ( y un poquito ms largo ). a lo largo de sus 160 minutos asistimos a un juego de gatos y ratones con una planificacin ejemplar ( los planos cenitales , los primeros treinta minutos ), que peca quizs en exceso de las elipsis ( hay cartelitos de situacin cada cinco o diez minutos , y eso en una peli de 160 " son muchos cartelitos ) y de la informacin . ni se te ocurra pestaear , que te lo pierdes . solo le veo una pega , y es que como digo antes , se trata de un film " policiacoperiodstico y no de un thriller de esos de hoy , de esos que dirige fincher , vamos , y viene al caso ( que oportuna expresin ) porque hay momentos en la pelcula que son magistrales , histricos , terrorficos , superlativos , y uno se pregunta por qu no tiene ese tono durante todo el ( largo ) metraje . claro que entonces no se habra titulado zodiac , se habra titulado se2en . y otra pega se la pondra a los personajes , que no a los actores ( todos magistrales ), que en algunos casos se van sin ms . hay que verla , que es la entrada de fincher en el olimpo de los directores , el resto de nuevos virtuosos se apoyan ms en el guin , este dirige como dios . ' (at corpus_cine) 
+
+ERROR : 2017-09-10 18:52:37 at ANALYZE > Reason : Empty analysis for 'the fod is excellent , despite the fact it is not necesarily typical traditional brasilian ( maybe that why it " s excellent !). i especially recomend the " bobo de camaroes ". if you succeed to reach the desert i recoment the impresive " maracuya mouse service is atentive and polite . the set is stylish and discrete , with a very pleasant patio with few tables . ' (at corpus_restaurantes) 
+
+ERROR : 2017-09-10 18:59:28 at ANALYZE > Reason : Empty analysis for 'cuando llegamos , no haba mesa . deb haber sabido que todo ira mal cuando el dueo en persona se acerc a disculparse " porque esto es un desastre , en este pas no se puede trabajar , un da tens trescientas personas y al siguiente nadie ". luego nos relat que haba tenido dos infartos y que por suerte l se dedicaba " a otra cosa ". cuando le pregunt a qu , me dijo que era humorista y que tena un show unipersonal en el que haca material tipo jorge corona . me cont un chiste imposible (" qu va a hacer un visn a una peletera ? va a comprar un tapado de trola ) para " amenizar " la espera . un rato despus nos sentamos . tardaron veinte minutos en levantarnos los platos sucios y armarnos la mesa . vino una camarera . le ped un guacamole y dos cervezas . me trajo el guacamole pero sin totopos ni nachos ni nada y no tenamos cubiertos ; cuando la pregunt a la camarera por qu vena slo , me dijo : " no s , a m slo me dijeron que trajera un guacamole . ' (at corpus_restaurantes) 
+
+ERROR : 2017-09-10 19:00:00 at ANALYZE > Reason : Empty analysis for 'el servicio es un desastre . me acuerdo que me haba jurado no volver , pero ante la insistencia de mis hijos . ped gasesosa light sin hielo , cuando me hicieron la recarga , me trajeron gasesosa comn con hielo ( despus de 15 "). es carsimo , la msica a todo volumen no te deja conversar . cuando cumpls aos te regalan un pedazo de torta . me pidieron el documento para acreditarlo ( nunca lo haban hecho ). tuve q " hablar con el responsable para explicarlo y aceptaron q " no tengo por q " andar con el doc . de mi hijo por la ciudad . acaso tendra q mentir ? no vuelvo ms . volver a bk o a mac : es . ' (at corpus_restaurantes) 
+
+ERROR : 2017-09-10 19:02:16 at ANALYZE > Reason : Empty analysis for 'me pareci un lugar improvisado , si bien lleva aos , parece q " lo nico q " le importa a esta familia duea de casi todos los locales es expandirse sin importar el servicio q " ofrescan . piza buena , empanadas saladsimas , camareros , mozos o como quieran llamarlos ( gente q " solo te toma el pedido ) mejor consganse a alguien q medianamente entienda . ah ! quin confeccion la carta ? exquisitos postres caseros ? somos tarados ? baos . cmo calificarlos ? eran baos pblicos , o pertenecan al lugar ? conclusin , pizeras sobran , y buenos lugares , incluyendo la atencin , tambien . no lo recomiendo . ' (at corpus_restaurantes) 
+
+INFO : 2017-09-10 22:13:29 at UPDATE_EMBEDDINGS > Embeddings integration result. {'ByWord': 86403, 'Fails': 0, 'Total': 104165, 'ByClosest': 12351, 'IsNull': 5411} 
+
+WARNING : 2017-09-10 18:49:53 at FROM_CORPUS > Nothing match in ../../corpus/corpus_prensa_uy/test2.csv 
+
+INFO : 2017-09-10 23:19:54 at __INIT__ > MODEL ARQUITECTURE
+{
+    "class_name": "Sequential", 
+    "keras_version": "2.0.7", 
+    "config": [
+        {
+            "class_name": "LSTM", 
+            "config": {
+                "recurrent_activation": "hard_sigmoid", 
+                "dtype": "float32", 
+                "trainable": true, 
+                "recurrent_initializer": {
+                    "class_name": "Orthogonal", 
+                    "config": {
+                        "seed": null, 
+                        "gain": 1.0
+                    }
+                }, 
+                "use_bias": true, 
+                "bias_regularizer": null, 
+                "return_state": false, 
+                "unroll": false, 
+                "activation": "relu", 
+                "bias_initializer": {
+                    "class_name": "Zeros", 
+                    "config": {}
+                }, 
+                "units": 750, 
+                "batch_input_shape": [
+                    null, 
+                    10, 
+                    300
+                ], 
+                "activity_regularizer": null, 
+                "recurrent_dropout": 0.0, 
+                "kernel_initializer": {
+                    "class_name": "VarianceScaling", 
+                    "config": {
+                        "distribution": "uniform", 
+                        "scale": 1.0, 
+                        "seed": null, 
+                        "mode": "fan_avg"
+                    }
+                }, 
+                "kernel_constraint": null, 
+                "dropout": 0.2, 
+                "stateful": false, 
+                "unit_forget_bias": true, 
+                "recurrent_regularizer": null, 
+                "name": "lstm_1", 
+                "bias_constraint": null, 
+                "go_backwards": false, 
+                "implementation": 0, 
+                "kernel_regularizer": null, 
+                "return_sequences": false, 
+                "recurrent_constraint": null
+            }
+        }, 
+        {
+            "class_name": "Dense", 
+            "config": {
+                "kernel_initializer": {
+                    "class_name": "VarianceScaling", 
+                    "config": {
+                        "distribution": "uniform", 
+                        "scale": 1.0, 
+                        "seed": null, 
+                        "mode": "fan_avg"
+                    }
+                }, 
+                "name": "dense_1", 
+                "kernel_constraint": null, 
+                "bias_regularizer": null, 
+                "bias_constraint": null, 
+                "activation": "sigmoid", 
+                "trainable": true, 
+                "kernel_regularizer": null, 
+                "bias_initializer": {
+                    "class_name": "Zeros", 
+                    "config": {}
+                }, 
+                "units": 10, 
+                "use_bias": true, 
+                "activity_regularizer": null
+            }
+        }
+    ], 
+    "backend": "tensorflow"
+} 
+
+INFO : 2017-09-10 23:52:17 at UPDATE_EMBEDDINGS > Embeddings integration result. {'ByWord': 3106, 'Fails': 0, 'Total': 4289, 'ByClosest': 635, 'IsNull': 548} 
+
+INFO : 2017-09-11 00:00:13 at __INIT__ > MODEL ARQUITECTURE
+{
+    "class_name": "Sequential", 
+    "keras_version": "2.0.7", 
+    "config": [
+        {
+            "class_name": "LSTM", 
+            "config": {
+                "recurrent_activation": "hard_sigmoid", 
+                "dtype": "float32", 
+                "trainable": true, 
+                "recurrent_initializer": {
+                    "class_name": "Orthogonal", 
+                    "config": {
+                        "seed": null, 
+                        "gain": 1.0
+                    }
+                }, 
+                "use_bias": true, 
+                "bias_regularizer": null, 
+                "return_state": false, 
+                "unroll": false, 
+                "activation": "relu", 
+                "bias_initializer": {
+                    "class_name": "Zeros", 
+                    "config": {}
+                }, 
+                "units": 750, 
+                "batch_input_shape": [
+                    null, 
+                    10, 
+                    300
+                ], 
+                "activity_regularizer": null, 
+                "recurrent_dropout": 0.0, 
+                "kernel_initializer": {
+                    "class_name": "VarianceScaling", 
+                    "config": {
+                        "distribution": "uniform", 
+                        "scale": 1.0, 
+                        "seed": null, 
+                        "mode": "fan_avg"
+                    }
+                }, 
+                "kernel_constraint": null, 
+                "dropout": 0.2, 
+                "stateful": false, 
+                "unit_forget_bias": true, 
+                "recurrent_regularizer": null, 
+                "name": "lstm_1", 
+                "bias_constraint": null, 
+                "go_backwards": false, 
+                "implementation": 0, 
+                "kernel_regularizer": null, 
+                "return_sequences": false, 
+                "recurrent_constraint": null
+            }
+        }, 
+        {
+            "class_name": "Dense", 
+            "config": {
+                "kernel_initializer": {
+                    "class_name": "VarianceScaling", 
+                    "config": {
+                        "distribution": "uniform", 
+                        "scale": 1.0, 
+                        "seed": null, 
+                        "mode": "fan_avg"
+                    }
+                }, 
+                "name": "dense_1", 
+                "kernel_constraint": null, 
+                "bias_regularizer": null, 
+                "bias_constraint": null, 
+                "activation": "sigmoid", 
+                "trainable": true, 
+                "kernel_regularizer": null, 
+                "bias_initializer": {
+                    "class_name": "Zeros", 
+                    "config": {}
+                }, 
+                "units": 10, 
+                "use_bias": true, 
+                "activity_regularizer": null
+            }
+        }
+    ], 
+    "backend": "tensorflow"
+} 
+
+INFO : 2017-09-11 00:23:08 at FIT_TAGGED > MODEL EVALUATION
+[('loss', nan), ('binary_accuracy', 0.0), ('precision', nan), ('recall', nan), ('fmeasure', nan), ('mean_squared_error', nan), ('binary_crossentropy', nan)] 
+
+INFO : 2017-09-11 13:33:41 at __INIT__ > MODEL ARQUITECTURE
+{
+    "class_name": "Sequential", 
+    "keras_version": "2.0.7", 
+    "config": [
+        {
+            "class_name": "LSTM", 
+            "config": {
+                "recurrent_activation": "hard_sigmoid", 
+                "dtype": "float32", 
+                "trainable": true, 
+                "recurrent_initializer": {
+                    "class_name": "Orthogonal", 
+                    "config": {
+                        "seed": null, 
+                        "gain": 1.0
+                    }
+                }, 
+                "use_bias": true, 
+                "bias_regularizer": null, 
+                "return_state": false, 
+                "unroll": false, 
+                "activation": "relu", 
+                "bias_initializer": {
+                    "class_name": "Zeros", 
+                    "config": {}
+                }, 
+                "units": 750, 
+                "batch_input_shape": [
+                    null, 
+                    10, 
+                    300
+                ], 
+                "activity_regularizer": null, 
+                "recurrent_dropout": 0.0, 
+                "kernel_initializer": {
+                    "class_name": "VarianceScaling", 
+                    "config": {
+                        "distribution": "uniform", 
+                        "scale": 1.0, 
+                        "seed": null, 
+                        "mode": "fan_avg"
+                    }
+                }, 
+                "kernel_constraint": null, 
+                "dropout": 0.2, 
+                "stateful": false, 
+                "unit_forget_bias": true, 
+                "recurrent_regularizer": null, 
+                "name": "lstm_1", 
+                "bias_constraint": null, 
+                "go_backwards": false, 
+                "implementation": 0, 
+                "kernel_regularizer": null, 
+                "return_sequences": false, 
+                "recurrent_constraint": null
+            }
+        }, 
+        {
+            "class_name": "Dense", 
+            "config": {
+                "kernel_initializer": {
+                    "class_name": "VarianceScaling", 
+                    "config": {
+                        "distribution": "uniform", 
+                        "scale": 1.0, 
+                        "seed": null, 
+                        "mode": "fan_avg"
+                    }
+                }, 
+                "name": "dense_1", 
+                "kernel_constraint": null, 
+                "bias_regularizer": null, 
+                "bias_constraint": null, 
+                "activation": "sigmoid", 
+                "trainable": true, 
+                "kernel_regularizer": null, 
+                "bias_initializer": {
+                    "class_name": "Zeros", 
+                    "config": {}
+                }, 
+                "units": 10, 
+                "use_bias": true, 
+                "activity_regularizer": null
+            }
+        }
+    ], 
+    "backend": "tensorflow"
+} 
+
+INFO : 2017-09-11 13:47:41 at __INIT__ > MODEL ARQUITECTURE
+{
+    "class_name": "Sequential", 
+    "keras_version": "2.0.7", 
+    "config": [
+        {
+            "class_name": "LSTM", 
+            "config": {
+                "recurrent_activation": "hard_sigmoid", 
+                "dtype": "float32", 
+                "trainable": true, 
+                "recurrent_initializer": {
+                    "class_name": "Orthogonal", 
+                    "config": {
+                        "seed": null, 
+                        "gain": 1.0
+                    }
+                }, 
+                "use_bias": true, 
+                "bias_regularizer": null, 
+                "return_state": false, 
+                "unroll": false, 
+                "activation": "relu", 
+                "bias_initializer": {
+                    "class_name": "Zeros", 
+                    "config": {}
+                }, 
+                "units": 750, 
+                "batch_input_shape": [
+                    null, 
+                    10, 
+                    300
+                ], 
+                "activity_regularizer": null, 
+                "recurrent_dropout": 0.0, 
+                "kernel_initializer": {
+                    "class_name": "VarianceScaling", 
+                    "config": {
+                        "distribution": "uniform", 
+                        "scale": 1.0, 
+                        "seed": null, 
+                        "mode": "fan_avg"
+                    }
+                }, 
+                "kernel_constraint": null, 
+                "dropout": 0.2, 
+                "stateful": false, 
+                "unit_forget_bias": true, 
+                "recurrent_regularizer": null, 
+                "name": "lstm_1", 
+                "bias_constraint": null, 
+                "go_backwards": false, 
+                "implementation": 0, 
+                "kernel_regularizer": null, 
+                "return_sequences": false, 
+                "recurrent_constraint": null
+            }
+        }, 
+        {
+            "class_name": "Dense", 
+            "config": {
+                "kernel_initializer": {
+                    "class_name": "VarianceScaling", 
+                    "config": {
+                        "distribution": "uniform", 
+                        "scale": 1.0, 
+                        "seed": null, 
+                        "mode": "fan_avg"
+                    }
+                }, 
+                "name": "dense_1", 
+                "kernel_constraint": null, 
+                "bias_regularizer": null, 
+                "bias_constraint": null, 
+                "activation": "sigmoid", 
+                "trainable": true, 
+                "kernel_regularizer": null, 
+                "bias_initializer": {
+                    "class_name": "Zeros", 
+                    "config": {}
+                }, 
+                "units": 10, 
+                "use_bias": true, 
+                "activity_regularizer": null
+            }
+        }
+    ], 
+    "backend": "tensorflow"
+} 
+
+INFO : 2017-09-11 14:07:09 at FIT_TAGGED > MODEL EVALUATION
+[('loss', nan), ('binary_accuracy', 0.0), ('precision', nan), ('recall', nan), ('fmeasure', nan), ('mean_squared_error', nan), ('binary_crossentropy', nan)] 
+
+INFO : 2017-09-11 14:14:46 at __INIT__ > MODEL ARQUITECTURE
+{
+    "class_name": "Sequential", 
+    "keras_version": "2.0.7", 
+    "config": [
+        {
+            "class_name": "LSTM", 
+            "config": {
+                "recurrent_activation": "hard_sigmoid", 
+                "dtype": "float32", 
+                "trainable": true, 
+                "recurrent_initializer": {
+                    "class_name": "Orthogonal", 
+                    "config": {
+                        "seed": null, 
+                        "gain": 1.0
+                    }
+                }, 
+                "use_bias": true, 
+                "bias_regularizer": null, 
+                "return_state": false, 
+                "unroll": false, 
+                "activation": "relu", 
+                "bias_initializer": {
+                    "class_name": "Zeros", 
+                    "config": {}
+                }, 
+                "units": 750, 
+                "batch_input_shape": [
+                    null, 
+                    10, 
+                    300
+                ], 
+                "activity_regularizer": null, 
+                "recurrent_dropout": 0.0, 
+                "kernel_initializer": {
+                    "class_name": "VarianceScaling", 
+                    "config": {
+                        "distribution": "uniform", 
+                        "scale": 1.0, 
+                        "seed": null, 
+                        "mode": "fan_avg"
+                    }
+                }, 
+                "kernel_constraint": null, 
+                "dropout": 0.2, 
+                "stateful": false, 
+                "unit_forget_bias": true, 
+                "recurrent_regularizer": null, 
+                "name": "lstm_1", 
+                "bias_constraint": null, 
+                "go_backwards": false, 
+                "implementation": 0, 
+                "kernel_regularizer": null, 
+                "return_sequences": false, 
+                "recurrent_constraint": null
+            }
+        }, 
+        {
+            "class_name": "Dense", 
+            "config": {
+                "kernel_initializer": {
+                    "class_name": "VarianceScaling", 
+                    "config": {
+                        "distribution": "uniform", 
+                        "scale": 1.0, 
+                        "seed": null, 
+                        "mode": "fan_avg"
+                    }
+                }, 
+                "name": "dense_1", 
+                "kernel_constraint": null, 
+                "bias_regularizer": null, 
+                "bias_constraint": null, 
+                "activation": "sigmoid", 
+                "trainable": true, 
+                "kernel_regularizer": null, 
+                "bias_initializer": {
+                    "class_name": "Zeros", 
+                    "config": {}
+                }, 
+                "units": 10, 
+                "use_bias": true, 
+                "activity_regularizer": null
+            }
+        }
+    ], 
+    "backend": "tensorflow"
+} 
+
+INFO : 2017-09-11 14:17:37 at __INIT__ > MODEL ARQUITECTURE
+{
+    "class_name": "Sequential", 
+    "keras_version": "2.0.7", 
+    "config": [
+        {
+            "class_name": "LSTM", 
+            "config": {
+                "recurrent_activation": "hard_sigmoid", 
+                "dtype": "float32", 
+                "trainable": true, 
+                "recurrent_initializer": {
+                    "class_name": "Orthogonal", 
+                    "config": {
+                        "seed": null, 
+                        "gain": 1.0
+                    }
+                }, 
+                "use_bias": true, 
+                "bias_regularizer": null, 
+                "return_state": false, 
+                "unroll": false, 
+                "activation": "relu", 
+                "bias_initializer": {
+                    "class_name": "Zeros", 
+                    "config": {}
+                }, 
+                "units": 750, 
+                "batch_input_shape": [
+                    null, 
+                    10, 
+                    300
+                ], 
+                "activity_regularizer": null, 
+                "recurrent_dropout": 0.0, 
+                "kernel_initializer": {
+                    "class_name": "VarianceScaling", 
+                    "config": {
+                        "distribution": "uniform", 
+                        "scale": 1.0, 
+                        "seed": null, 
+                        "mode": "fan_avg"
+                    }
+                }, 
+                "kernel_constraint": null, 
+                "dropout": 0.2, 
+                "stateful": false, 
+                "unit_forget_bias": true, 
+                "recurrent_regularizer": null, 
+                "name": "lstm_1", 
+                "bias_constraint": null, 
+                "go_backwards": false, 
+                "implementation": 0, 
+                "kernel_regularizer": null, 
+                "return_sequences": false, 
+                "recurrent_constraint": null
+            }
+        }, 
+        {
+            "class_name": "Dense", 
+            "config": {
+                "kernel_initializer": {
+                    "class_name": "VarianceScaling", 
+                    "config": {
+                        "distribution": "uniform", 
+                        "scale": 1.0, 
+                        "seed": null, 
+                        "mode": "fan_avg"
+                    }
+                }, 
+                "name": "dense_1", 
+                "kernel_constraint": null, 
+                "bias_regularizer": null, 
+                "bias_constraint": null, 
+                "activation": "sigmoid", 
+                "trainable": true, 
+                "kernel_regularizer": null, 
+                "bias_initializer": {
+                    "class_name": "Zeros", 
+                    "config": {}
+                }, 
+                "units": 10, 
+                "use_bias": true, 
+                "activity_regularizer": null
+            }
+        }
+    ], 
+    "backend": "tensorflow"
+} 
+
+INFO : 2017-09-11 14:19:59 at __INIT__ > MODEL ARQUITECTURE
+{
+    "class_name": "Sequential", 
+    "keras_version": "2.0.7", 
+    "config": [
+        {
+            "class_name": "LSTM", 
+            "config": {
+                "recurrent_activation": "hard_sigmoid", 
+                "dtype": "float32", 
+                "trainable": true, 
+                "recurrent_initializer": {
+                    "class_name": "Orthogonal", 
+                    "config": {
+                        "seed": null, 
+                        "gain": 1.0
+                    }
+                }, 
+                "use_bias": true, 
+                "bias_regularizer": null, 
+                "return_state": false, 
+                "unroll": false, 
+                "activation": "tanh", 
+                "bias_initializer": {
+                    "class_name": "Zeros", 
+                    "config": {}
+                }, 
+                "units": 750, 
+                "batch_input_shape": [
+                    null, 
+                    10, 
+                    300
+                ], 
+                "activity_regularizer": null, 
+                "recurrent_dropout": 0.0, 
+                "kernel_initializer": {
+                    "class_name": "VarianceScaling", 
+                    "config": {
+                        "distribution": "uniform", 
+                        "scale": 1.0, 
+                        "seed": null, 
+                        "mode": "fan_avg"
+                    }
+                }, 
+                "kernel_constraint": null, 
+                "dropout": 0.2, 
+                "stateful": false, 
+                "unit_forget_bias": true, 
+                "recurrent_regularizer": null, 
+                "name": "lstm_1", 
+                "bias_constraint": null, 
+                "go_backwards": false, 
+                "implementation": 0, 
+                "kernel_regularizer": null, 
+                "return_sequences": false, 
+                "recurrent_constraint": null
+            }
+        }, 
+        {
+            "class_name": "Dense", 
+            "config": {
+                "kernel_initializer": {
+                    "class_name": "VarianceScaling", 
+                    "config": {
+                        "distribution": "uniform", 
+                        "scale": 1.0, 
+                        "seed": null, 
+                        "mode": "fan_avg"
+                    }
+                }, 
+                "name": "dense_1", 
+                "kernel_constraint": null, 
+                "bias_regularizer": null, 
+                "bias_constraint": null, 
+                "activation": "sigmoid", 
+                "trainable": true, 
+                "kernel_regularizer": null, 
+                "bias_initializer": {
+                    "class_name": "Zeros", 
+                    "config": {}
+                }, 
+                "units": 10, 
+                "use_bias": true, 
+                "activity_regularizer": null
+            }
+        }
+    ], 
+    "backend": "tensorflow"
+} 
+
+INFO : 2017-09-11 14:40:50 at __INIT__ > MODEL ARQUITECTURE
+{
+    "class_name": "Sequential", 
+    "keras_version": "2.0.7", 
+    "config": [
+        {
+            "class_name": "LSTM", 
+            "config": {
+                "recurrent_activation": "hard_sigmoid", 
+                "dtype": "float32", 
+                "trainable": true, 
+                "recurrent_initializer": {
+                    "class_name": "Orthogonal", 
+                    "config": {
+                        "seed": null, 
+                        "gain": 1.0
+                    }
+                }, 
+                "use_bias": true, 
+                "bias_regularizer": null, 
+                "return_state": false, 
+                "unroll": false, 
+                "activation": "tanh", 
+                "bias_initializer": {
+                    "class_name": "Zeros", 
+                    "config": {}
+                }, 
+                "units": 250, 
+                "batch_input_shape": [
+                    null, 
+                    10, 
+                    300
+                ], 
+                "activity_regularizer": null, 
+                "recurrent_dropout": 0.0, 
+                "kernel_initializer": {
+                    "class_name": "VarianceScaling", 
+                    "config": {
+                        "distribution": "uniform", 
+                        "scale": 1.0, 
+                        "seed": null, 
+                        "mode": "fan_avg"
+                    }
+                }, 
+                "kernel_constraint": null, 
+                "dropout": 0.2, 
+                "stateful": false, 
+                "unit_forget_bias": true, 
+                "recurrent_regularizer": null, 
+                "name": "lstm_1", 
+                "bias_constraint": null, 
+                "go_backwards": false, 
+                "implementation": 0, 
+                "kernel_regularizer": null, 
+                "return_sequences": false, 
+                "recurrent_constraint": null
+            }
+        }, 
+        {
+            "class_name": "Dense", 
+            "config": {
+                "kernel_initializer": {
+                    "class_name": "VarianceScaling", 
+                    "config": {
+                        "distribution": "uniform", 
+                        "scale": 1.0, 
+                        "seed": null, 
+                        "mode": "fan_avg"
+                    }
+                }, 
+                "name": "dense_1", 
+                "kernel_constraint": null, 
+                "bias_regularizer": null, 
+                "bias_constraint": null, 
+                "activation": "sigmoid", 
+                "trainable": true, 
+                "kernel_regularizer": null, 
+                "bias_initializer": {
+                    "class_name": "Zeros", 
+                    "config": {}
+                }, 
+                "units": 10, 
+                "use_bias": true, 
+                "activity_regularizer": null
+            }
+        }
+    ], 
+    "backend": "tensorflow"
+} 
+
+INFO : 2017-09-11 14:47:49 at FIT_TAGGED > MODEL EVALUATION
+[('loss', nan), ('binary_accuracy', 0.0), ('precision', nan), ('recall', nan), ('fmeasure', nan), ('mean_squared_error', nan), ('binary_crossentropy', nan)] 
+
+INFO : 2017-09-11 14:48:21 at __INIT__ > MODEL ARQUITECTURE
+{
+    "class_name": "Sequential", 
+    "keras_version": "2.0.7", 
+    "config": [
+        {
+            "class_name": "LSTM", 
+            "config": {
+                "recurrent_activation": "hard_sigmoid", 
+                "dtype": "float32", 
+                "trainable": true, 
+                "recurrent_initializer": {
+                    "class_name": "Orthogonal", 
+                    "config": {
+                        "seed": null, 
+                        "gain": 1.0
+                    }
+                }, 
+                "use_bias": true, 
+                "bias_regularizer": null, 
+                "return_state": false, 
+                "unroll": false, 
+                "activation": "tanh", 
+                "bias_initializer": {
+                    "class_name": "Zeros", 
+                    "config": {}
+                }, 
+                "units": 250, 
+                "batch_input_shape": [
+                    null, 
+                    10, 
+                    300
+                ], 
+                "activity_regularizer": null, 
+                "recurrent_dropout": 0.0, 
+                "kernel_initializer": {
+                    "class_name": "VarianceScaling", 
+                    "config": {
+                        "distribution": "uniform", 
+                        "scale": 1.0, 
+                        "seed": null, 
+                        "mode": "fan_avg"
+                    }
+                }, 
+                "kernel_constraint": null, 
+                "dropout": 0.2, 
+                "stateful": false, 
+                "unit_forget_bias": true, 
+                "recurrent_regularizer": null, 
+                "name": "lstm_1", 
+                "bias_constraint": null, 
+                "go_backwards": false, 
+                "implementation": 0, 
+                "kernel_regularizer": null, 
+                "return_sequences": false, 
+                "recurrent_constraint": null
+            }
+        }, 
+        {
+            "class_name": "Dense", 
+            "config": {
+                "kernel_initializer": {
+                    "class_name": "VarianceScaling", 
+                    "config": {
+                        "distribution": "uniform", 
+                        "scale": 1.0, 
+                        "seed": null, 
+                        "mode": "fan_avg"
+                    }
+                }, 
+                "name": "dense_1", 
+                "kernel_constraint": null, 
+                "bias_regularizer": null, 
+                "bias_constraint": null, 
+                "activation": "sigmoid", 
+                "trainable": true, 
+                "kernel_regularizer": null, 
+                "bias_initializer": {
+                    "class_name": "Zeros", 
+                    "config": {}
+                }, 
+                "units": 10, 
+                "use_bias": true, 
+                "activity_regularizer": null
+            }
+        }
+    ], 
+    "backend": "tensorflow"
+} 
+
+INFO : 2017-09-11 14:55:30 at FIT_TAGGED > MODEL EVALUATION
+[('loss', nan), ('binary_accuracy', 0.0), ('precision', nan), ('recall', nan), ('fmeasure', nan), ('mean_squared_error', nan), ('binary_crossentropy', nan)] 
+
+INFO : 2017-09-11 15:00:13 at __INIT__ > MODEL ARQUITECTURE
+{
+    "class_name": "Sequential", 
+    "keras_version": "2.0.7", 
+    "config": [
+        {
+            "class_name": "LSTM", 
+            "config": {
+                "recurrent_activation": "hard_sigmoid", 
+                "dtype": "float32", 
+                "trainable": true, 
+                "recurrent_initializer": {
+                    "class_name": "Orthogonal", 
+                    "config": {
+                        "seed": null, 
+                        "gain": 1.0
+                    }
+                }, 
+                "use_bias": true, 
+                "bias_regularizer": null, 
+                "return_state": false, 
+                "unroll": false, 
+                "activation": "relu", 
+                "bias_initializer": {
+                    "class_name": "Zeros", 
+                    "config": {}
+                }, 
+                "units": 750, 
+                "batch_input_shape": [
+                    null, 
+                    10, 
+                    300
+                ], 
+                "activity_regularizer": null, 
+                "recurrent_dropout": 0.0, 
+                "kernel_initializer": {
+                    "class_name": "VarianceScaling", 
+                    "config": {
+                        "distribution": "uniform", 
+                        "scale": 1.0, 
+                        "seed": null, 
+                        "mode": "fan_avg"
+                    }
+                }, 
+                "kernel_constraint": null, 
+                "dropout": 0.2, 
+                "stateful": false, 
+                "unit_forget_bias": true, 
+                "recurrent_regularizer": null, 
+                "name": "lstm_1", 
+                "bias_constraint": null, 
+                "go_backwards": false, 
+                "implementation": 0, 
+                "kernel_regularizer": null, 
+                "return_sequences": false, 
+                "recurrent_constraint": null
+            }
+        }, 
+        {
+            "class_name": "Dense", 
+            "config": {
+                "kernel_initializer": {
+                    "class_name": "VarianceScaling", 
+                    "config": {
+                        "distribution": "uniform", 
+                        "scale": 1.0, 
+                        "seed": null, 
+                        "mode": "fan_avg"
+                    }
+                }, 
+                "name": "dense_1", 
+                "kernel_constraint": null, 
+                "bias_regularizer": null, 
+                "bias_constraint": null, 
+                "activation": "sigmoid", 
+                "trainable": true, 
+                "kernel_regularizer": null, 
+                "bias_initializer": {
+                    "class_name": "Zeros", 
+                    "config": {}
+                }, 
+                "units": 10, 
+                "use_bias": true, 
+                "activity_regularizer": null
+            }
+        }
+    ], 
+    "backend": "tensorflow"
+} 
+
+INFO : 2017-09-11 15:03:05 at __INIT__ > MODEL ARQUITECTURE
+{
+    "class_name": "Sequential", 
+    "keras_version": "2.0.7", 
+    "config": [
+        {
+            "class_name": "LSTM", 
+            "config": {
+                "recurrent_activation": "hard_sigmoid", 
+                "dtype": "float32", 
+                "trainable": true, 
+                "recurrent_initializer": {
+                    "class_name": "Orthogonal", 
+                    "config": {
+                        "seed": null, 
+                        "gain": 1.0
+                    }
+                }, 
+                "use_bias": true, 
+                "bias_regularizer": null, 
+                "return_state": false, 
+                "unroll": false, 
+                "activation": "relu", 
+                "bias_initializer": {
+                    "class_name": "Zeros", 
+                    "config": {}
+                }, 
+                "units": 750, 
+                "batch_input_shape": [
+                    null, 
+                    10, 
+                    300
+                ], 
+                "activity_regularizer": null, 
+                "recurrent_dropout": 0.0, 
+                "kernel_initializer": {
+                    "class_name": "VarianceScaling", 
+                    "config": {
+                        "distribution": "uniform", 
+                        "scale": 1.0, 
+                        "seed": null, 
+                        "mode": "fan_avg"
+                    }
+                }, 
+                "kernel_constraint": null, 
+                "dropout": 0.2, 
+                "stateful": false, 
+                "unit_forget_bias": true, 
+                "recurrent_regularizer": null, 
+                "name": "lstm_1", 
+                "bias_constraint": null, 
+                "go_backwards": false, 
+                "implementation": 0, 
+                "kernel_regularizer": null, 
+                "return_sequences": false, 
+                "recurrent_constraint": null
+            }
+        }, 
+        {
+            "class_name": "Dense", 
+            "config": {
+                "kernel_initializer": {
+                    "class_name": "VarianceScaling", 
+                    "config": {
+                        "distribution": "uniform", 
+                        "scale": 1.0, 
+                        "seed": null, 
+                        "mode": "fan_avg"
+                    }
+                }, 
+                "name": "dense_1", 
+                "kernel_constraint": null, 
+                "bias_regularizer": null, 
+                "bias_constraint": null, 
+                "activation": "sigmoid", 
+                "trainable": true, 
+                "kernel_regularizer": null, 
+                "bias_initializer": {
+                    "class_name": "Zeros", 
+                    "config": {}
+                }, 
+                "units": 10, 
+                "use_bias": true, 
+                "activity_regularizer": null
+            }
+        }
+    ], 
+    "backend": "tensorflow"
+} 
+
+INFO : 2017-09-11 15:25:23 at __INIT__ > MODEL ARQUITECTURE
+{
+    "class_name": "Sequential", 
+    "keras_version": "2.0.7", 
+    "config": [
+        {
+            "class_name": "LSTM", 
+            "config": {
+                "recurrent_activation": "hard_sigmoid", 
+                "dtype": "float32", 
+                "trainable": true, 
+                "recurrent_initializer": {
+                    "class_name": "Orthogonal", 
+                    "config": {
+                        "seed": null, 
+                        "gain": 1.0
+                    }
+                }, 
+                "use_bias": true, 
+                "bias_regularizer": null, 
+                "return_state": false, 
+                "unroll": false, 
+                "activation": "sigmoid", 
+                "bias_initializer": {
+                    "class_name": "Zeros", 
+                    "config": {}
+                }, 
+                "units": 750, 
+                "batch_input_shape": [
+                    null, 
+                    10, 
+                    300
+                ], 
+                "activity_regularizer": null, 
+                "recurrent_dropout": 0.0, 
+                "kernel_initializer": {
+                    "class_name": "VarianceScaling", 
+                    "config": {
+                        "distribution": "uniform", 
+                        "scale": 1.0, 
+                        "seed": null, 
+                        "mode": "fan_avg"
+                    }
+                }, 
+                "kernel_constraint": null, 
+                "dropout": 0.2, 
+                "stateful": false, 
+                "unit_forget_bias": true, 
+                "recurrent_regularizer": null, 
+                "name": "lstm_1", 
+                "bias_constraint": null, 
+                "go_backwards": false, 
+                "implementation": 0, 
+                "kernel_regularizer": null, 
+                "return_sequences": false, 
+                "recurrent_constraint": null
+            }
+        }, 
+        {
+            "class_name": "Dense", 
+            "config": {
+                "kernel_initializer": {
+                    "class_name": "VarianceScaling", 
+                    "config": {
+                        "distribution": "uniform", 
+                        "scale": 1.0, 
+                        "seed": null, 
+                        "mode": "fan_avg"
+                    }
+                }, 
+                "name": "dense_1", 
+                "kernel_constraint": null, 
+                "bias_regularizer": null, 
+                "bias_constraint": null, 
+                "activation": "sigmoid", 
+                "trainable": true, 
+                "kernel_regularizer": null, 
+                "bias_initializer": {
+                    "class_name": "Zeros", 
+                    "config": {}
+                }, 
+                "units": 10, 
+                "use_bias": true, 
+                "activity_regularizer": null
+            }
+        }
+    ], 
+    "backend": "tensorflow"
+} 
+
+INFO : 2017-09-11 15:35:00 at __INIT__ > MODEL ARQUITECTURE
+{
+    "class_name": "Sequential", 
+    "keras_version": "2.0.7", 
+    "config": [
+        {
+            "class_name": "LSTM", 
+            "config": {
+                "recurrent_activation": "hard_sigmoid", 
+                "dtype": "float32", 
+                "trainable": true, 
+                "recurrent_initializer": {
+                    "class_name": "Orthogonal", 
+                    "config": {
+                        "seed": null, 
+                        "gain": 1.0
+                    }
+                }, 
+                "use_bias": true, 
+                "bias_regularizer": null, 
+                "return_state": false, 
+                "unroll": false, 
+                "activation": "sigmoid", 
+                "bias_initializer": {
+                    "class_name": "Zeros", 
+                    "config": {}
+                }, 
+                "units": 750, 
+                "batch_input_shape": [
+                    null, 
+                    10, 
+                    300
+                ], 
+                "activity_regularizer": null, 
+                "recurrent_dropout": 0.0, 
+                "kernel_initializer": {
+                    "class_name": "VarianceScaling", 
+                    "config": {
+                        "distribution": "uniform", 
+                        "scale": 1.0, 
+                        "seed": null, 
+                        "mode": "fan_avg"
+                    }
+                }, 
+                "kernel_constraint": null, 
+                "dropout": 0.2, 
+                "stateful": false, 
+                "unit_forget_bias": true, 
+                "recurrent_regularizer": null, 
+                "name": "lstm_1", 
+                "bias_constraint": null, 
+                "go_backwards": false, 
+                "implementation": 0, 
+                "kernel_regularizer": null, 
+                "return_sequences": false, 
+                "recurrent_constraint": null
+            }
+        }, 
+        {
+            "class_name": "Dense", 
+            "config": {
+                "kernel_initializer": {
+                    "class_name": "VarianceScaling", 
+                    "config": {
+                        "distribution": "uniform", 
+                        "scale": 1.0, 
+                        "seed": null, 
+                        "mode": "fan_avg"
+                    }
+                }, 
+                "name": "dense_1", 
+                "kernel_constraint": null, 
+                "bias_regularizer": null, 
+                "bias_constraint": null, 
+                "activation": "sigmoid", 
+                "trainable": true, 
+                "kernel_regularizer": null, 
+                "bias_initializer": {
+                    "class_name": "Zeros", 
+                    "config": {}
+                }, 
+                "units": 10, 
+                "use_bias": true, 
+                "activity_regularizer": null
+            }
+        }
+    ], 
+    "backend": "tensorflow"
+} 
+
+INFO : 2017-09-11 15:48:33 at __INIT__ > MODEL ARQUITECTURE
+{
+    "class_name": "Sequential", 
+    "keras_version": "2.0.7", 
+    "config": [
+        {
+            "class_name": "LSTM", 
+            "config": {
+                "recurrent_activation": "hard_sigmoid", 
+                "dtype": "float32", 
+                "trainable": true, 
+                "recurrent_initializer": {
+                    "class_name": "Orthogonal", 
+                    "config": {
+                        "seed": null, 
+                        "gain": 1.0
+                    }
+                }, 
+                "use_bias": true, 
+                "bias_regularizer": null, 
+                "return_state": false, 
+                "unroll": false, 
+                "activation": "relu", 
+                "bias_initializer": {
+                    "class_name": "Zeros", 
+                    "config": {}
+                }, 
+                "units": 750, 
+                "batch_input_shape": [
+                    null, 
+                    10, 
+                    300
+                ], 
+                "activity_regularizer": null, 
+                "recurrent_dropout": 0.0, 
+                "kernel_initializer": {
+                    "class_name": "VarianceScaling", 
+                    "config": {
+                        "distribution": "uniform", 
+                        "scale": 1.0, 
+                        "seed": null, 
+                        "mode": "fan_avg"
+                    }
+                }, 
+                "kernel_constraint": null, 
+                "dropout": 0.2, 
+                "stateful": false, 
+                "unit_forget_bias": true, 
+                "recurrent_regularizer": null, 
+                "name": "lstm_1", 
+                "bias_constraint": null, 
+                "go_backwards": false, 
+                "implementation": 0, 
+                "kernel_regularizer": null, 
+                "return_sequences": false, 
+                "recurrent_constraint": null
+            }
+        }, 
+        {
+            "class_name": "Dense", 
+            "config": {
+                "kernel_initializer": {
+                    "class_name": "VarianceScaling", 
+                    "config": {
+                        "distribution": "uniform", 
+                        "scale": 1.0, 
+                        "seed": null, 
+                        "mode": "fan_avg"
+                    }
+                }, 
+                "name": "dense_1", 
+                "kernel_constraint": null, 
+                "bias_regularizer": null, 
+                "bias_constraint": null, 
+                "activation": "sigmoid", 
+                "trainable": true, 
+                "kernel_regularizer": null, 
+                "bias_initializer": {
+                    "class_name": "Zeros", 
+                    "config": {}
+                }, 
+                "units": 10, 
+                "use_bias": true, 
+                "activity_regularizer": null
+            }
+        }
+    ], 
+    "backend": "tensorflow"
+} 
+
+INFO : 2017-09-11 16:11:55 at FIT_TAGGED > MODEL EVALUATION
+[('loss', nan), ('binary_accuracy', 0.0), ('precision', nan), ('recall', nan), ('fmeasure', nan), ('mean_squared_error', nan), ('binary_crossentropy', nan)] 
+
+INFO : 2017-09-11 20:58:03 at __INIT__ > MODEL ARQUITECTURE
+{
+    "class_name": "Sequential", 
+    "keras_version": "2.0.7", 
+    "config": [
+        {
+            "class_name": "LSTM", 
+            "config": {
+                "recurrent_activation": "hard_sigmoid", 
+                "dtype": "float32", 
+                "trainable": true, 
+                "recurrent_initializer": {
+                    "class_name": "Orthogonal", 
+                    "config": {
+                        "seed": null, 
+                        "gain": 1.0
+                    }
+                }, 
+                "use_bias": true, 
+                "bias_regularizer": null, 
+                "return_state": false, 
+                "unroll": false, 
+                "activation": "relu", 
+                "bias_initializer": {
+                    "class_name": "Zeros", 
+                    "config": {}
+                }, 
+                "units": 750, 
+                "batch_input_shape": [
+                    null, 
+                    10, 
+                    300
+                ], 
+                "activity_regularizer": null, 
+                "recurrent_dropout": 0.0, 
+                "kernel_initializer": {
+                    "class_name": "VarianceScaling", 
+                    "config": {
+                        "distribution": "uniform", 
+                        "scale": 1.0, 
+                        "seed": null, 
+                        "mode": "fan_avg"
+                    }
+                }, 
+                "kernel_constraint": null, 
+                "dropout": 0.2, 
+                "stateful": false, 
+                "unit_forget_bias": true, 
+                "recurrent_regularizer": null, 
+                "name": "lstm_1", 
+                "bias_constraint": null, 
+                "go_backwards": false, 
+                "implementation": 0, 
+                "kernel_regularizer": null, 
+                "return_sequences": false, 
+                "recurrent_constraint": null
+            }
+        }, 
+        {
+            "class_name": "Dense", 
+            "config": {
+                "kernel_initializer": {
+                    "class_name": "VarianceScaling", 
+                    "config": {
+                        "distribution": "uniform", 
+                        "scale": 1.0, 
+                        "seed": null, 
+                        "mode": "fan_avg"
+                    }
+                }, 
+                "name": "dense_1", 
+                "kernel_constraint": null, 
+                "bias_regularizer": null, 
+                "bias_constraint": null, 
+                "activation": "sigmoid", 
+                "trainable": true, 
+                "kernel_regularizer": null, 
+                "bias_initializer": {
+                    "class_name": "Zeros", 
+                    "config": {}
+                }, 
+                "units": 10, 
+                "use_bias": true, 
+                "activity_regularizer": null
+            }
+        }
+    ], 
+    "backend": "tensorflow"
+} 
+
+INFO : 2017-09-11 21:01:58 at __INIT__ > MODEL ARQUITECTURE
+{
+    "class_name": "Sequential", 
+    "keras_version": "2.0.7", 
+    "config": [
+        {
+            "class_name": "LSTM", 
+            "config": {
+                "recurrent_activation": "hard_sigmoid", 
+                "dtype": "float32", 
+                "trainable": true, 
+                "recurrent_initializer": {
+                    "class_name": "Orthogonal", 
+                    "config": {
+                        "seed": null, 
+                        "gain": 1.0
+                    }
+                }, 
+                "use_bias": true, 
+                "bias_regularizer": null, 
+                "return_state": false, 
+                "unroll": false, 
+                "activation": "relu", 
+                "bias_initializer": {
+                    "class_name": "Zeros", 
+                    "config": {}
+                }, 
+                "units": 750, 
+                "batch_input_shape": [
+                    null, 
+                    10, 
+                    300
+                ], 
+                "activity_regularizer": null, 
+                "recurrent_dropout": 0.0, 
+                "kernel_initializer": {
+                    "class_name": "VarianceScaling", 
+                    "config": {
+                        "distribution": "uniform", 
+                        "scale": 1.0, 
+                        "seed": null, 
+                        "mode": "fan_avg"
+                    }
+                }, 
+                "kernel_constraint": null, 
+                "dropout": 0.2, 
+                "stateful": false, 
+                "unit_forget_bias": true, 
+                "recurrent_regularizer": null, 
+                "name": "lstm_1", 
+                "bias_constraint": null, 
+                "go_backwards": false, 
+                "implementation": 0, 
+                "kernel_regularizer": null, 
+                "return_sequences": false, 
+                "recurrent_constraint": null
+            }
+        }, 
+        {
+            "class_name": "Dense", 
+            "config": {
+                "kernel_initializer": {
+                    "class_name": "VarianceScaling", 
+                    "config": {
+                        "distribution": "uniform", 
+                        "scale": 1.0, 
+                        "seed": null, 
+                        "mode": "fan_avg"
+                    }
+                }, 
+                "name": "dense_1", 
+                "kernel_constraint": null, 
+                "bias_regularizer": null, 
+                "bias_constraint": null, 
+                "activation": "sigmoid", 
+                "trainable": true, 
+                "kernel_regularizer": null, 
+                "bias_initializer": {
+                    "class_name": "Zeros", 
+                    "config": {}
+                }, 
+                "units": 10, 
+                "use_bias": true, 
+                "activity_regularizer": null
+            }
+        }
+    ], 
+    "backend": "tensorflow"
+} 
+
+INFO : 2017-09-11 21:12:48 at __INIT__ > MODEL ARQUITECTURE
+{
+    "class_name": "Sequential", 
+    "keras_version": "2.0.7", 
+    "config": [
+        {
+            "class_name": "LSTM", 
+            "config": {
+                "recurrent_activation": "hard_sigmoid", 
+                "dtype": "float32", 
+                "trainable": true, 
+                "recurrent_initializer": {
+                    "class_name": "Orthogonal", 
+                    "config": {
+                        "seed": null, 
+                        "gain": 1.0
+                    }
+                }, 
+                "use_bias": true, 
+                "bias_regularizer": null, 
+                "return_state": false, 
+                "unroll": false, 
+                "activation": "relu", 
+                "bias_initializer": {
+                    "class_name": "Zeros", 
+                    "config": {}
+                }, 
+                "units": 750, 
+                "batch_input_shape": [
+                    null, 
+                    10, 
+                    300
+                ], 
+                "activity_regularizer": null, 
+                "recurrent_dropout": 0.0, 
+                "kernel_initializer": {
+                    "class_name": "VarianceScaling", 
+                    "config": {
+                        "distribution": "uniform", 
+                        "scale": 1.0, 
+                        "seed": null, 
+                        "mode": "fan_avg"
+                    }
+                }, 
+                "kernel_constraint": null, 
+                "dropout": 0.2, 
+                "stateful": false, 
+                "unit_forget_bias": true, 
+                "recurrent_regularizer": null, 
+                "name": "lstm_1", 
+                "bias_constraint": null, 
+                "go_backwards": false, 
+                "implementation": 0, 
+                "kernel_regularizer": null, 
+                "return_sequences": false, 
+                "recurrent_constraint": null
+            }
+        }, 
+        {
+            "class_name": "Dense", 
+            "config": {
+                "kernel_initializer": {
+                    "class_name": "VarianceScaling", 
+                    "config": {
+                        "distribution": "uniform", 
+                        "scale": 1.0, 
+                        "seed": null, 
+                        "mode": "fan_avg"
+                    }
+                }, 
+                "name": "dense_1", 
+                "kernel_constraint": null, 
+                "bias_regularizer": null, 
+                "bias_constraint": null, 
+                "activation": "sigmoid", 
+                "trainable": true, 
+                "kernel_regularizer": null, 
+                "bias_initializer": {
+                    "class_name": "Zeros", 
+                    "config": {}
+                }, 
+                "units": 10, 
+                "use_bias": true, 
+                "activity_regularizer": null
+            }
+        }
+    ], 
+    "backend": "tensorflow"
+} 
+
+INFO : 2017-09-11 21:22:23 at __INIT__ > MODEL ARQUITECTURE
+{
+    "class_name": "Sequential", 
+    "keras_version": "2.0.7", 
+    "config": [
+        {
+            "class_name": "LSTM", 
+            "config": {
+                "recurrent_activation": "hard_sigmoid", 
+                "dtype": "float32", 
+                "trainable": true, 
+                "recurrent_initializer": {
+                    "class_name": "Orthogonal", 
+                    "config": {
+                        "seed": null, 
+                        "gain": 1.0
+                    }
+                }, 
+                "use_bias": true, 
+                "bias_regularizer": null, 
+                "return_state": false, 
+                "unroll": false, 
+                "activation": "relu", 
+                "bias_initializer": {
+                    "class_name": "Zeros", 
+                    "config": {}
+                }, 
+                "units": 750, 
+                "batch_input_shape": [
+                    null, 
+                    10, 
+                    300
+                ], 
+                "activity_regularizer": null, 
+                "recurrent_dropout": 0.0, 
+                "kernel_initializer": {
+                    "class_name": "VarianceScaling", 
+                    "config": {
+                        "distribution": "uniform", 
+                        "scale": 1.0, 
+                        "seed": null, 
+                        "mode": "fan_avg"
+                    }
+                }, 
+                "kernel_constraint": null, 
+                "dropout": 0.2, 
+                "stateful": false, 
+                "unit_forget_bias": true, 
+                "recurrent_regularizer": null, 
+                "name": "lstm_1", 
+                "bias_constraint": null, 
+                "go_backwards": false, 
+                "implementation": 0, 
+                "kernel_regularizer": null, 
+                "return_sequences": false, 
+                "recurrent_constraint": null
+            }
+        }, 
+        {
+            "class_name": "Dense", 
+            "config": {
+                "kernel_initializer": {
+                    "class_name": "VarianceScaling", 
+                    "config": {
+                        "distribution": "uniform", 
+                        "scale": 1.0, 
+                        "seed": null, 
+                        "mode": "fan_avg"
+                    }
+                }, 
+                "name": "dense_1", 
+                "kernel_constraint": null, 
+                "bias_regularizer": null, 
+                "bias_constraint": null, 
+                "activation": "sigmoid", 
+                "trainable": true, 
+                "kernel_regularizer": null, 
+                "bias_initializer": {
+                    "class_name": "Zeros", 
+                    "config": {}
+                }, 
+                "units": 10, 
+                "use_bias": true, 
+                "activity_regularizer": null
+            }
+        }
+    ], 
+    "backend": "tensorflow"
+} 
+
+INFO : 2017-09-11 21:27:06 at __INIT__ > MODEL ARQUITECTURE
+{
+    "class_name": "Sequential", 
+    "keras_version": "2.0.7", 
+    "config": [
+        {
+            "class_name": "LSTM", 
+            "config": {
+                "recurrent_activation": "hard_sigmoid", 
+                "dtype": "float32", 
+                "trainable": true, 
+                "recurrent_initializer": {
+                    "class_name": "Orthogonal", 
+                    "config": {
+                        "seed": null, 
+                        "gain": 1.0
+                    }
+                }, 
+                "use_bias": true, 
+                "bias_regularizer": null, 
+                "return_state": false, 
+                "unroll": false, 
+                "activation": "relu", 
+                "bias_initializer": {
+                    "class_name": "Zeros", 
+                    "config": {}
+                }, 
+                "units": 750, 
+                "batch_input_shape": [
+                    null, 
+                    10, 
+                    300
+                ], 
+                "activity_regularizer": null, 
+                "recurrent_dropout": 0.0, 
+                "kernel_initializer": {
+                    "class_name": "VarianceScaling", 
+                    "config": {
+                        "distribution": "uniform", 
+                        "scale": 1.0, 
+                        "seed": null, 
+                        "mode": "fan_avg"
+                    }
+                }, 
+                "kernel_constraint": null, 
+                "dropout": 0.2, 
+                "stateful": false, 
+                "unit_forget_bias": true, 
+                "recurrent_regularizer": null, 
+                "name": "lstm_1", 
+                "bias_constraint": null, 
+                "go_backwards": false, 
+                "implementation": 0, 
+                "kernel_regularizer": null, 
+                "return_sequences": false, 
+                "recurrent_constraint": null
+            }
+        }, 
+        {
+            "class_name": "Dense", 
+            "config": {
+                "kernel_initializer": {
+                    "class_name": "VarianceScaling", 
+                    "config": {
+                        "distribution": "uniform", 
+                        "scale": 1.0, 
+                        "seed": null, 
+                        "mode": "fan_avg"
+                    }
+                }, 
+                "name": "dense_1", 
+                "kernel_constraint": null, 
+                "bias_regularizer": null, 
+                "bias_constraint": null, 
+                "activation": "sigmoid", 
+                "trainable": true, 
+                "kernel_regularizer": null, 
+                "bias_initializer": {
+                    "class_name": "Zeros", 
+                    "config": {}
+                }, 
+                "units": 10, 
+                "use_bias": true, 
+                "activity_regularizer": null
+            }
+        }
+    ], 
+    "backend": "tensorflow"
+} 
+
+INFO : 2017-09-11 22:46:16 at FIT_TAGGED > MODEL EVALUATION
+[('loss', 9.1), ('binary_accuracy', 97.1), ('precision', 68.4), ('recall', 57.7), ('fmeasure', 60.7), ('mean_squared_error', 2.3), ('binary_crossentropy', 72.8)] 
+
+INFO : 2017-09-11 22:50:49 at __INIT__ > MODEL ARQUITECTURE
+{
+    "class_name": "Sequential", 
+    "keras_version": "2.0.7", 
+    "config": [
+        {
+            "class_name": "LSTM", 
+            "config": {
+                "recurrent_activation": "hard_sigmoid", 
+                "dtype": "float32", 
+                "trainable": true, 
+                "recurrent_initializer": {
+                    "class_name": "Orthogonal", 
+                    "config": {
+                        "seed": null, 
+                        "gain": 1.0
+                    }
+                }, 
+                "use_bias": true, 
+                "bias_regularizer": null, 
+                "return_state": false, 
+                "unroll": false, 
+                "activation": "relu", 
+                "bias_initializer": {
+                    "class_name": "Zeros", 
+                    "config": {}
+                }, 
+                "units": 750, 
+                "batch_input_shape": [
+                    null, 
+                    10, 
+                    300
+                ], 
+                "activity_regularizer": null, 
+                "recurrent_dropout": 0.0, 
+                "kernel_initializer": {
+                    "class_name": "VarianceScaling", 
+                    "config": {
+                        "distribution": "uniform", 
+                        "scale": 1.0, 
+                        "seed": null, 
+                        "mode": "fan_avg"
+                    }
+                }, 
+                "kernel_constraint": null, 
+                "dropout": 0.2, 
+                "stateful": false, 
+                "unit_forget_bias": true, 
+                "recurrent_regularizer": null, 
+                "name": "lstm_1", 
+                "bias_constraint": null, 
+                "go_backwards": false, 
+                "implementation": 0, 
+                "kernel_regularizer": null, 
+                "return_sequences": false, 
+                "recurrent_constraint": null
+            }
+        }, 
+        {
+            "class_name": "Dense", 
+            "config": {
+                "kernel_initializer": {
+                    "class_name": "VarianceScaling", 
+                    "config": {
+                        "distribution": "uniform", 
+                        "scale": 1.0, 
+                        "seed": null, 
+                        "mode": "fan_avg"
+                    }
+                }, 
+                "name": "dense_1", 
+                "kernel_constraint": null, 
+                "bias_regularizer": null, 
+                "bias_constraint": null, 
+                "activation": "sigmoid", 
+                "trainable": true, 
+                "kernel_regularizer": null, 
+                "bias_initializer": {
+                    "class_name": "Zeros", 
+                    "config": {}
+                }, 
+                "units": 10, 
+                "use_bias": true, 
+                "activity_regularizer": null
+            }
+        }
+    ], 
+    "backend": "tensorflow"
+} 
+
+INFO : 2017-09-11 23:52:25 at FIT_TAGGED > MODEL EVALUATION
+[('loss', 11.1), ('binary_accuracy', 96.3), ('precision', 67.9), ('recall', 49.1), ('fmeasure', 54.4), ('mean_squared_error', 2.9), ('binary_crossentropy', 95.7)] 
+
+INFO : 2017-09-12 00:16:14 at __INIT__ > MODEL ARQUITECTURE
+{
+    "class_name": "Sequential", 
+    "keras_version": "2.0.7", 
+    "config": [
+        {
+            "class_name": "LSTM", 
+            "config": {
+                "recurrent_activation": "hard_sigmoid", 
+                "dtype": "float32", 
+                "trainable": true, 
+                "recurrent_initializer": {
+                    "class_name": "Orthogonal", 
+                    "config": {
+                        "seed": null, 
+                        "gain": 1.0
+                    }
+                }, 
+                "use_bias": true, 
+                "bias_regularizer": null, 
+                "return_state": false, 
+                "unroll": false, 
+                "activation": "relu", 
+                "bias_initializer": {
+                    "class_name": "Zeros", 
+                    "config": {}
+                }, 
+                "units": 750, 
+                "batch_input_shape": [
+                    null, 
+                    20, 
+                    300
+                ], 
+                "activity_regularizer": null, 
+                "recurrent_dropout": 0.0, 
+                "kernel_initializer": {
+                    "class_name": "VarianceScaling", 
+                    "config": {
+                        "distribution": "uniform", 
+                        "scale": 1.0, 
+                        "seed": null, 
+                        "mode": "fan_avg"
+                    }
+                }, 
+                "kernel_constraint": null, 
+                "dropout": 0.2, 
+                "stateful": false, 
+                "unit_forget_bias": true, 
+                "recurrent_regularizer": null, 
+                "name": "lstm_1", 
+                "bias_constraint": null, 
+                "go_backwards": false, 
+                "implementation": 0, 
+                "kernel_regularizer": null, 
+                "return_sequences": false, 
+                "recurrent_constraint": null
+            }
+        }, 
+        {
+            "class_name": "Dense", 
+            "config": {
+                "kernel_initializer": {
+                    "class_name": "VarianceScaling", 
+                    "config": {
+                        "distribution": "uniform", 
+                        "scale": 1.0, 
+                        "seed": null, 
+                        "mode": "fan_avg"
+                    }
+                }, 
+                "name": "dense_1", 
+                "kernel_constraint": null, 
+                "bias_regularizer": null, 
+                "bias_constraint": null, 
+                "activation": "sigmoid", 
+                "trainable": true, 
+                "kernel_regularizer": null, 
+                "bias_initializer": {
+                    "class_name": "Zeros", 
+                    "config": {}
+                }, 
+                "units": 10, 
+                "use_bias": true, 
+                "activity_regularizer": null
+            }
+        }
+    ], 
+    "backend": "tensorflow"
+} 
+
+INFO : 2017-09-12 13:17:03 at __INIT__ > MODEL ARQUITECTURE
+{
+    "class_name": "Sequential", 
+    "keras_version": "2.0.7", 
+    "config": [
+        {
+            "class_name": "LSTM", 
+            "config": {
+                "recurrent_activation": "hard_sigmoid", 
+                "dtype": "float32", 
+                "trainable": true, 
+                "recurrent_initializer": {
+                    "class_name": "Orthogonal", 
+                    "config": {
+                        "seed": null, 
+                        "gain": 1.0
+                    }
+                }, 
+                "use_bias": true, 
+                "bias_regularizer": null, 
+                "return_state": false, 
+                "unroll": false, 
+                "activation": "relu", 
+                "bias_initializer": {
+                    "class_name": "Zeros", 
+                    "config": {}
+                }, 
+                "units": 750, 
+                "batch_input_shape": [
+                    null, 
+                    20, 
+                    300
+                ], 
+                "activity_regularizer": null, 
+                "recurrent_dropout": 0.0, 
+                "kernel_initializer": {
+                    "class_name": "VarianceScaling", 
+                    "config": {
+                        "distribution": "uniform", 
+                        "scale": 1.0, 
+                        "seed": null, 
+                        "mode": "fan_avg"
+                    }
+                }, 
+                "kernel_constraint": null, 
+                "dropout": 0.2, 
+                "stateful": false, 
+                "unit_forget_bias": true, 
+                "recurrent_regularizer": null, 
+                "name": "lstm_1", 
+                "bias_constraint": null, 
+                "go_backwards": false, 
+                "implementation": 0, 
+                "kernel_regularizer": null, 
+                "return_sequences": false, 
+                "recurrent_constraint": null
+            }
+        }, 
+        {
+            "class_name": "Dense", 
+            "config": {
+                "kernel_initializer": {
+                    "class_name": "VarianceScaling", 
+                    "config": {
+                        "distribution": "uniform", 
+                        "scale": 1.0, 
+                        "seed": null, 
+                        "mode": "fan_avg"
+                    }
+                }, 
+                "name": "dense_1", 
+                "kernel_constraint": null, 
+                "bias_regularizer": null, 
+                "bias_constraint": null, 
+                "activation": "sigmoid", 
+                "trainable": true, 
+                "kernel_regularizer": null, 
+                "bias_initializer": {
+                    "class_name": "Zeros", 
+                    "config": {}
+                }, 
+                "units": 20, 
+                "use_bias": true, 
+                "activity_regularizer": null
+            }
+        }
+    ], 
+    "backend": "tensorflow"
+} 
+
+INFO : 2017-09-12 13:35:33 at __INIT__ > MODEL ARQUITECTURE
+{
+    "class_name": "Sequential", 
+    "keras_version": "2.0.7", 
+    "config": [
+        {
+            "class_name": "LSTM", 
+            "config": {
+                "recurrent_activation": "hard_sigmoid", 
+                "dtype": "float32", 
+                "trainable": true, 
+                "recurrent_initializer": {
+                    "class_name": "Orthogonal", 
+                    "config": {
+                        "seed": null, 
+                        "gain": 1.0
+                    }
+                }, 
+                "use_bias": true, 
+                "bias_regularizer": null, 
+                "return_state": false, 
+                "unroll": false, 
+                "activation": "relu", 
+                "bias_initializer": {
+                    "class_name": "Zeros", 
+                    "config": {}
+                }, 
+                "units": 750, 
+                "batch_input_shape": [
+                    null, 
+                    20, 
+                    300
+                ], 
+                "activity_regularizer": null, 
+                "recurrent_dropout": 0.0, 
+                "kernel_initializer": {
+                    "class_name": "VarianceScaling", 
+                    "config": {
+                        "distribution": "uniform", 
+                        "scale": 1.0, 
+                        "seed": null, 
+                        "mode": "fan_avg"
+                    }
+                }, 
+                "kernel_constraint": null, 
+                "dropout": 0.2, 
+                "stateful": false, 
+                "unit_forget_bias": true, 
+                "recurrent_regularizer": null, 
+                "name": "lstm_1", 
+                "bias_constraint": null, 
+                "go_backwards": false, 
+                "implementation": 0, 
+                "kernel_regularizer": null, 
+                "return_sequences": false, 
+                "recurrent_constraint": null
+            }
+        }, 
+        {
+            "class_name": "Dense", 
+            "config": {
+                "kernel_initializer": {
+                    "class_name": "VarianceScaling", 
+                    "config": {
+                        "distribution": "uniform", 
+                        "scale": 1.0, 
+                        "seed": null, 
+                        "mode": "fan_avg"
+                    }
+                }, 
+                "name": "dense_1", 
+                "kernel_constraint": null, 
+                "bias_regularizer": null, 
+                "bias_constraint": null, 
+                "activation": "sigmoid", 
+                "trainable": true, 
+                "kernel_regularizer": null, 
+                "bias_initializer": {
+                    "class_name": "Zeros", 
+                    "config": {}
+                }, 
+                "units": 20, 
+                "use_bias": true, 
+                "activity_regularizer": null
+            }
+        }
+    ], 
+    "backend": "tensorflow"
+} 
+
+INFO : 2017-09-12 13:36:07 at __INIT__ > MODEL ARQUITECTURE
+{
+    "class_name": "Sequential", 
+    "keras_version": "2.0.7", 
+    "config": [
+        {
+            "class_name": "LSTM", 
+            "config": {
+                "recurrent_activation": "hard_sigmoid", 
+                "dtype": "float32", 
+                "trainable": true, 
+                "recurrent_initializer": {
+                    "class_name": "Orthogonal", 
+                    "config": {
+                        "seed": null, 
+                        "gain": 1.0
+                    }
+                }, 
+                "use_bias": true, 
+                "bias_regularizer": null, 
+                "return_state": false, 
+                "unroll": false, 
+                "activation": "relu", 
+                "bias_initializer": {
+                    "class_name": "Zeros", 
+                    "config": {}
+                }, 
+                "units": 750, 
+                "batch_input_shape": [
+                    null, 
+                    20, 
+                    300
+                ], 
+                "activity_regularizer": null, 
+                "recurrent_dropout": 0.0, 
+                "kernel_initializer": {
+                    "class_name": "VarianceScaling", 
+                    "config": {
+                        "distribution": "uniform", 
+                        "scale": 1.0, 
+                        "seed": null, 
+                        "mode": "fan_avg"
+                    }
+                }, 
+                "kernel_constraint": null, 
+                "dropout": 0.2, 
+                "stateful": false, 
+                "unit_forget_bias": true, 
+                "recurrent_regularizer": null, 
+                "name": "lstm_1", 
+                "bias_constraint": null, 
+                "go_backwards": false, 
+                "implementation": 0, 
+                "kernel_regularizer": null, 
+                "return_sequences": false, 
+                "recurrent_constraint": null
+            }
+        }, 
+        {
+            "class_name": "Dense", 
+            "config": {
+                "kernel_initializer": {
+                    "class_name": "VarianceScaling", 
+                    "config": {
+                        "distribution": "uniform", 
+                        "scale": 1.0, 
+                        "seed": null, 
+                        "mode": "fan_avg"
+                    }
+                }, 
+                "name": "dense_1", 
+                "kernel_constraint": null, 
+                "bias_regularizer": null, 
+                "bias_constraint": null, 
+                "activation": "sigmoid", 
+                "trainable": true, 
+                "kernel_regularizer": null, 
+                "bias_initializer": {
+                    "class_name": "Zeros", 
+                    "config": {}
+                }, 
+                "units": 20, 
+                "use_bias": true, 
+                "activity_regularizer": null
+            }
+        }
+    ], 
+    "backend": "tensorflow"
+} 
+
+INFO : 2017-09-12 14:03:21 at FIT_TAGGED > MODEL EVALUATION
+[('loss', 130.0), ('binary_accuracy', 91.9), ('precision', 0.0), ('recall', 0.0), ('fmeasure', 0.0), ('mean_squared_error', 8.1), ('binary_crossentropy', 128.6)] 
+
+INFO : 2017-09-12 14:03:25 at __INIT__ > MODEL ARQUITECTURE
+{
+    "class_name": "Sequential", 
+    "keras_version": "2.0.7", 
+    "config": [
+        {
+            "class_name": "LSTM", 
+            "config": {
+                "recurrent_activation": "hard_sigmoid", 
+                "dtype": "float32", 
+                "trainable": true, 
+                "recurrent_initializer": {
+                    "class_name": "Orthogonal", 
+                    "config": {
+                        "seed": null, 
+                        "gain": 1.0
+                    }
+                }, 
+                "use_bias": true, 
+                "bias_regularizer": null, 
+                "return_state": false, 
+                "unroll": false, 
+                "activation": "relu", 
+                "bias_initializer": {
+                    "class_name": "Zeros", 
+                    "config": {}
+                }, 
+                "units": 750, 
+                "batch_input_shape": [
+                    null, 
+                    30, 
+                    300
+                ], 
+                "activity_regularizer": null, 
+                "recurrent_dropout": 0.0, 
+                "kernel_initializer": {
+                    "class_name": "VarianceScaling", 
+                    "config": {
+                        "distribution": "uniform", 
+                        "scale": 1.0, 
+                        "seed": null, 
+                        "mode": "fan_avg"
+                    }
+                }, 
+                "kernel_constraint": null, 
+                "dropout": 0.2, 
+                "stateful": false, 
+                "unit_forget_bias": true, 
+                "recurrent_regularizer": null, 
+                "name": "lstm_2", 
+                "bias_constraint": null, 
+                "go_backwards": false, 
+                "implementation": 0, 
+                "kernel_regularizer": null, 
+                "return_sequences": false, 
+                "recurrent_constraint": null
+            }
+        }, 
+        {
+            "class_name": "Dense", 
+            "config": {
+                "kernel_initializer": {
+                    "class_name": "VarianceScaling", 
+                    "config": {
+                        "distribution": "uniform", 
+                        "scale": 1.0, 
+                        "seed": null, 
+                        "mode": "fan_avg"
+                    }
+                }, 
+                "name": "dense_2", 
+                "kernel_constraint": null, 
+                "bias_regularizer": null, 
+                "bias_constraint": null, 
+                "activation": "sigmoid", 
+                "trainable": true, 
+                "kernel_regularizer": null, 
+                "bias_initializer": {
+                    "class_name": "Zeros", 
+                    "config": {}
+                }, 
+                "units": 30, 
+                "use_bias": true, 
+                "activity_regularizer": null
+            }
+        }
+    ], 
+    "backend": "tensorflow"
+} 
+
+INFO : 2017-09-12 14:29:40 at FIT_TAGGED > MODEL EVALUATION
+[('loss', 173.5), ('binary_accuracy', 89.2), ('precision', 7.9), ('recall', 3.2), ('fmeasure', 4.2), ('mean_squared_error', 10.8), ('binary_crossentropy', 172.7)] 
+
+INFO : 2017-09-12 14:29:44 at __INIT__ > MODEL ARQUITECTURE
+{
+    "class_name": "Sequential", 
+    "keras_version": "2.0.7", 
+    "config": [
+        {
+            "class_name": "LSTM", 
+            "config": {
+                "recurrent_activation": "hard_sigmoid", 
+                "dtype": "float32", 
+                "trainable": true, 
+                "recurrent_initializer": {
+                    "class_name": "Orthogonal", 
+                    "config": {
+                        "seed": null, 
+                        "gain": 1.0
+                    }
+                }, 
+                "use_bias": true, 
+                "bias_regularizer": null, 
+                "return_state": false, 
+                "unroll": false, 
+                "activation": "relu", 
+                "bias_initializer": {
+                    "class_name": "Zeros", 
+                    "config": {}
+                }, 
+                "units": 750, 
+                "batch_input_shape": [
+                    null, 
+                    40, 
+                    300
+                ], 
+                "activity_regularizer": null, 
+                "recurrent_dropout": 0.0, 
+                "kernel_initializer": {
+                    "class_name": "VarianceScaling", 
+                    "config": {
+                        "distribution": "uniform", 
+                        "scale": 1.0, 
+                        "seed": null, 
+                        "mode": "fan_avg"
+                    }
+                }, 
+                "kernel_constraint": null, 
+                "dropout": 0.2, 
+                "stateful": false, 
+                "unit_forget_bias": true, 
+                "recurrent_regularizer": null, 
+                "name": "lstm_3", 
+                "bias_constraint": null, 
+                "go_backwards": false, 
+                "implementation": 0, 
+                "kernel_regularizer": null, 
+                "return_sequences": false, 
+                "recurrent_constraint": null
+            }
+        }, 
+        {
+            "class_name": "Dense", 
+            "config": {
+                "kernel_initializer": {
+                    "class_name": "VarianceScaling", 
+                    "config": {
+                        "distribution": "uniform", 
+                        "scale": 1.0, 
+                        "seed": null, 
+                        "mode": "fan_avg"
+                    }
+                }, 
+                "name": "dense_3", 
+                "kernel_constraint": null, 
+                "bias_regularizer": null, 
+                "bias_constraint": null, 
+                "activation": "sigmoid", 
+                "trainable": true, 
+                "kernel_regularizer": null, 
+                "bias_initializer": {
+                    "class_name": "Zeros", 
+                    "config": {}
+                }, 
+                "units": 40, 
+                "use_bias": true, 
+                "activity_regularizer": null
+            }
+        }
+    ], 
+    "backend": "tensorflow"
+} 
+
+INFO : 2017-09-12 14:55:37 at FIT_TAGGED > MODEL EVALUATION
+[('loss', 127.8), ('binary_accuracy', 92.1), ('precision', 0.0), ('recall', 0.0), ('fmeasure', 0.0), ('mean_squared_error', 7.9), ('binary_crossentropy', 126.4)] 
+
+INFO : 2017-09-12 17:22:33 at __INIT__ > MODEL ARQUITECTURE
+{
+    "class_name": "Sequential", 
+    "keras_version": "2.0.7", 
+    "config": [
+        {
+            "class_name": "LSTM", 
+            "config": {
+                "recurrent_activation": "hard_sigmoid", 
+                "dtype": "float32", 
+                "trainable": true, 
+                "recurrent_initializer": {
+                    "class_name": "Orthogonal", 
+                    "config": {
+                        "seed": null, 
+                        "gain": 1.0
+                    }
+                }, 
+                "use_bias": true, 
+                "bias_regularizer": null, 
+                "return_state": false, 
+                "unroll": false, 
+                "activation": "relu", 
+                "bias_initializer": {
+                    "class_name": "Zeros", 
+                    "config": {}
+                }, 
+                "units": 750, 
+                "batch_input_shape": [
+                    null, 
+                    10, 
+                    300
+                ], 
+                "activity_regularizer": null, 
+                "recurrent_dropout": 0.0, 
+                "kernel_initializer": {
+                    "class_name": "VarianceScaling", 
+                    "config": {
+                        "distribution": "uniform", 
+                        "scale": 1.0, 
+                        "seed": null, 
+                        "mode": "fan_avg"
+                    }
+                }, 
+                "kernel_constraint": null, 
+                "dropout": 0.2, 
+                "stateful": false, 
+                "unit_forget_bias": true, 
+                "recurrent_regularizer": null, 
+                "name": "lstm_1", 
+                "bias_constraint": null, 
+                "go_backwards": false, 
+                "implementation": 0, 
+                "kernel_regularizer": null, 
+                "return_sequences": false, 
+                "recurrent_constraint": null
+            }
+        }, 
+        {
+            "class_name": "Dense", 
+            "config": {
+                "kernel_initializer": {
+                    "class_name": "VarianceScaling", 
+                    "config": {
+                        "distribution": "uniform", 
+                        "scale": 1.0, 
+                        "seed": null, 
+                        "mode": "fan_avg"
+                    }
+                }, 
+                "name": "dense_1", 
+                "kernel_constraint": null, 
+                "bias_regularizer": null, 
+                "bias_constraint": null, 
+                "activation": "sigmoid", 
+                "trainable": true, 
+                "kernel_regularizer": null, 
+                "bias_initializer": {
+                    "class_name": "Zeros", 
+                    "config": {}
+                }, 
+                "units": 10, 
+                "use_bias": true, 
+                "activity_regularizer": null
+            }
+        }
+    ], 
+    "backend": "tensorflow"
+} 
+
+INFO : 2017-09-12 17:55:28 at FIT_TAGGED > MODEL EVALUATION
+[('loss', 17.9), ('binary_accuracy', 94.3), ('precision', 55.1), ('recall', 34.1), ('fmeasure', 39.2), ('mean_squared_error', 4.8), ('binary_crossentropy', 173.2)] 
+
+INFO : 2017-09-12 18:44:21 at __INIT__ > MODEL ARQUITECTURE
+{
+    "class_name": "Sequential", 
+    "keras_version": "2.0.7", 
+    "config": [
+        {
+            "class_name": "LSTM", 
+            "config": {
+                "recurrent_activation": "hard_sigmoid", 
+                "dtype": "float32", 
+                "trainable": true, 
+                "recurrent_initializer": {
+                    "class_name": "Orthogonal", 
+                    "config": {
+                        "seed": null, 
+                        "gain": 1.0
+                    }
+                }, 
+                "use_bias": true, 
+                "bias_regularizer": null, 
+                "return_state": false, 
+                "unroll": false, 
+                "activation": "tanh", 
+                "bias_initializer": {
+                    "class_name": "Zeros", 
+                    "config": {}
+                }, 
+                "units": 750, 
+                "batch_input_shape": [
+                    null, 
+                    10, 
+                    300
+                ], 
+                "activity_regularizer": null, 
+                "recurrent_dropout": 0.0, 
+                "kernel_initializer": {
+                    "class_name": "VarianceScaling", 
+                    "config": {
+                        "distribution": "uniform", 
+                        "scale": 1.0, 
+                        "seed": null, 
+                        "mode": "fan_avg"
+                    }
+                }, 
+                "kernel_constraint": null, 
+                "dropout": 0.2, 
+                "stateful": false, 
+                "unit_forget_bias": true, 
+                "recurrent_regularizer": null, 
+                "name": "lstm_1", 
+                "bias_constraint": null, 
+                "go_backwards": false, 
+                "implementation": 0, 
+                "kernel_regularizer": null, 
+                "return_sequences": false, 
+                "recurrent_constraint": null
+            }
+        }, 
+        {
+            "class_name": "Dense", 
+            "config": {
+                "kernel_initializer": {
+                    "class_name": "VarianceScaling", 
+                    "config": {
+                        "distribution": "uniform", 
+                        "scale": 1.0, 
+                        "seed": null, 
+                        "mode": "fan_avg"
+                    }
+                }, 
+                "name": "dense_1", 
+                "kernel_constraint": null, 
+                "bias_regularizer": null, 
+                "bias_constraint": null, 
+                "activation": "sigmoid", 
+                "trainable": true, 
+                "kernel_regularizer": null, 
+                "bias_initializer": {
+                    "class_name": "Zeros", 
+                    "config": {}
+                }, 
+                "units": 10, 
+                "use_bias": true, 
+                "activity_regularizer": null
+            }
+        }
+    ], 
+    "backend": "tensorflow"
+} 
+
+INFO : 2017-09-12 19:42:13 at FIT_TAGGED > MODEL EVALUATION
+[('loss', 10.8), ('binary_accuracy', 96.3), ('precision', 66.8), ('recall', 51.8), ('fmeasure', 55.6), ('mean_squared_error', 2.9), ('binary_crossentropy', 88.4)] 
