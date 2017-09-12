@@ -97,8 +97,10 @@ class NeuralNegationTagger:
         print self.model.summary() 
      
      
-    def fit_tagged(self,neg_as,testing_fraction=0.2,verbose=0,early_monitor='val_binary_accuraty'):    
-        opinions = dp.get_tagged('manually').limit(20)
+    def fit_tagged(self,neg_as,testing_fraction=0.2,verbose=0,early_monitor='val_binary_accuraty',limit=None):    
+        opinions = dp.get_tagged('manually')
+        if limit: # Only for testing
+            opinions = opinions.limit(limit)
         total = opinions.count(with_limit_and_skip=True)       
         if total == 0: raise Exception('Nothing to train')
                 
@@ -165,6 +167,7 @@ class NeuralNegationTagger:
         
         while True:
             try:
+                
                 os.system('clear')
                 print '\n\033[4mYOUR SENTENCE\033[0m'
                 sentence = raw_input("> ")
@@ -187,8 +190,10 @@ class NeuralNegationTagger:
                     "%s" % ("\033[91m"+wd+"\033[0m" if tg else wd) 
                     for wd,tg in zip( [text['word'] for text in analized_sentence] , result ) 
                 ])
+                
             except :
-                print 'An error has ocurred during processing. Ensure that your sentence finishes with dot.'  
+                print 'An error has ocurred during processing. Ensure that your sentence finishes with dot.'
+                  
             raw_input("\nPress enter to continue...")
             
 
