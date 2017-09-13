@@ -201,6 +201,7 @@ def update_embeddings(
 def get_word_embedding(word):
     item = db.embeddings.find_one({ "_id" : word })
     if not item:
+        print "Not found",word
         vocabulary = db.embeddings.distinct("_id")
         match = get_close_matches( word , vocabulary , 1 , 0.75 )
         if match: item = db.embeddings.find_one({ "_id" : match[0] })
