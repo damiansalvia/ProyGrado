@@ -198,16 +198,13 @@ def update_embeddings(
     if result: db.embeddings.insert_many(result)
 
 
-vocabulary = db.embeddings.distinct("_id")
 def get_word_embedding(word):
-    if word in vocabulary: 
-        item = db.embeddings.find_one({ "_id" : word })
-    else:
+    item = db.embeddings.find_one({ "_id" : word })
+    if not item:
+        vocabulary = db.embeddings.distinct("_id")
         match = get_close_matches( word , vocabulary , 1 , 0.75 )
-        if match: 
-            item = db.embeddings.find_one({ "_id" : match[0] })
-        else:
-            item = db.embeddings.find_one({ "_id" : "" })
+        if match: item = db.embeddings.find_one({ "_id" : match[0] })
+        else    : item = db.embeddings.find_one({ "_id" : "" })
     return item['embedding']
 
 
