@@ -76,18 +76,28 @@ op = len(config_set) if op.lower() == 'a' else 0
 
 stats = []
 for config in config_set[:op]:
-    ann = nt.NeuralNegationTagger( 
-        config['wleft'], 
-        config['wright'],
+    ann = nt.NeuralNegationTagger( config['wleft'], config['wright'] )    
+    ann.set_model(
         out_dims      = config['out_dims'],
         activation    = config['activation'], 
         loss          = config['loss'],
-        optimizer     = config['optimizer'], 
-        early_monitor = config['early_monitor'], 
+        optimizer     = config['optimizer'],  
         drop_rate     = config['drop_rate'] 
-    )     
+    ) 
+#     ann.load_model( './outputs/models/algo.h5' ) # A modo de ejemplo
     # TO-DO Decidir que hacer con los negadores (null, true o false)
-    stat = ann.fit_tagged( neg_as=False , testing_fraction=0.20 , verbose=1 )
+    stat = ann.fit_tagged( neg_as=False , testing_fraction=0.20 , verbose=1, early_monitor = config['early_monitor'] )
+    ann.save_model( "predict_l%i_r%i_%s_%s_o%s_e%s_d%s" % (
+            config['wleft'],
+            config['wright'],
+            ''.join('d'+str(dim) for dim in config['out_dims']),
+            ''.join(act[0].upper() for act in config['activation']),
+            config['optimizer'][0].upper(),
+            "Y" if config['early_monitor'] else "N",
+            "Y" if config['drop_rate'] else "N"
+        ) 
+    )
+    ann.input_guess() # Interactive
     stats.append(stat)
     ann.predict_untagged( limit = 10, tofile="./outputs/tmp" )
  

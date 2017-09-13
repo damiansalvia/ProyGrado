@@ -1,17 +1,17 @@
 # -*- coding: utf-8 -*-
 import sys
+from Cython.Plex.Regexps import Opt
 sys.path.append('../utilities')
 from utilities import *
 from metrics import precision, recall, fmeasure, cosine, mse, bce, binacc
 
-from keras.models import Sequential
+from keras.models import Sequential, load_model
 from keras.layers import Dense
 from keras.layers.core import Dropout
 from keras.layers.recurrent import LSTM
 from keras.layers.wrappers import Bidirectional
 from keras.callbacks import EarlyStopping
 from keras.utils import to_categorical
-# from keras.utils import plot_model
 
 import DataProvider as dp 
 
@@ -34,26 +34,12 @@ sources = dp.get_sources()
 sources_size = len(sources)
 
 
-
-class NeuralNegationTagger:
+class NeuralNegationTagger: 
      
     def __init__(self,
             wleft,
             wright,
-            out_dims        = [750,500],
-            activation      = ['relu','relu','sigmoid'],
-            loss            = 'binary_crossentropy', 
-            optimizer       = 'adam', 
-            metrics         = [binacc, precision, recall, fmeasure, mse, bce],
-            early_monitor   ='val_binary_accuracy',
-            early_min_delta = 0,
-            early_patience  = 2,
-            early_mode      = 'auto',
-            drop_rate       = [0.2,0.2],
         ):
-        
-        assert len(out_dims) == len(drop_rate)
-        assert len(out_dims)+1 == len(activation)
                     
         # Parameters calculation
         vec_size  = dp.get_size_embedding()        
@@ -62,35 +48,44 @@ class NeuralNegationTagger:
         # Attributes settings
         self.wright = wright
         self.wleft  = wleft
-        self.dim    = input_dim
-        self.name   = "predict_l%i_r%i_%s_%s_o%s_e%s_d%s" % (
-            wleft,
-            wright,
-            ''.join('d'+str(dim) for dim in out_dims),
-            ''.join(act[0].upper() for act in activation),
-            optimizer[0].upper(),
-            "Y" if early_monitor else "N",
-            "Y" if drop_rate else "N"
-        )
+        self.dimension = input_dim
+    
+    
+    def save_model(self,oname,odir = './outputs/models'):
+        odir = odir if odir[-1] != "/" else odir[:-1]
+        if not os.path.isdir(odir): os.makedirs(odir)
+        self.model.save( odir+"/model_%s.h5" % oname )
         
-        # Callbacks settings
-        self.callbacks = []
-        if early_monitor:
-            self.callbacks.append(
-                EarlyStopping(
-                    monitor   = early_monitor,
-                    min_delta = early_min_delta,
-                    patience  = early_patience, 
-                    mode      = early_mode,
-                    verbose   = 0
-                )
-            )
+    
+    def load_model(self,source):
+        self.model = load_model(source , custom_objects={
+            'binary_accuracy':binacc,
+            'precision': precision,
+            'recall':recall,
+            'fmeasure':fmeasure,
+            'mean_squared_error':mse,
+            'binary_crossentropy':bce,
+        })
+    
+    
+    def set_model(self,
+            out_dims        = [750,500],
+            activation      = ['relu','relu','sigmoid'],
+            loss            = 'binary_crossentropy', 
+            optimizer       = 'adam', 
+            metrics         = [binacc, precision, recall, fmeasure, mse, bce],
+            early_monitor   ='val_binary_accuracy',
+            drop_rate       = [0.2,0.2],
+        ):
+        
+        assert len(out_dims) == len(drop_rate)
+        assert len(out_dims)+1 == len(activation)
         
         # Model definition     
         self.model = Sequential()
         
         # Input layer
-        self.model.add( Dense( out_dims[0], input_dim=input_dim, activation=activation[0] ) )
+        self.model.add( Dense( out_dims[0], input_dim=self.dimension, activation=activation[0] ) )
         self.model.add( Dropout( drop_rate[0] , seed=666 ) )
          
         # Intermediate layers
@@ -106,13 +101,27 @@ class NeuralNegationTagger:
         
         # Result
         log('MODEL ARQUITECTURE\n'+self.model.to_json(indent=4),level='info')
-        print self.model.summary()
+        print self.model.summary() 
      
      
-    def fit_tagged(self,neg_as,testing_fraction=0.2,verbose=0):    
+    def fit_tagged(self,neg_as,testing_fraction=0.2,verbose=0,early_monitor='val_binary_accuraty',limit=None):    
         opinions = dp.get_tagged('manually')
+        if limit: # Only for testing
+            opinions = opinions.limit(limit)
         total = opinions.count(with_limit_and_skip=True)       
         if total == 0: raise Exception('Nothing to train')
+                
+        callbacks = []
+        if early_monitor:
+            callbacks.append(
+                EarlyStopping(
+                    monitor   = early_monitor,
+                    min_delta = 0,
+                    patience  = 2, 
+                    mode      = 'auto',
+                    verbose   = 0
+                )
+            )
         
         X , Y = [] , []
         for idx,opinion in enumerate(opinions):
@@ -124,7 +133,7 @@ class NeuralNegationTagger:
         Y = np.array(Y)   
         
         self.model.fit( X, Y, 
-            callbacks=self.callbacks , 
+            callbacks=callbacks , 
             batch_size=32 , epochs=100 , 
             validation_split=testing_fraction , 
             verbose=verbose 
@@ -152,17 +161,48 @@ class NeuralNegationTagger:
                 Y = self.model.predict( X )
                 Y = ( round(Y) == 1 ) # 0 <= Y <= 1 -- Round is ok?
                 results[ opinion['_id'] ].append( Y ) 
-        if tofile: save(results,"%s" % self.name,tofile)
+        if tofile: save(results,"predict_%s" % self.name,tofile)
         #dp.save_negation(result,tagged_as='automatically')
-        return results
+        return results   
     
-     
-    def save(self,odir = './outputs/models'):
-        odir = odir if odir[-1] != "/" else odir[:-1]
-        if not os.path.isdir(odir): os.makedirs(odir)
-        self.model.save( odir+"/model_%s.h5" % self.name )
-#         plot_model( self.model, to_file=odir+'/model_neg_l%i_r%i_d%i.png' % (self.left,self.right,self.dim) , show_shapes=True )    
-
+    
+    def input_guess(self):
+        
+        from analyzer import Analyzer
+        from CorpusReader import review_correction
+        an = Analyzer()
+        
+        while True:
+            try:
+                
+                os.system('clear')
+                print '\n\033[4mYOUR SENTENCE\033[0m'
+                sentence = raw_input("> ")
+                if not sentence: # exit
+                    os.system('clear') ; break
+                sentence = review_correction(sentence)
+                analized_sentence = an.analyze(sentence)
+                analized_sentence = [ {'word': item['form']} for item in analized_sentence ]
+                
+                result = []
+                for X in dp.get_text_embeddings( analized_sentence , self.wleft , self.wright )[0]:
+                    X = X.reshape((1, -1))
+                    Y = self.model.predict( X )
+                    Y = ( round(Y) == 1 )
+                    result.append( Y )
+                
+                os.system('clear') 
+                print '\n\033[4mPREDICTION RESULT\033[0m'        
+                print '>',' '.join([
+                    "%s" % ("\033[91m"+wd+"\033[0m" if tg else wd) 
+                    for wd,tg in zip( [text['word'] for text in analized_sentence] , result ) 
+                ])
+                
+            except :
+                print 'An error has ocurred during processing. Ensure that your sentence finishes with dot.'
+                  
+            raw_input("\nPress enter to continue...")
+            
 
 
 def load_corpus_negation(sources='../../corpus/corpus_variado_sfu_neg/*/*.xml',tofile=None):
@@ -441,7 +481,7 @@ def start_tagging(tofile=None):
                 raw_input("Reason: %s\nEnter to continue..." % str(e))
     
   
-    
+      
 def load_neg_from_files(source_dir):
     sources = glob.glob(source_dir)
     total = len(sources)
@@ -450,6 +490,7 @@ def load_neg_from_files(source_dir):
         content = json.load( open(source) )    
         dp.save_negations(content,tagged_as='manually')        
         
+
 
 def nprint(file):
     tags = json.load(open(file))
