@@ -10,6 +10,23 @@ an = Analyzer()
 import DataProvider as dp
 import NegationTagger
 
+
+def new_model():
+    option = raw_input("\nCreate new model or load saved model [ new / load ] > ").replace(' ','')
+    while True:
+        if option == 'new':
+            return True
+        elif option == 'load':
+            return False
+        option = raw_input("\nCreate new model or load data [ new / load ] > ").replace(' ','')
+
+
+def get_window():
+    window_str = raw_input("Indique la ventana del modelo guardado: ").replace(' ','')
+    while not window_str.isdigit():
+        window_str = raw_input("La ventana debe ser un digito: ").replace(' ','')
+    return (int(window_str))
+
 def get_params(window="dual"):
     def process_value(raw_value):
         if raw_value.startswith('[') and raw_value.endswith(']'):
@@ -74,49 +91,48 @@ def get_params(window="dual"):
     else:
         return wleft, config
 
-
-wleft, wright, config = get_params()
-ANN = NegationTagger.NeuralNegationTagger(wleft,wright,**config)
-ANN.fit_tagged( testing_fraction=0.20 , verbose=1 )
-an = Analyzer()
-raw_input("\nPRESS ENTER TO CONTINUE")
-os.system('clear')
-sentence = raw_input("\nEscriba una frase a analizar o 'exit' para salir > ")
-while sentence != 'exit':
-    try:
-        result = []
-        sentence = review_correction(sentence)
-        analized_sentence = an.analyze(sentence)
-        analized_sentence = [ {'word': item['form']} for item in analized_sentence ]
-        for X in dp.get_text_embeddings( analized_sentence,wleft , wright  )[0]:
-            X = X.reshape((1, -1))
-            Y = ANN.model.predict( X )
-            Y = ( round(Y) == 1 )
-            result.append( Y ) 
-        print '\nRESULTADO:'        
-        print ' '.join(["%s" % ("\033[91m"+wd+"\033[0m" if tg else wd) for wd,tg in \
-        zip([text['word'] for text in analized_sentence], result) ])  
-    except Exception as e:
-        print '-- Ocurrio un error --'
-
-    sentence = raw_input("\n\nEscriba una opinion a analizar o exit para salir > ")
-
 def start_evaluator(predict_function):
     an = Analyzer()
     raw_input("\nPRESS ENTER TO CONTINUE")
     os.system('clear')
     sentence = raw_input("\nEscriba una frase a analizar o 'exit' para salir > ")
     while sentence != 'exit':
-    try:
-        result = []
-        sentence = review_correction(sentence)
-        analized_sentence = an.analyze(sentence)
-        analized_sentence = [ item['form'] for item in analized_sentence ]
+        try:
+            sentence = review_correction(sentence)
+            analized_sentence = [ item['form'] for item in an.analyze(sentence) ]
+            Y = predict_function(analized_sentence)
+            print '\nRESULTADO:'        
+            print ' '.join(["%s" % ("\033[91m"+wd+"\033[0m" if tg else wd) for wd,tg in \
+            zip([text for text in analized_sentence], Y ) ])  
+        except:
+            print '-- Ocurrio un error --'
 
-        Y = predict_function(analized_sentence)
+        sentence = raw_input("\nEscriba una opinion a analizar o exit para salir > ")
 
-        print '\nRESULTADO:'        
-        print ' '.join(["%s" % ("\033[91m"+wd+"\033[0m" if tg else wd) for wd,tg in \
-        zip([text for text in analized_sentence], Y ) ])  
-    except Exception as e:
-        print '-- Ocurrio un error --'
+if __name__ == '__main__':
+
+    wleft, wright, config = get_params()
+    ANN = NegationTagger.NeuralNegationTagger(wleft,wright,**config)
+    ANN.fit_tagged( testing_fraction=0.20 , verbose=1 )
+    an = Analyzer()
+    raw_input("\nPRESS ENTER TO CONTINUE")
+    os.system('clear')
+    sentence = raw_input("\nEscriba una frase a analizar o 'exit' para salir > ")
+    while sentence != 'exit':
+        try:
+            result = []
+            sentence = review_correction(sentence)
+            analized_sentence = an.analyze(sentence)
+            analized_sentence = [ {'word': item['form']} for item in analized_sentence ]
+            for X in dp.get_text_embeddings( analized_sentence,wleft , wright  )[0]:
+                X = X.reshape((1, -1))
+                Y = ANN.model.predict( X )
+                Y = ( round(Y) == 1 )
+                result.append( Y ) 
+            print '\nRESULTADO:'        
+            print ' '.join(["%s" % ("\033[91m"+wd+"\033[0m" if tg else wd) for wd,tg in \
+            zip([text['word'] for text in analized_sentence], result) ])  
+        except Exception as e:
+            print '-- Ocurrio un error --'
+
+        sentence = raw_input("\n\nEscriba una opinion a analizar o exit para salir > ")

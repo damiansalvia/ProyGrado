@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import sys
-from Cython.Plex.Regexps import Opt
 sys.path.append('../utilities')
 from utilities import *
 from metrics import precision, recall, fmeasure, cosine, mse, bce, binacc
