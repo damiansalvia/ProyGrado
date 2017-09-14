@@ -117,59 +117,6 @@ def get_size_embedding():
     return len(db.embeddings.find_one({},{ '_id':0 })['embedding'])
     
 
-def get_word_embedding(word):
-    res = db.embeddings.find_one({ "_id" : word })
-    if res: return res['embedding']
-    raise Exception("Couldn't find embedding for '%s'" % word)
-
-
-def get_text_embeddings(text, wleft, wright, neg_as=None):    
-    size_embedding = get_size_embedding()
-    
-    def get_entry(text, idx):
-        if  0 <= idx < len(text) :
-            return get_word_embedding( text[idx]['word'] )
-        else :
-            return list(np.zeros( size_embedding ))
-    
-    data,pred = [],[]
-    
-    total = len(text)
-    for idx, word in enumerate(text):
-#         progress("Getting embedding",total,idx,end=False)
-        
-        embeddings = []        
-        for i in range(wleft + wright + 1):
-            embeddings += get_entry( text , idx-wleft+i )
-        
-        embeddings = np.array( embeddings ).flatten()
-        data.append( embeddings )
-        
-        if text[idx].has_key('negated'): # for training
-            prediction = text[idx]['negated']
-            if prediction == True:
-                prediction = 1
-            elif prediction == False:
-                prediction = 0
-            elif neg_as == True:
-                prediction = 1
-            elif neg_as == False:
-                prediction = 0
-            else: # prediction=None and neg_as=None
-                prediction = 2
-            pred.append( prediction )
-            
-    return data, pred
-
-
-def get_soruce_vocabulary(source):
-    return list(db.reviews.aggregate([
-        { '$match': {'source': source}},
-        { '$unwind': "$text" },
-        { '$group': { '_id':'$text.lemma' } }
-     ]))
-
-
 def update_embeddings(
         femb='../../embeddings/emb39-word2vec.npy',
         ftok='../../embeddings/emb39-word2vec.txt',
@@ -249,6 +196,64 @@ def update_embeddings(
     
     # Save results in database
     if result: db.embeddings.insert_many(result)
+
+
+def get_word_embedding(word):
+    item = db.embeddings.find_one({ "_id" : word })
+    if not item:
+        print "Not found",word
+        vocabulary = db.embeddings.distinct("_id")
+        match = get_close_matches( word , vocabulary , 1 , 0.75 )
+        if match: item = db.embeddings.find_one({ "_id" : match[0] })
+        else    : item = db.embeddings.find_one({ "_id" : "" })
+    return item['embedding']
+
+
+def get_text_embeddings(text, wleft, wright, neg_as=None):    
+    size_embedding = get_size_embedding()
+    
+    def get_entry(text, idx):
+        if  0 <= idx < len(text) :
+            return get_word_embedding( text[idx]['word'] )
+        else :
+            return list(np.zeros( size_embedding ))
+    
+    data,pred = [],[]
+    
+    total = len(text)
+    for idx, word in enumerate(text):
+#         progress("Getting embedding",total,idx,end=False)
+        
+        embeddings = []        
+        for i in range(wleft + wright + 1):
+            embeddings += get_entry( text , idx-wleft+i )
+        
+        embeddings = np.array( embeddings ).flatten()
+        data.append( embeddings )
+        
+        if text[idx].has_key('negated'): # for training
+            prediction = text[idx]['negated']
+            if prediction == True:
+                prediction = 1
+            elif prediction == False:
+                prediction = 0
+            elif neg_as == True:
+                prediction = 1
+            elif neg_as == False:
+                prediction = 0
+            else: # prediction=None and neg_as=None
+                prediction = 2
+            pred.append( prediction )
+            
+    return data, pred
+
+
+def get_soruce_vocabulary(source):
+    return list(db.reviews.aggregate([
+        { '$match': {'source': source}},
+        { '$unwind': "$text" },
+        { '$group': { '_id':'$text.lemma' } }
+     ]))
 
 # ----------------------------------------------------------------------------------------------------------------------
 
