@@ -124,7 +124,7 @@ def update_embeddings(
         verbose=False
     ):
       
-    stats = { "ByWord":0,"ByClosest":0,"IsNull":0,"Fails":0,"Total":0 }
+    stats = { "ByWord":0,"ByRepl":0,"ByClos":0,"IsNull":0,"Fails":0,"Total":0 }
     
     # Load vectors and its words
     content     = open(ftok).read().lower().replace("_","")
@@ -142,9 +142,9 @@ def update_embeddings(
     # Get difference of vector-words and vocabulary-words for improving get_close_matches performance 
     # PROBLEM: 'pizería' could be excluded and 'pizerías' (in the vocabulary) won't have a closest match
     dif_keys = set(index_for.keys()) - set(vocabulary)
-#     mean_word_len = sum(len(w) for w in vocabulary)/len(vocabulary)
-#     dif_keys = dif_keys - set( word for word in index_for.keys() if len(word) >= mean_word_len-1 and len(word) <= mean_word_len+1 )
     for key in list(dif_keys): index_for.pop(key,None)
+    
+    replaces = {u'a':u'á',u'e':u'é',u'i':u'í',u'o':u'ó',u'u':u'ú'}
     
     def get_vectors( # Get the associated vector of a word and its match (null if it is the same or null vector)
             word
@@ -155,13 +155,20 @@ def update_embeddings(
         if index_for.has_key(word):
             stats['ByWord'] += 1
             return None , embeddings[ index_for[ word ] ]
+        
+        vowels = {idx:char for idx,char in enumerate(word) if char in 'aeiou'}
+        for idx in vowels:
+            replaced = word[:idx]+replaces[vowels[idx]]+word[idx+1:]
+            if index_for.has_key(replaced):
+                stats['ByRepl'] += 1
+                return replaced , embeddings[ index_for[ replaced ] ]
 
         size = len(word)
         if size > 1 and size < 20 and ('_' not in word): # Prevents unnecessary calculation
             possibilities = filter( lambda x: size-2 < len(x) < size+2 , index_for.keys() )
             match = get_close_matches( word , possibilities , 1 , 0.75 )
             if match:
-                stats['ByClosest'] += 1
+                stats['ByClos'] += 1
                 return match[0] , embeddings[ index_for[ match[0] ] ]
         
 #         if size > 1 and size < 20 and not any( map( lambda chr : chr.isdigit() , word ) ):
@@ -176,7 +183,7 @@ def update_embeddings(
     total = len(vocabulary)
     
     for idx,word in enumerate(vocabulary):
-        progress("Updating embeddings (%i,%i,%i)" % ( stats['ByWord'],stats['ByClosest'],stats['IsNull'] ),total,idx)
+        progress("Updating embeddings (%i,%i,%i,%i)" % ( stats['ByWord'],stats['ByRepl'],stats['ByClos'],stats['IsNull'] ),total,idx)
         if not db.embeddings.find_one({'_id':word}):
             nearest , vector = get_vectors( word )
             result.append({ 
