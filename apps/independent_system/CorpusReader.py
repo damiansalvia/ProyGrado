@@ -21,10 +21,10 @@ SUBSTITUTIONS = [
     (u"å",u"a"), (u"ç",u"c"),
     # Eliminate english contractions
     (u"(\w)'(\w)",u"\\1\\2"),
-    # Replace other non-spanish characters
-    (u"[`´\']",u"\""),
-    (u"\u201c",u"\""),(u"\u201d",u"\""),    # “ and ” in unicode 
-    ("\xc2\x93",u"\""),("\xc2\x94",u"\""),  # “ and ” in win1252
+    # Replace quotes variants by double quotes
+    (u"`",u"\""),(u"´",u"\""),(u"\'",u"\""),
+    (u"[\u201c\u201d]",u"\""),
+    ("\xc2\x93",u"\""),("\xc2\x94",u"\""),
     # Replace multiple periods by one
     (u"(\.\s*)+",u"."),
     # Replace every occurrence of repetitive characters except {l,r,c,e} [cabaLLo, coRRer, aCCion, crEE]
