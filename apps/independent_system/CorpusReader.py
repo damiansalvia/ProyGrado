@@ -22,7 +22,9 @@ SUBSTITUTIONS = [
     # Eliminate english contractions
     (u"(\w)'(\w)",u"\\1\\2"),
     # Replace other non-spanish characters
-    (u"`",u"\""),(u"´",u"\""),(u"\'",u"\""),
+    (u"[`´\']",u"\""),
+    (u"\u201c",u"\""),(u"\u201d",u"\""),    # “ and ” in unicode 
+    ("\xc2\x93",u"\""),("\xc2\x94",u"\""),  # “ and ” in win1252
     # Replace multiple periods by one
     (u"(\.\s*)+",u"."),
     # Replace every occurrence of repetitive characters except {l,r,c,e} [cabaLLo, coRRer, aCCion, crEE]
@@ -34,6 +36,8 @@ SUBSTITUTIONS = [
     (u":\(",u" emoji_triste "),(u"\):",u" emoji_triste "),
     # Remove URIs with scheme http or https
     (u"(https?:\/\/\S+)",u""),
+    # Remove special marks
+    (u"<(.*?)\s.*?>(.*?)</\\1>",u"\\2"),
     # Separate alphabetical character from non-alphabetical character by a blank space
     (u"(?i)([0-9a-záéíóúñüÁÉÍÓÚÑÜ\\\]?)([^0-9a-záéíóúñüÁÉÍÓÚÑÜ_\\\\s]+)([0-9a-záéíóúñüÁÉÍÓÚÑÜ\\\]?)",u"\\1 \\2 \\3"),
     # Remove redundant quote marks  -- replace, delete, undo
