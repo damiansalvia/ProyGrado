@@ -146,7 +146,7 @@ def config_set_parsing():
         {
             'source'            :"../../corpus/corpus_emotiblog",
             'path_pattern'      :"*.xml",
-            'review_pattern'    :"\#>(.*?)(?:(?:\.</phrase>)|(?:</phrase>\.))",
+            'review_pattern'    :"\#>(.*?)\..*?</phrase>",
             'category_pattern'  :"<phrase.*?polarity=\"(.*?)\"",
             'category_mapping'  :{
                 'negative': 0,
