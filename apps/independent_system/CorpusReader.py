@@ -24,7 +24,8 @@ SUBSTITUTIONS = [
     # Replace quotes variants by double quotes
     (u"`",u"\""),(u"´",u"\""),(u"\'",u"\""),
     (u"[\u201c\u201d]",u"\""),
-    ("\xc2\x93",u"\""),("\xc2\x94",u"\""),
+    (u'\u2026',u'...'),
+#     ("\xc2\x93",u"\""),("\xc2\x94",u"\""),
     # Replace multiple periods by one
     (u"(\.\s*)+",u"."),
     # Replace every occurrence of repetitive characters except {l,r,c,e} [cabaLLo, coRRer, aCCion, crEE]
@@ -36,8 +37,6 @@ SUBSTITUTIONS = [
     (u":\(",u" emoji_triste "),(u"\):",u" emoji_triste "),
     # Remove URIs with scheme http or https
     (u"(https?:\/\/\S+)",u""),
-    # Remove special marks
-    (u"<(.*?)\s.*?>(.*?)</\\1>",u"\\2"),
     # Separate alphabetical character from non-alphabetical character by a blank space
     (u"(?i)([0-9a-záéíóúñüÁÉÍÓÚÑÜ\\\]?)([^0-9a-záéíóúñüÁÉÍÓÚÑÜ_\\\\s]+)([0-9a-záéíóúñüÁÉÍÓÚÑÜ\\\]?)",u"\\1 \\2 \\3"),
     # Remove redundant quote marks  -- replace, delete, undo
@@ -50,7 +49,7 @@ SUBSTITUTIONS = [
     (u"[\(\)]",u""),
     (u"&lquo;",u"("),(u"&rquo;",u")"), 
     # Replace all non-alphabetical or special symbols by a whitespace
-    (u"(?i)[^0-9a-záéíóúñüÁÉÍÓÚÑÜ_¿\?¡!\(\),\.:;\"\$/]",u" "),
+    (u"(?i)[^0-9a-záéíóúñüÁÉÍÓÚÑÜ_¿\?¡!\(\),\.:;\"\$/<>]",u" "),
     # Replace multiple blank spaces by one
     (u"(\s){2,}",u" ")
 ]
@@ -59,11 +58,20 @@ SUBSTITUTIONS = [
 def review_correction( # Apply simple pattern correction in the input text
         text # Text for applying the correction.
     ):
+    # Encode
+    text = text.decode('utf8')
     if not isinstance(text,unicode):
         text = unicode(text,'utf8')
+    # Correct
     text += u" ."
     for source,target in SUBSTITUTIONS:
         text = re.sub(source,target,text,flags=re.DOTALL)
+    # Tags treatement (such as embedded tags and residual tags)
+    pattern = u"<\s(.*?)\s.*?>(.*?)</\s\\1\s>" 
+    while re.search(pattern, text, flags=re.DOTALL):
+        text = re.sub(pattern,u"\\2",text,flags=re.DOTALL)
+    text = re.sub(u"<.*?>",u"",text,flags=re.DOTALL)
+    # Normalize
     text = text.lower() 
     return text    
 
@@ -169,6 +177,14 @@ def from_corpus(
         progress("Generating %s" % corpus_name,total,idx)
         rev = revs[idx]
         cat = cats[idx]
+        if "polarity" in review_correction(rev):
+            print
+            print pattern
+            print
+            print rev
+            print
+            print review_correction(rev)
+            import pdb;pdb.set_trace()
         if rev:
             opinion_data.append({
                 'idx'      : idx+1,

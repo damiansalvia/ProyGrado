@@ -146,7 +146,7 @@ def config_set_parsing():
         {
             'source'            :"../../corpus/corpus_emotiblog",
             'path_pattern'      :"*.xml",
-            'review_pattern'    :"\#>(.*?)\..*?</phrase>",
+            'review_pattern'    :"\#>(.*?)\.?<\/phrase>\.?",
             'category_pattern'  :"<phrase.*?polarity=\"(.*?)\"",
             'category_mapping'  :{
                 'negative': 0,
@@ -157,7 +157,7 @@ def config_set_parsing():
             'category_position' :"BEFORE",
             'category_level'    : None,
             'start'             : 0,
-            'decoding'          :'windows-1252'
+            'decoding'          :'cp1252'
         }
 ] 
     
