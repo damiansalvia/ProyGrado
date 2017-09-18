@@ -25,7 +25,9 @@ WIDTH = int(tmp[1])-15 if tmp else 100
 
 log = Log("./log")
 
-
+DEFAULT_LAYER_SIZE = 750
+DEFAULT_DROPOUT    = 0.2
+DEFAUTL_ACTIVATION = 'relu'
 
 sources = dp.get_sources()
 sources_size = len(sources)
@@ -57,17 +59,23 @@ class ANN:
             'binary_crossentropy':bce,
         })
     
-    
+    # LEYER DEFINITION:
+    # {
+    #     'units'            : <Int>, 
+    #     'activation'       : <String>,
+    #     'dropout'          : <Double>,
+    #     'bias'             : <Boolean>,
+    #     'recurrent_dropout': <Double>
+    # }
     def set_model( self,
-            activation      ='relu',
-            metrics         =[binacc, precision, recall, fmeasure, mse, bce],
-            loss            ='binary_crossentropy', 
-            optimizer       ='adam', 
-            early_monitor   ='val_binary_accuracy',
-            early_min_delta = 0,
-            early_patience  = 2,
-            early_mode      ='auto',
-            drop_rate       = 0.2
+            hidden_leyers   = [{'units':750, 'activation': 'relu', 'dropout': 0.2 }],
+            metrics         = [binacc, precision, recall, fmeasure, mse, bce],
+            loss            = 'binary_crossentropy', 
+            optimizer       = 'adam', 
+            early_monitor   = 'val_binary_accuracy',
+            early_min_delta =  0,
+            early_patience  =  2,
+            early_mode      = 'auto',
         ):
         
         # Callbacks settings
@@ -88,7 +96,21 @@ class ANN:
         # Model definition     
         self.model = Sequential()
 
-        self.model.add( LSTM(750, activation=activation, dropout=drop_rate ,  input_shape=(self.window, self.vec_size), use_bias=True ) )
+        for idx,layer in enumerate(hidden_leyers):
+            conf = {
+                    'activation'        : layer.get('activation',DEFAUTL_ACTIVATION), 
+                    'dropout'           : layer.get('dropout', DEFAULT_DROPOUT) ,  
+                    'use_bias'          : layer.get('bias',True),
+                    'recurrent_dropout' : layer.get('recurrent_dropout', 0.0),
+                    'return_sequences'  : idx == len(hidden_leyers)
+            }
+            if idx != len(hidden_leyers) -1:
+                conf['return_sequences']  = True
+            if idx == 0:
+                conf['input_shape'] = (self.window, self.vec_size)
+            self.model.add( 
+                LSTM(layer.get('units',DEFAULT_LAYER_SIZE), **conf)
+            )
         
         # Output layer
         self.model.add( Dense( window, activation='sigmoid') )

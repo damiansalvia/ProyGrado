@@ -6,10 +6,6 @@ sys.path.append('../utilities')
 
 from analyzer import Analyzer
 from CorpusReader import review_correction
-an = Analyzer()
-import DataProvider as dp
-import NegationTagger
-
 
 def new_model():
     option = raw_input("\nCreate new model or load saved model [ new / load ] > ").replace(' ','')
@@ -34,7 +30,10 @@ def get_params(window="dual"):
         elif raw_value.isdigit():
             return int(raw_value)
         else:
-            return raw_value
+            try:
+                return float(raw_value)
+            except ValueError:
+                return raw_value
 
     os.system('clear')
 
@@ -54,38 +53,71 @@ def get_params(window="dual"):
             wleft_str = raw_input("La ventana debe ser un digito: ").replace(' ','')
         wleft= (int(wleft_str))
 
-    option = raw_input("\nOpciones ('help' por ayuda) >").replace(' ','')
     config = {}   
+    option = raw_input("Hiperparametros ('help' por ayuda) >").replace(' ','')
     while option:
         if option == 'help':
             print ('''
-            Las siguiente opciones son validas:
+    Los siguientes hiperparametros son validao:
 
-                out_dims
-                activation
-                loss
-                optimizer
-                metrics
-                early_monitor
-                early_min_delta
-                early_patience
-                early_mode
-                drop_rate
+        metrics
+        loss
+        optimizer
+        early_monitor
+        early_min_delta
+        early_patience
+        early_mode
 
-            Se debe escribir con el formato <option> : <value>
-            Oprima enter para continuar.''')
+    Se debe escribir con el formato <hiperparametro> : <valor>
+    Oprima 'Enter' para continuar.''')
         else:
             try:
                 key, raw_value = option.split(':') 
                 assert key and raw_value
-                assert key in ['out_dims', 'activation', 'loss', 'optimizer', 'metrics', 'early_monitor', 
+                assert key in ['loss', 'optimizer', 'metrics', 'early_monitor', 
                     'early_min_delta', 'early_patience', 'early_mode']
                 value = process_value(raw_value)
                 config[key] = value
             except:
                 print "invalid Option"
         option = raw_input(">").replace(' ','') 
-        os.system('clear')
+    os.system('clear')
+    print 
+    new_layer = True
+    layers = []
+    layer_number = 1
+    while new_layer:
+        layer = {}
+        print 'Capa oculta #' + str(layer_number)
+        layer_number += 1
+        option = raw_input("Parametros capa oculta ('help' por ayuda) > ").replace(' ','')
+        while option:
+            if option == 'help':
+                print ('''
+    Los siguientes parametros son validos:
+
+        units              : <Int>, 
+        activation         : <String>,
+        dropout            : <Double>,
+        bias               : <Boolean>,
+        recurrent_dropout  : <Double>
+
+    Se debe escribir con el formato <parametro> : <valor>
+    Oprima 'Enter' para continuar.''')
+            else:
+                try:
+                    key, raw_value = option.split(':') 
+                    assert key and raw_value
+                    assert key in ['units', 'activation', 'dropout', 'bias', 'recurrent_dropout']
+                    value = process_value(raw_value)
+                    layer[key] = value
+                except:
+                    print "invalid Option"
+            option = raw_input(">").replace(' ','') 
+        layers.append(layer)
+        new_layer = raw_input('Desea agregar una nueva capa? [ Y / n ] > ').replace(' ','') in ['y','Y']
+    config['hidden_leyers'] = layers
+    os.system('clear')
     if window == 'dual':
         return wleft, wright, config
     else:
@@ -109,30 +141,3 @@ def start_evaluator(predict_function):
 
         sentence = raw_input("\nEscriba una opinion a analizar o exit para salir > ")
 
-if __name__ == '__main__':
-
-    wleft, wright, config = get_params()
-    ANN = NegationTagger.NeuralNegationTagger(wleft,wright,**config)
-    ANN.fit_tagged( testing_fraction=0.20 , verbose=1 )
-    an = Analyzer()
-    raw_input("\nPRESS ENTER TO CONTINUE")
-    os.system('clear')
-    sentence = raw_input("\nEscriba una frase a analizar o 'exit' para salir > ")
-    while sentence != 'exit':
-        try:
-            result = []
-            sentence = review_correction(sentence)
-            analized_sentence = an.analyze(sentence)
-            analized_sentence = [ {'word': item['form']} for item in analized_sentence ]
-            for X in dp.get_text_embeddings( analized_sentence,wleft , wright  )[0]:
-                X = X.reshape((1, -1))
-                Y = ANN.model.predict( X )
-                Y = ( round(Y) == 1 )
-                result.append( Y ) 
-            print '\nRESULTADO:'        
-            print ' '.join(["%s" % ("\033[91m"+wd+"\033[0m" if tg else wd) for wd,tg in \
-            zip([text['word'] for text in analized_sentence], result) ])  
-        except Exception as e:
-            print '-- Ocurrio un error --'
-
-        sentence = raw_input("\n\nEscriba una opinion a analizar o exit para salir > ")
