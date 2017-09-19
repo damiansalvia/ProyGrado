@@ -165,12 +165,12 @@ class ANN:
         return scores
             
     
-    def predict_untagged(self,tofile=None):
-        opinions = list(dp.get_untagged())
+    def predict_untagged(self,tofile=None,limit=None):
+        opinions = dp.get_untagged(limit=10,seed=1)
         results = {}
-        total = len(opinions)#opinions.count(with_limit_and_skip=True)
+        total = opinions.count(with_limit_and_skip=True)
         for idx,opinion in enumerate(opinions): 
-            progress("Predicting on new data",total,idx)
+            progress("Predicting on new data (%i words)" % len(opinion['text']),total,idx)
             results[ opinion['_id'] ] = []
 
             x_curr = [np.array(dp.get_word_embedding(token['word'])) for token in opinion['text'] ]
@@ -186,7 +186,7 @@ class ANN:
                 print 'ERROR'
             results[ opinion['_id'] ] = Y.tolist()[:len(opinion['text'])]
         
-        if tofile: save(results,"predict_untagged_LMST_window_%i" % (self.windows),tofile)
+        if tofile: save(results,"predict_untagged_LMST_window_%i" % (self.window),tofile)
         dp.save_negations(results,tagged_as='automatically')
         return results
     
