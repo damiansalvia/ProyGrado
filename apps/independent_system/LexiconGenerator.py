@@ -1,17 +1,91 @@
 # -*- coding: utf-8 -*-
 import sys
+from _collections import defaultdict
 sys.path.append('../utilities')
 from utilities import *
 
 from DataProvider import db
 import DataProvider as dp
 import numpy as np
+from sklearn.feature_extraction.text import TfidfVectorizer
 
 
 SOURCE = 'corpus_apps_android'
 output_dir = 'outputs/tmp/'
 
 
+def get_indepentent_lexicon_by_senti_tfidf(limit=None,useNeg=True,tolerance=0.0,threshold=1e-3):
+    
+    reviews = db.reviews.find({})
+    
+    lemmas  = db.reviews.distinct("text.lemma")
+    index = { lemma:idx for idx,lemma in enumerate(lemmas) }
+    size = len(index)
+    
+    pos_reviews = db.reviews.find({"category":{ "$gt":50 }})
+    neg_reviews = db.reviews.find({"category":{ "$lt":50 }})
+    
+    P = pos_reviews.count() * 1.0
+    N = neg_reviews.count() * 1.0
+    
+    Pctd = np.zeros(size)
+    Pt   = np.zeros(size)
+    Nctd = np.zeros(size)
+    Nt   = np.zeros(size)
+    
+    total = pos_reviews.count() + neg_reviews.count()
+    
+    for idx,review in enumerate(pos_reviews):
+        progress("Building Senti-TFIDF matrix",total,idx)
+        visited = defaultdict(lambda:0)
+        for item in review['text']: 
+            visited[ item['lemma'] ] += 1
+        for i,lemma in enumerate(visited.keys()):
+            value = visited[lemma]
+            negated = useNeg and review['text'][i].has_key('negated') and review['text'][i]['negated']
+            Pctd[ index[lemma] ] += value if not negated else 0
+            Pt  [ index[lemma] ] += 1 if not negated else 0
+            Nctd[ index[lemma] ] += value if negated else 0
+            Nt  [ index[lemma] ] += 1 if negated else 0
+            
+    offset = idx
+    
+    for idx,review in enumerate(neg_reviews):
+        progress("Building Senti-TFIDF matrix",total,offset+idx)
+        visited = defaultdict(lambda:0)
+        for item in review['text']: 
+            visited[ item['lemma'] ] += 1
+        for i,lemma in enumerate(visited.keys()):
+            value = visited[lemma]
+            negated = useNeg and review['text'][i].has_key('negated') and review['text'][i]['negated']
+            Nctd[ index[lemma] ] += value if not negated else 0
+            Nt  [ index[lemma] ] += 1 if not negated else 0
+            Pctd[ index[lemma] ] += value if negated else 0
+            Pt  [ index[lemma] ] += 1 if negated else 0
+    
+    POSt = Pctd * np.log2(P/(Pt+1e-10))
+    NEGt = Nctd * np.log2(N/(Nt+1e-10))
+    
+    LDT = np.log2( (POSt+1e-4) / (NEGt+1e-4) )
+    where_are_NaNs = np.isnan(LDT)
+    LDT[where_are_NaNs] = 0.0
+    
+    lexicon = {lemmas[idx]:pol for idx,pol in enumerate(LDT)}
+    
+    if limit:
+        lexicon = dict( sorted(lexicon.items(), key=lambda x: abs(x[1]), reverse=True)[:limit] )
+            
+    for lemma in lexicon:
+        pol = lexicon[lemma]
+        if pol < -threshold:
+            lexicon[ lemma ] = "NEG"
+        elif pol > threshold:
+            lexicon[ lemma ] = "POS"
+        else:
+            lexicon[ lemma ] = "NEU"
+            
+    return lexicon
+     
 
 # -----------------------------------------------------------------------------------------------------------
 
@@ -71,9 +145,9 @@ def get_indepentent_lexicon_by_polarity_matrices(limit=None, tolerance=0.0, wind
         for idx in range(total):
             progress("Assigning polarities in words for %s" % source,total,idx)
             if np.linalg.norm(pos_matrix[idx]) - np.linalg.norm(neg_matrix[idx]) > 0:
-                polarities[vocabulary[idx]] = '+'
+                polarities[vocabulary[idx]] = 'POS'
             else:
-                polarities[vocabulary[idx]] = '-'
+                polarities[vocabulary[idx]] = 'NEG'
 
     return { pol: polarities[pol][0] \
         for pol in polarities.keys() if len(polarities[pol])>= min_matches and all_equal(polarities[pol])}
@@ -104,9 +178,9 @@ def get_indepentent_lexicon_by_average(limit=None, tolerance=0.0, filter_neutral
                 'polarities' : {
                     '$push' : {
                         '$switch' : { 'branches' : [
-                            {'case' : { '$gte' : ['$sent', 60] }, 'then': '+'},    
-                            {'case' : { '$lte' : ['$sent', 30] }, 'then': '-'},    
-                            {'case' : True, 'then': '0'},    
+                            {'case' : { '$gte' : ['$sent', 60] }, 'then': 'POS'},    
+                            {'case' : { '$lte' : ['$sent', 30] }, 'then': 'NEG'},    
+                            {'case' : True, 'then': 'NEU'},    
                         ]}
                     }
                 }
@@ -138,7 +212,7 @@ def get_indepentent_lexicon_by_average(limit=None, tolerance=0.0, filter_neutral
     ] 
 
     if filter_neutral:
-        query.append({ '$match' : {'pol': {'$ne': '0'} } })
+        query.append({ '$match' : {'pol': {'$ne': 'NEU'} } })
         
     query.extend([
         { '$project' : {'_id': 0, 'accepted' : 0} },
@@ -216,9 +290,9 @@ def get_indepentent_lexicon_by_weight_function(limit=None, tolerance=0.0, filter
                 'polarities' : {
                     '$push' : {
                         '$switch' : { 'branches' : [
-                            {'case' : { '$gt' : ['$sent', 0] }, 'then': '+'},    
-                            {'case' : { '$lt' : ['$sent', 0] }, 'then': '-'},    
-                            {'case' : True, 'then': '0'},    
+                            {'case' : { '$gt' : ['$sent', 0] }, 'then': 'POS'},    
+                            {'case' : { '$lt' : ['$sent', 0] }, 'then': 'NEG'},    
+                            {'case' : True, 'then': 'NEU'},    
                         ]}
                     }
                 }
@@ -250,7 +324,7 @@ def get_indepentent_lexicon_by_weight_function(limit=None, tolerance=0.0, filter
     ] 
 
     if filter_neutral:
-        query.append({ '$match' : {'pol': {'$ne': '0'} } })
+        query.append({ '$match' : {'pol': {'$ne': 'NEU'} } })
         
     query.extend([
         { '$project' : {'_id': 0, 'accepted' : 0} },
@@ -291,6 +365,8 @@ def get_independent_lexicon_by_rules(treshold=0.9):
 
 
 if __name__ == '__main__':
+    print ' --------------------------- SENTI-TFIDF ----------------------------'
+    print get_indepentent_lexicon_by_senti_tfidf(limit=20,threshold=0.1)
     print ' ----------------------------- MATRICES -----------------------------'
     print get_indepentent_lexicon_by_polarity_matrices(limit=20, tolerance=0.8)
     print ' ----------------------------- AVERAGE ------------------------------'
