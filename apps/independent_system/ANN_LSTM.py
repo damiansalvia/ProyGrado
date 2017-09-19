@@ -171,20 +171,17 @@ class ANN:
         total = opinions.count(with_limit_and_skip=True)
         for idx,opinion in enumerate(opinions): 
             progress("Predicting on new data (%i words)" % len(opinion['text']),total,idx)
-            results[ opinion['_id'] ] = []
-
             x_curr = [np.array(dp.get_word_embedding(token['word'])) for token in opinion['text'] ]
             rest = self.window - len(x_curr) % self.window 
             if rest > 0:
                 x_curr.extend([self.end_vecotr for i in range(rest)])
 
             X = np.array([ x_curr[i*self.window : (i+1)*self.window] for i in range(len(x_curr)/self.window) ])
-            try :
-            
+            try :            
                 Y = self.model.predict( X ).flatten()
             except:
                 print 'ERROR'
-            results[ opinion['_id'] ] = Y.tolist()[:len(opinion['text'])]
+            results[ opinion['_id'] ] =  [ round(y) == 1 for y in Y.tolist()[:len(opinion['text'])] ]
         
         if tofile: save(results,"predict_untagged_LMST_window_%i" % (self.window),tofile)
         dp.save_negations(results,tagged_as='automatically')
