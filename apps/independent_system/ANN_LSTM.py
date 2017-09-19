@@ -166,9 +166,9 @@ class ANN:
             
     
     def predict_untagged(self,tofile=None):
-        opinions = dp.get_untagged()
+        opinions = list(dp.get_untagged())
         results = {}
-        total = opinions.count(with_limit_and_skip=True)
+        total = len(opinions)#opinions.count(with_limit_and_skip=True)
         for idx,opinion in enumerate(opinions): 
             progress("Predicting on new data",total,idx)
             results[ opinion['_id'] ] = []
@@ -187,6 +187,7 @@ class ANN:
             results[ opinion['_id'] ] = Y.tolist()[:len(opinion['text'])]
         
         if tofile: save(results,"predict_untagged_LMST_window_%i" % (self.windows),tofile)
+        dp.save_negations(results,tagged_as='automatically')
         return results
     
     def predict_opinion(self, opinion):
@@ -210,4 +211,6 @@ if __name__ == '__main__':
         ann = ANN(get_window())
         ann.load_model('./outputs/models/model_LSTM.h5')
     start_evaluator(ann.predict_opinion)
+    if raw_input("Predict all? > "):
+        ann.predict_untagged(tofile="./outputs/tmp")
         
