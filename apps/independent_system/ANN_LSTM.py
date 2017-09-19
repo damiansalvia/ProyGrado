@@ -166,7 +166,7 @@ class ANN:
             
     
     def predict_untagged(self,tofile=None,limit=None):
-        opinions = dp.get_untagged(limit=10,seed=1)
+        opinions = dp.get_untagged(limit=limit)
         results = {}
         total = opinions.count(with_limit_and_skip=True)
         for idx,opinion in enumerate(opinions): 
