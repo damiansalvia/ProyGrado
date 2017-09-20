@@ -7,83 +7,71 @@ from utilities import *
 from DataProvider import db
 import DataProvider as dp
 import numpy as np
-from sklearn.feature_extraction.text import TfidfVectorizer
 
 
 SOURCE = 'corpus_apps_android'
 output_dir = 'outputs/tmp/'
 
 
-def get_indepentent_lexicon_by_senti_tfidf(limit=None,useNeg=True,tolerance=0.0,threshold=1e-3):
+def get_indepentent_lexicon_by_senti_tfidf(limit=None,useNeg=True,tolerance=0.0,ratio=1,threshold=0.3):
     
-    reviews = db.reviews.find({})
+    reviews = db.reviews.find({},no_cursor_timeout=True)
     
     lemmas  = db.reviews.distinct("text.lemma")
     index = { lemma:idx for idx,lemma in enumerate(lemmas) }
-    size = len(index)
     
-    pos_reviews = db.reviews.find({"category":{ "$gt":50 }})
-    neg_reviews = db.reviews.find({"category":{ "$lt":50 }})
+    P = db.reviews.find({"category":{ "$gt":50 }}).count() * 1.0
+    N = db.reviews.find({"category":{ "$lt":50 }}).count() * 1.0
     
-    P = pos_reviews.count() * 1.0
-    N = neg_reviews.count() * 1.0
+    size = len(lemmas)
     
     Pctd = np.zeros(size)
-    Pt   = np.zeros(size)
     Nctd = np.zeros(size)
-    Nt   = np.zeros(size)
-    
-    total = pos_reviews.count() + neg_reviews.count()
-    
-    for idx,review in enumerate(pos_reviews):
-        progress("Building Senti-TFIDF matrix",total,idx)
-        visited = defaultdict(lambda:0)
-        for item in review['text']: 
-            visited[ item['lemma'] ] += 1
-        for i,lemma in enumerate(visited.keys()):
-            value = visited[lemma]
-            negated = useNeg and review['text'][i].has_key('negated') and review['text'][i]['negated']
-            Pctd[ index[lemma] ] += value if not negated else 0
-            Pt  [ index[lemma] ] += 1 if not negated else 0
-            Nctd[ index[lemma] ] += value if negated else 0
-            Nt  [ index[lemma] ] += 1 if negated else 0
+     
+    total = reviews.count()
+    for jth,review in enumerate(reviews):
+        progress("Building Senti-TFIDF (%i words)" % len(review['text']),total,jth)
+        
+        cat = review['category']
+        
+        for item in review['text']:
+            neg = useNeg and item.has_key('negated') and item['negated']
             
-    offset = idx
+            ith = index[ item['lemma'] ]
+            
+            if (cat > 50 and not neg) or (cat < 50 and neg):
+                Pctd[ith] += 1
+                continue
+            
+            if (cat < 50 and not neg) or (cat > 50 and neg):
+                Nctd[ith] += 1
+                continue
     
-    for idx,review in enumerate(neg_reviews):
-        progress("Building Senti-TFIDF matrix",total,offset+idx)
-        visited = defaultdict(lambda:0)
-        for item in review['text']: 
-            visited[ item['lemma'] ] += 1
-        for i,lemma in enumerate(visited.keys()):
-            value = visited[lemma]
-            negated = useNeg and review['text'][i].has_key('negated') and review['text'][i]['negated']
-            Nctd[ index[lemma] ] += value if not negated else 0
-            Nt  [ index[lemma] ] += 1 if not negated else 0
-            Pctd[ index[lemma] ] += value if negated else 0
-            Pt  [ index[lemma] ] += 1 if negated else 0
+    reviews.close()
     
-    POSt = Pctd * np.log2(P/(Pt+1e-10))
-    NEGt = Nctd * np.log2(N/(Nt+1e-10))
+    Pt = (Pctd != 0)
+    Nt = (Nctd != 0)
     
-    LDT = np.log2( (POSt+1e-4) / (NEGt+1e-4) )
-    where_are_NaNs = np.isnan(LDT)
+    POSt = Pctd * np.log2( P / (Pt + 1e-10 ) )
+    NEGt = Nctd * np.log2( N / (Nt + 1e-10 ) )
+    
+    LDT = np.log2( POSt / (NEGt + 1e-10) )
+    where_are_NaNs = np.isnan( LDT ) 
     LDT[where_are_NaNs] = 0.0
     
-    lexicon = {lemmas[idx]:pol for idx,pol in enumerate(LDT)}
+    lexicon = { lemmas[idx]:pol for idx,pol in enumerate(LDT)}
+    
+    for lem,pol in lexicon.items():
+        if abs(pol) > 10              : lexicon.pop(lem) 
+        elif pol < -ratio             : lexicon[ lem ] = ("NEG+",pol)
+        elif pol < -ratio + threshold : lexicon[ lem ] = ("NEG" ,pol)
+        elif pol >  ratio             : lexicon[ lem ] = ("POS+",pol)
+        elif pol >  ratio - threshold : lexicon[ lem ] = ("POS" ,pol)
+        else                          : lexicon[ lem ] = ("NEU" ,pol)
     
     if limit:
-        lexicon = dict( sorted(lexicon.items(), key=lambda x: abs(x[1]), reverse=True)[:limit] )
-            
-    for lemma in lexicon:
-        pol = lexicon[lemma]
-        if pol < -threshold:
-            lexicon[ lemma ] = "NEG"
-        elif pol > threshold:
-            lexicon[ lemma ] = "POS"
-        else:
-            lexicon[ lemma ] = "NEU"
-            
+        lexicon = dict( sorted(lexicon.items(), key=lambda x: abs(x[1][1]), reverse=True)[:limit] ) 
+        
     return lexicon
      
 
