@@ -6,6 +6,7 @@ from utilities import *
 
 from keras.wrappers.scikit_learn import KerasClassifier
 from sklearn.model_selection import GridSearchCV
+import time
 
 import CorpusReader as cr 
 import DataProvider as dp
@@ -107,23 +108,34 @@ for nth,stat in enumerate(stats): print "Option",nth,stat
 ###################################################################
 
 tolerance = 0.8
-limit = 150
+limit = None
+
+suffix  = "_%i" % limit if limit else "_all"
+suffix += "_%ip" % (tolerance*100)
 
 title('SENTI-TFIDF')
-result = lg.get_indepentent_lexicon_by_senti_tfidf(limit=limit)
-save(result,"LI_BySentiTFIDF","./outputs/lexicon")
- 
+start_time = time.time()
+result = lg.get_indepentent_lexicon_by_senti_tfidf(limit=limit,tolerance=tolerance)
+save(result,"indepentent_lexicon_by_senti_tfidf"+suffix,"./outputs/lexicon")
+print "Elapsed time:",time.time()-start_time,'s'
+
 title('AVERAGE')
+start_time = time.time()
 result = lg.get_indepentent_lexicon_by_average(limit=limit, tolerance=tolerance)
-save(result,"LI_ByAverage_at_%i" % (tolerance*100),"./outputs/lexicon")
+save(result,"indepentent_lexicon_by_average"+suffix,"./outputs/lexicon")
+print "Elapsed time:",time.time()-start_time,'s'
  
 title('WEIGHT FUNCTION')
+start = gmtime()
 result = lg.get_indepentent_lexicon_by_weight_function(limit=limit, tolerance=tolerance)
-save(result,"LI_ByWeightedFunction_at_%i" % (tolerance*100),"./outputs/lexicon")
+save(result,"indepentent_lexicon_by_weight_function"+suffix,"./outputs/lexicon")
+print "Elapsed time:",time.time()-start_time,'s'
  
 title('MATRICES')
+start_time = time.time()
 result = lg.get_indepentent_lexicon_by_polarity_matrices(limit=limit, tolerance=tolerance)
-save(result,"LI_ByMatrix_at_%i" % (tolerance*100),"./outputs/lexicon")
+save(result,"lexicon_by_polarity_matrices"+suffix,"./outputs/lexicon")
+print "Elapsed time:",time.time()-start_time,'s'
  
 
 

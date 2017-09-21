@@ -13,12 +13,15 @@ SOURCE = 'corpus_apps_android'
 output_dir = 'outputs/tmp/'
 
 
-def get_indepentent_lexicon_by_senti_tfidf(limit=None,useNeg=True,tolerance=0.0,ratio=1,threshold=0.3):
+def get_indepentent_lexicon_by_senti_tfidf(limit=None,filter_neutral=None,use_neg=True,tolerance=0.0,ratio=1,threshold=0.3):
     
     reviews = db.reviews.find({},no_cursor_timeout=True)
     
     lemmas  = db.reviews.distinct("text.lemma")
     index = { lemma:idx for idx,lemma in enumerate(lemmas) }
+    alias = { item['_id']:item['nearestOf'] 
+        for item in db.embeddings.find({"nearestOf":{"$ne":None}},{"nearestOf":1}) 
+        if item['nearestOf'] in lemmas }
     
     P = db.reviews.find({"category":{ "$gt":50 }}).count() * 1.0
     N = db.reviews.find({"category":{ "$lt":50 }}).count() * 1.0
@@ -35,9 +38,13 @@ def get_indepentent_lexicon_by_senti_tfidf(limit=None,useNeg=True,tolerance=0.0,
         cat = review['category']
         
         for item in review['text']:
-            neg = useNeg and item.has_key('negated') and item['negated']
+            neg = use_neg and item.has_key('negated') and item['negated']
             
-            ith = index[ item['lemma'] ]
+            lem = item['lemma']
+            if alias.has_key(lem): # Correct some lemmas
+                lem = alias[ lem ]
+             
+            ith = index[ lem ]
             
             if (cat > 50 and not neg) or (cat < 50 and neg):
                 Pctd[ith] += 1
@@ -69,15 +76,23 @@ def get_indepentent_lexicon_by_senti_tfidf(limit=None,useNeg=True,tolerance=0.0,
         elif pol >  ratio - threshold : lexicon[ lem ] = ("POS" ,pol)
         else                          : lexicon[ lem ] = ("NEU" ,pol)
     
+    lexicon = sorted(lexicon.items(), key=lambda x: abs(x[1][1]), reverse=True)
+    
     if limit:
-        lexicon = dict( sorted(lexicon.items(), key=lambda x: abs(x[1][1]), reverse=True)[:limit] ) 
+        lexicon = lexicon[:limit] 
         
-    return lexicon
+    return {
+        lem:{
+            "pol" :pol[0],
+            "rank":pol[1]
+        }
+        for lem,pol in lexicon 
+    }
      
 
 # -----------------------------------------------------------------------------------------------------------
 
-def get_indepentent_lexicon_by_polarity_matrices(limit=None, tolerance=0.0, window_left=2 , window_right=2):
+def get_indepentent_lexicon_by_polarity_matrices(limit=None,tolerance=0.0,window_left=2,window_right=2):
 
     def get_vectors(text, window_left, window_right):
         vectors = []
@@ -144,7 +159,7 @@ def get_indepentent_lexicon_by_polarity_matrices(limit=None, tolerance=0.0, wind
 #--------------------------------------------------------------------------------------
 
 
-def get_indepentent_lexicon_by_average(limit=None, tolerance=0.0, filter_neutral=False):
+def get_indepentent_lexicon_by_average(limit=None,tolerance=0.0,filter_neutral=False):
     sources_qty = len( dp.get_sources() )
     min_matches = int(round(sources_qty*(1.0-tolerance),0))
     query = [
@@ -154,7 +169,7 @@ def get_indepentent_lexicon_by_average(limit=None, tolerance=0.0, filter_neutral
                 'sent' : { '$avg' : { 
                         '$cond' : {
                             'if'  :  '$text.negated',
-                            'then': { '$subtract': [ 100 , "$category"] },
+                            'then': { '$subtract': [ 100.0 , "$category"] },
                             'else': '$category'
                         }
                     } 
@@ -166,9 +181,11 @@ def get_indepentent_lexicon_by_average(limit=None, tolerance=0.0, filter_neutral
                 'polarities' : {
                     '$push' : {
                         '$switch' : { 'branches' : [
-                            {'case' : { '$gte' : ['$sent', 60] }, 'then': 'POS'},    
-                            {'case' : { '$lte' : ['$sent', 30] }, 'then': 'NEG'},    
-                            {'case' : True, 'then': 'NEU'},    
+                            {'case' : { '$gte' : ['$sent', 90] }, 'then': [ 'POS+' , '$sent' ]} ,
+                            {'case' : { '$gte' : ['$sent', 60] }, 'then': [ 'POS'  , '$sent' ]},    
+                            {'case' : { '$lte' : ['$sent', 10] }, 'then': [ 'NEG+' , '$sent' ]},    
+                            {'case' : { '$lte' : ['$sent', 30] }, 'then': [ 'NEG'  , '$sent' ]},    
+                            {'case' : True, 'then': [ 'NEU', '$sent' ]},    
                         ]}
                     }
                 }
@@ -178,11 +195,11 @@ def get_indepentent_lexicon_by_average(limit=None, tolerance=0.0, filter_neutral
             '$project' : {
                 'lemma' : "$_id",
                 'corpus_len' : { '$size': "$polarities" } ,
-                'pol' : { '$arrayElemAt': [ "$polarities", 0] },
+                'pol' : { '$arrayElemAt': [ "$polarities", 0 ] },
                 'accepted' : {
                    '$let': {
                        'vars': {
-                          'first': { '$arrayElemAt': [ "$polarities", 0] },
+                          'first': { '$arrayElemAt': [ "$polarities", 0 ] },
                        },
                        'in': { 
                             '$reduce' : {
@@ -208,15 +225,19 @@ def get_indepentent_lexicon_by_average(limit=None, tolerance=0.0, filter_neutral
     ])
     
     if limit:
-       query.append({ '$limit': limit }) 
-    
-    result = list(db.reviews.aggregate(query))
-    return {item['lemma']:item['pol'] for item in result} 
+        query.append({ '$limit': limit }) 
+        
+    return {
+        item['lemma']:{
+            'pol':item['pol'][0],
+            'avg':item['pol'][1],
+            'qty':item['corpus_len']
+    } for item in db.reviews.aggregate(query) } 
 
 #--------------------------------------------------------------------------------------
 
 
-def get_indepentent_lexicon_by_weight_function(limit=None, tolerance=0.0, filter_neutral=False):
+def get_indepentent_lexicon_by_weight_function(limit=None,tolerance=0.0,filter_neutral=False):
     sources_qty = len( dp.get_sources() )
     min_matches = int(round(sources_qty*(1.0-tolerance),0))
     sum_pos = list(db.reviews.aggregate([
@@ -278,9 +299,9 @@ def get_indepentent_lexicon_by_weight_function(limit=None, tolerance=0.0, filter
                 'polarities' : {
                     '$push' : {
                         '$switch' : { 'branches' : [
-                            {'case' : { '$gt' : ['$sent', 0] }, 'then': 'POS'},    
-                            {'case' : { '$lt' : ['$sent', 0] }, 'then': 'NEG'},    
-                            {'case' : True, 'then': 'NEU'},    
+                            {'case' : { '$gt' : ['$sent', 0] }, 'then': ['POS','$sent']},    
+                            {'case' : { '$lt' : ['$sent', 0] }, 'then': ['NEG','$sent']},    
+                            {'case' : True, 'then': ['NEU','$sent']},    
                         ]}
                     }
                 }
@@ -322,8 +343,13 @@ def get_indepentent_lexicon_by_weight_function(limit=None, tolerance=0.0, filter
     if limit:
        query.append({ '$limit': limit }) 
        
-    result = list(db.reviews.aggregate(query))
-    return {item['lemma']:item['pol'] for item in result} 
+    return {
+        item['lemma']:{
+            "pol":item['pol'][0],
+            "val":item['pol'][1]
+        } 
+        for item in db.reviews.aggregate(query)
+    } 
 
 
 #--------------------------------------------------------------------------------------
