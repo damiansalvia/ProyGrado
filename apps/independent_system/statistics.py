@@ -223,6 +223,6 @@ if __name__ == "__main__":
     print '%28s : %s' % ('Size positive words',         str(size_positive_words()) )
     print '%28s : %s' % ('Global balance',              str(get_balance()) )
     print '%28s : %s' % ('Local balance by source',     str(get_balance_by_source()) ) 
-    print '%28s : %s' % ('Size loose match embedings' , str(size_near_match()) )
+    print '%28s : %s' % ('Size close match embedings' , str(size_near_match()) )
     print '%28s : %s' % ('Size null embedings' ,        str(size_null_match()) )
     print '%28s : %s' % ('Size exact match embeddins' , str(size_exact_match()) )
