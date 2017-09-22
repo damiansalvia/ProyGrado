@@ -6,6 +6,7 @@ from utilities import *
 
 from keras.wrappers.scikit_learn import KerasClassifier
 from sklearn.model_selection import GridSearchCV
+import time
 
 import CorpusReader as cr 
 import DataProvider as dp
@@ -97,7 +98,7 @@ for config in config_set[:op]:
             "Y" if config['drop_rate'] else "N"
         ) 
     )
-    ann.input_guess() # Interactive
+#     ann.input_guess() # Interactive
     stats.append(stat)
     ann.predict_untagged( limit = 10, tofile="./outputs/tmp" )
  
@@ -107,18 +108,34 @@ for nth,stat in enumerate(stats): print "Option",nth,stat
 ###################################################################
 
 tolerance = 0.8
- 
-title('MATRICES')
-result = lg.get_indepentent_lexicon_by_polarity_matrices(limit=20, tolerance=tolerance)
-save(result,"LI_ByMatrix_at_%i" % (tolerance*100),"./outputs/lexicon")
- 
+limit = None
+
+suffix  = "_%i" % limit if limit else "_all"
+suffix += "_%ip" % (tolerance*100)
+
+title('SENTI-TFIDF')
+start_time = time.time()
+result = lg.get_indepentent_lexicon_by_senti_tfidf(limit=limit,tolerance=tolerance)
+save(result,"indepentent_lexicon_by_senti_tfidf"+suffix,"./outputs/lexicon")
+print "Elapsed time:",time.time()-start_time,'s'
+
 title('AVERAGE')
-result = lg.get_indepentent_lexicon_by_average(limit=20, tolerance=tolerance)
-save(result,"LI_ByMatrix_at_%i" % (tolerance*100),"./outputs/lexicon")
+start_time = time.time()
+result = lg.get_indepentent_lexicon_by_average(limit=limit, tolerance=tolerance)
+save(result,"indepentent_lexicon_by_average"+suffix,"./outputs/lexicon")
+print "Elapsed time:",time.time()-start_time,'s'
  
 title('WEIGHT FUNCTION')
-result = lg.get_indepentent_lexicon_by_weight_function(limit=20, tolerance=tolerance)
-save(result,"LI_ByMatrix_at_%i" % (tolerance*100),"./outputs/lexicon")
+start = gmtime()
+result = lg.get_indepentent_lexicon_by_weight_function(limit=limit, tolerance=tolerance)
+save(result,"indepentent_lexicon_by_weight_function"+suffix,"./outputs/lexicon")
+print "Elapsed time:",time.time()-start_time,'s'
+ 
+title('MATRICES')
+start_time = time.time()
+result = lg.get_indepentent_lexicon_by_polarity_matrices(limit=limit, tolerance=tolerance)
+save(result,"lexicon_by_polarity_matrices"+suffix,"./outputs/lexicon")
+print "Elapsed time:",time.time()-start_time,'s'
  
 
 

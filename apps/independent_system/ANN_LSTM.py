@@ -175,28 +175,26 @@ class ANN:
             epochs=100 , 
             validation_split=testing_fraction
         )
-
-    def predict_untagged(self,tofile=None):
-        opinions = dp.get_untagged()
+    
+    def predict_untagged(self,tofile=None,limit=None):
+        opinions = dp.get_untagged(limit=limit)
         results = {}
         total = opinions.count(with_limit_and_skip=True)
         for idx,opinion in enumerate(opinions): 
-            progress("Predicting on new data",total,idx)
-            results[ opinion['_id'] ] = []
-
+            progress("Predicting on new data (%i words)" % len(opinion['text']),total,idx)
             x_curr = [np.array(dp.get_word_embedding(token['word'])) for token in opinion['text'] ]
             rest = self.window - len(x_curr) % self.window 
             if rest > 0:
                 x_curr.extend([self.end_vecotr for i in range(rest)])
 
             X = np.array([ x_curr[i*self.window : (i+1)*self.window] for i in range(len(x_curr)/self.window) ])
-            try :
+            try :            
                 Y = self.model.predict( X ).flatten()
             except:
                 print 'ERROR'
-            results[ opinion['_id'] ] = [ round(y) == 1 for y in Y.tolist()[:len(opinion['text'])]]
-        
-        if tofile: save(results,"predict_untagged_LMST_window_%i" % (self.windows),tofile)
+            results[ opinion['_id'] ] =  [ round(y) == 1 for y in Y.tolist()[:len(opinion['text'])] ]
+        if tofile: save(results,"predict_untagged_LMST_window_%i" % (self.window),tofile)
+        dp.save_negations(results,tagged_as='automatically')
         return results
     
     def predict_opinion(self, opinion):
@@ -222,4 +220,6 @@ if __name__ == '__main__':
         import pdb; pdb.set_trace()  # breakpoint 69491b51 //
 
     start_evaluator(ann.predict_opinion)
+    if raw_input("Predict all? > "):
+        ann.predict_untagged(tofile="./outputs/tmp")
         
