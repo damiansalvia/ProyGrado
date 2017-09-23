@@ -29,7 +29,9 @@ def get_indepentent_lexicon_by_senti_tfidf(limit=None,filter_neutral=None,use_ne
     size = len(lemmas)
     
     Pctd = np.zeros(size)
+    Pt   = np.zeros(size) 
     Nctd = np.zeros(size)
+    Nt   = np.zeros(size) 
      
     total = reviews.count()
     for jth,review in enumerate(reviews):
@@ -37,6 +39,8 @@ def get_indepentent_lexicon_by_senti_tfidf(limit=None,filter_neutral=None,use_ne
         
         cat = review['category']
         
+        Pfreq = defaultdict(lambda:0)
+        Nfreq = defaultdict(lambda:0)
         for item in review['text']:
             neg = use_neg and item.has_key('negated') and item['negated']
             
@@ -47,17 +51,22 @@ def get_indepentent_lexicon_by_senti_tfidf(limit=None,filter_neutral=None,use_ne
             ith = index[ lem ]
             
             if (cat > 50 and not neg) or (cat < 50 and neg):
-                Pctd[ith] += 1
+                Pfreq[ith] += 1
                 continue
             
             if (cat < 50 and not neg) or (cat > 50 and neg):
-                Nctd[ith] += 1
+                Nfreq[ith] += 1
                 continue
-    
+        
+        for idx in Pfreq:
+            Pctd[idx] += Pfreq[idx]
+            Pt[idx]   += 1
+            
+        for idx in Nfreq:
+            Nctd[idx] += Nfreq[idx]
+            Nt[idx]   += 1
+            
     reviews.close()
-    
-    Pt = (Pctd != 0)
-    Nt = (Nctd != 0)
     
     POSt = Pctd * np.log2( P / (Pt + 1e-10 ) )
     NEGt = Nctd * np.log2( N / (Nt + 1e-10 ) )
@@ -380,7 +389,7 @@ def get_independent_lexicon_by_rules(treshold=0.9):
 
 if __name__ == '__main__':
     print ' --------------------------- SENTI-TFIDF ----------------------------'
-    print get_indepentent_lexicon_by_senti_tfidf(limit=20,threshold=0.1)
+    print get_indepentent_lexicon_by_senti_tfidf(limit=150,threshold=0.1)
     print ' ----------------------------- MATRICES -----------------------------'
     print get_indepentent_lexicon_by_polarity_matrices(limit=20, tolerance=0.8)
     print ' ----------------------------- AVERAGE ------------------------------'
