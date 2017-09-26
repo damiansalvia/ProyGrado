@@ -108,33 +108,35 @@ for nth,stat in enumerate(stats): print "Option",nth,stat
 ###################################################################
 
 tolerance = 0.8
-limit = None
+limit = 150
+filter_neutral = True
 
-suffix  = "_%i" % limit if limit else "_all"
+suffix  = "_top%i" % limit if limit else "_all"
 suffix += "_%ip" % (tolerance*100)
+suffix += "_neu" if not filter_neutral else ""
 
 title('SENTI-TFIDF')
 start_time = time.time()
-result = lg.get_indepentent_lexicon_by_senti_tfidf(limit=limit,tolerance=tolerance)
-save(result,"indepentent_lexicon_by_senti_tfidf"+suffix,"./outputs/lexicon")
+result = lg.get_indepentent_lexicon_by_senti_tfidf(limit=limit,tolerance=tolerance,filter_neutral=filter_neutral)
+save(result,"indepentent_lexicon_by_senti_tfidf"+suffix,"../lexicon/independent")
 print "Elapsed time:",time.time()-start_time,'s'
 
 title('AVERAGE')
 start_time = time.time()
 result = lg.get_indepentent_lexicon_by_average(limit=limit, tolerance=tolerance)
-save(result,"indepentent_lexicon_by_average"+suffix,"./outputs/lexicon")
+save(result,"indepentent_lexicon_by_average"+suffix,"../lexicon/independent")
 print "Elapsed time:",time.time()-start_time,'s'
  
 title('WEIGHT FUNCTION')
 start = gmtime()
 result = lg.get_indepentent_lexicon_by_weight_function(limit=limit, tolerance=tolerance)
-save(result,"indepentent_lexicon_by_weight_function"+suffix,"./outputs/lexicon")
+save(result,"indepentent_lexicon_by_weight_function"+suffix,"../lexicon/independent")
 print "Elapsed time:",time.time()-start_time,'s'
  
 title('MATRICES')
 start_time = time.time()
 result = lg.get_indepentent_lexicon_by_polarity_matrices(limit=limit, tolerance=tolerance)
-save(result,"lexicon_by_polarity_matrices"+suffix,"./outputs/lexicon")
+save(result,"lexicon_by_polarity_matrices"+suffix,"../lexicon/independent")
 print "Elapsed time:",time.time()-start_time,'s'
  
 

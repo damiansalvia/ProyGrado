@@ -13,7 +13,7 @@ SOURCE = 'corpus_apps_android'
 output_dir = 'outputs/tmp/'
 
 
-def get_indepentent_lexicon_by_senti_tfidf(limit=None,filter_neutral=None,use_neg=True,tolerance=0.0,ratio=1,threshold=0.3):
+def get_indepentent_lexicon_by_senti_tfidf(limit=None,filter_neutral=False,use_neg=True,tolerance=0.0,ratio=1,threshold=0.3):
     
     reviews = db.reviews.find({},no_cursor_timeout=True)
     
@@ -75,7 +75,7 @@ def get_indepentent_lexicon_by_senti_tfidf(limit=None,filter_neutral=None,use_ne
     where_are_NaNs = np.isnan( LDT ) 
     LDT[where_are_NaNs] = 0.0
     
-    lexicon = { lemmas[idx]:pol for idx,pol in enumerate(LDT)}
+    lexicon = { lemmas[idx]:round(pol,3) for idx,pol in enumerate(LDT)}
     
     for lem,pol in lexicon.items():
         if abs(pol) > 10              : lexicon.pop(lem) 
@@ -83,12 +83,19 @@ def get_indepentent_lexicon_by_senti_tfidf(limit=None,filter_neutral=None,use_ne
         elif pol < -ratio + threshold : lexicon[ lem ] = ("NEG" ,pol)
         elif pol >  ratio             : lexicon[ lem ] = ("POS+",pol)
         elif pol >  ratio - threshold : lexicon[ lem ] = ("POS" ,pol)
-        else                          : lexicon[ lem ] = ("NEU" ,pol)
+        elif not filter_neutral       : lexicon[ lem ] = ("NEU" ,pol)
+        else: lexicon.pop(lem)      
     
-    lexicon = sorted(lexicon.items(), key=lambda x: abs(x[1][1]), reverse=True)
+    lexicon = lexicon.items()
     
     if limit:
-        lexicon = lexicon[:limit] 
+        top_pos = sorted( filter( lambda x: x[1][1] > ratio - threshold , lexicon ) , key=lambda x: abs(x[1][1]), reverse=True )
+        top_neg = sorted( filter( lambda x: x[1][1] < ratio + threshold , lexicon ) , key=lambda x: abs(x[1][1]), reverse=True )
+        top_neu = sorted( filter( lambda x: ratio + threshold <= x[1][1] <= ratio - threshold , lexicon ) , key=lambda x: abs(x[1][1]), reverse=True ) 
+#         lexicon = filter( lambda x: abs(x[1][1]) < ratio + 0.5 , lexicon )
+#         lexicon = sorted( lexicon , key=lambda x: abs(x[1][1]), reverse=True )
+        limit = limit/2 if filter_neutral else limit/3
+        lexicon = top_pos[:limit] + top_neg[:limit] + top_neu[:limit] 
         
     return {
         lem:{

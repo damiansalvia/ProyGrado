@@ -177,9 +177,9 @@ class ANN:
         )
     
     def predict_untagged(self,tofile=None,limit=None):
-        opinions = dp.get_untagged(limit=limit)
+        opinions = list( dp.get_untagged(limit=limit) )
         results = {}
-        total = opinions.count(with_limit_and_skip=True)
+        total = len(opinions)#opinions.count(with_limit_and_skip=True)
         for idx,opinion in enumerate(opinions): 
             progress("Predicting on new data (%i words)" % len(opinion['text']),total,idx)
             x_curr = [np.array(dp.get_word_embedding(token['word'])) for token in opinion['text'] ]

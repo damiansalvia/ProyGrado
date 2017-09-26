@@ -9,7 +9,9 @@ width = int(tmp[1])-15 if tmp else 100
 
 
 def save(data,name,path,overwrite=True):
-    if not data: return    
+    if not data:
+        print "Nothing to be saved" 
+        return    
     
     if not os.path.isdir(path): os.makedirs(path)
         
