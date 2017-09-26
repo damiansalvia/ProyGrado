@@ -92,6 +92,77 @@ def get_dependent_lexicon_by_graph(source,seeds_path,val_key,filter_neutral=True
     save(result,"dependent_lexicon_by_graph_%s_li%i" % (source,len(seeds)) + suffix,"../lexicon/dependent")
 
 
+def get_dependent_lexicon_by_dijkstra(source,seeds_path,val_key,filter_neutral=True,limit=None):
+    graph = defaultdict(lambda:{ 'val':[] , 'ady':defaultdict(lambda:{ 'wdir':0 , 'wneg':0 }) })
+    
+    reviews = db.reviews.find({"source":source})
+    
+    total = reviews.count()    
+    for idx,review in enumerate( reviews ):
+        progress("Building graph for %s" % source,total,idx)
+        text = review['text']        
+        size = len(text)
+        for i,item in enumerate(text):
+            lem = item['lemma'] 
+            if i != 0: 
+                nb  = text[i-1]['lemma'] # left word
+                neg = text[i-1]['negated']
+                graph[ lem ]['ady'][nb]['wdir' if neg else 'wneg'] += 1
+            if i != size-1:
+                nb  = text[i+1]['lemma'] # right word
+                neg = text[i+1]['negated'] 
+                graph[ lem ]['ady'][nb]['wdir' if neg else 'wneg'] += 1
+                    
+    count = { lemma['_id']:1 for lemma in dp.get_soruce_vocabulary(source) }
+    
+    seeds = [ (lem,pol[val_key],1) for lem,pol in json.load( open(seeds_path) ).items() ]
+#     queue = [ (lem,pol[val_key],1) for lem,pol in seeds ]
+    top = 0
+    
+    for seed in seeds:
+        queue = [seed]
+        while queue:
+            size = len(queue)
+            top  = max(size,top)         
+            progress("Calculating valence",top,top-size)
+            
+            (lem,pol,vis) = queue.pop(0)
+            
+            if not graph.has_key(lem) or vis > 10: # prune word not in vocabulary
+                continue
+            
+            graph[lem]['val'].append( pol )
+            
+            for idx,ady in enumerate( graph[lem]['ady'] ):
+                wdir = graph[ady]['wdir']
+                wneg = graph[ady]['wneg']
+                pol = -pol if neg else pol
+                val = pol - pol / wdir
+                queue.append( (ady,val,vis+1) )
+            
+    result = { 
+        lem : 1.0 * sum(info['val']) / len(info['val'])  
+        for lem,info in graph.items()
+    }
+#     result = { 
+#         lem:{
+#             "val" :round( info['val'] * int(count[lem]/len(info['ady'])) , 3 ),
+#             "freq":count[lem],
+#             "adys":len(info['ady']),
+#             "weight": 1.0 * count[lem]/len(info['ady'])
+#         } for lem,info in graph.items() 
+#     }
+    
+    if filter_neutral:
+        result = dict( filter( lambda x: x[1]!=0 , result.items() ) )
+    
+    if limit:
+        result = dict( sorted( result.items() , key=lambda x: abs(x[1]) , reverse=True )[:limit] )
+        
+    suffix = "_top%i" % limit if limit else ""
+    save(result,"dependent_lexicon_by_graph_%s_li%i" % (source,len(seeds)) + suffix,"../lexicon/dependent")
+
+
 for source in dp.get_sources():    
     get_dependent_lexicon_by_graph(
         source=source,
