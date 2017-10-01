@@ -62,28 +62,16 @@ def analyze(opinions,tofile=None):
 if __name__ == '__main__':
     opinions = [
         {
-            'source' : 'corpus_test',
-            'text' : u'Mola mundo .',
-            'category': 100,
-            'idx' : 1
-        },
+            "category": 90, 
+            "source": "test", 
+            "idx": 1, 
+            "text": "la pelicula es muy divertida , es genial ."
+        }, 
         {
-            'source' : 'corpus_test',
-            'text' : u'. Hola mundo .',
-            'category': 50,
-            'idx' : 2
-        },
-        {
-            'category': 1000, 
-            'source': 'corpus_test', 
-            'idx': 76, 
-            'text': u'Hola mundo ! .'
-        },
-        {
-            'category': 1000, 
-            'source': 'corpus_test', 
-            'idx': 76, 
-            'text': u'Hola ( mundo ! .' # Este caso da error para FreeLing
+            "category": 80, 
+            "source": "test", 
+            "idx": 2, 
+            "text": "me parece encantadora la pelicula , la recomiendo , genial . "
         }
     ]
 

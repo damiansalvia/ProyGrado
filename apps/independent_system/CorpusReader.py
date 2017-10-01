@@ -25,7 +25,7 @@ SUBSTITUTIONS = [
     (u"`",u"\""),(u"´",u"\""),(u"\'",u"\""),
     (u"[\u201c\u201d]",u"\""),
     (u'\u2026',u'...'),
-#     ("\xc2\x93",u"\""),("\xc2\x94",u"\""),
+    #     ("\xc2\x93",u"\""),("\xc2\x94",u"\""),
     # Replace multiple periods by one
     (u"(\.\s*)+",u"."),
     # Replace every occurrence of repetitive characters except {l,r,c,e} [cabaLLo, coRRer, aCCion, crEE]
