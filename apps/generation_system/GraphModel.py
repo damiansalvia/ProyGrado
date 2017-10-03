@@ -152,29 +152,60 @@ def generate_graph(reviews, source, prefix_tag_list, max_weight, win = 1):
     return dict(graph)
 
 def dijkstra(graph, initial):
-    influence = {initial: (1, 0)}
+
+    influence = defaultdict(lambda:[None,None])
+    influence[initial] = [1, 0]
+    
+    visited_dir = []
+    visited_inv = []
+
     nodes = set(graph.keys())
-
     while nodes: 
-        next_node = None
-        for node in nodes:
-            if node in influence:
-                if next_node is None:
-                    next_node = node
-                elif influence[node] > influence[next_node]:
-                    next_node = node
 
-        if next_node is None:
+        next_dir = None
+        next_inv = None
+        for node in nodes:
+            # Select best direct node and best inverse node
+            # (It can be the dame node) 
+            if influence[node][0] is not None and not node in visited_dir:
+                if next_dir is None:
+                    next_dir = node
+                elif influence[node][0] > influence[next_dir][0]:
+                    next_dir = node
+            if influence[node][1] is not None and not node in visited_inv:
+                if next_inv is None:
+                    next_inv = node
+                elif influence[node][1] > influence[next_inv][1]:
+                    next_inv = node
+
+        if next_dir is None and next_inv is None:
             break
 
-        nodes.remove(next_node)
-        current_weight = influence[next_node]
+        if next_dir:
+            visited_dir.append(next_dir)
+            current_dir_w = influence[next_dir][0]
+            for edge in graph[next_dir]['ady']:
+                if edge not in visited_dir:
+                    dir_weight = current_dir_w * graph[next_dir]['ady'][edge]['p_dir']
+                    inv_weight = current_dir_w * graph[next_dir]['ady'][edge]['p_inv']
+                    if influence[edge][0] is None or dir_weight > influence[edge][0]:
+                        influence[edge][0] = dir_weight
+                    if influence[edge][1] is None or inv_weight > influence[edge][1]:
+                        influence[edge][1] = inv_weight
 
-        for edge in graph[next_node]['ady']:
-            weight = current_weight * graph[next_node]['ady'][edge]['p_dir']
-            if edge not in influence or weight > influence[edge]:
-                influence[edge] = weight
-    return influence
+        if next_inv:
+            visited_inv.append(next_inv)
+            current_inv_w = influence[next_inv][1]
+            for edge in graph[next_inv]['ady']:
+                if edge not in visited_inv:
+                    dir_weight = current_inv_w * graph[next_inv]['ady'][edge]['p_inv']
+                    inv_weight = current_inv_w * graph[next_inv]['ady'][edge]['p_dir']
+                    if influence[edge][0] is None or dir_weight > influence[edge][0]:
+                        influence[edge][0] = dir_weight
+                    if influence[edge][1] is None or inv_weight > influence[edge][1]:
+                        influence[edge][1] = inv_weight
+
+    return dict(influence)
 
 def get_dependent_lexicon_by_dijkstra(source, reviews, seeds, 
     prefix_tag_list  = None, 
@@ -188,9 +219,12 @@ def get_dependent_lexicon_by_dijkstra(source, reviews, seeds,
     graph = generate_graph(reviews, source, prefix_tag_list, max_weight)
     influences = defaultdict(list)
     for seed in seeds:
-        nodes_weights = dijkstra(graph, seed)
-        for w in nodes_weights:
-            influences[w].append((seeds[seed], nodes_weights[w]))
+        nodes_influences = dijkstra(graph, seed)
+        for w in nodes_influences:
+            # Direct influnece
+            influences[w].append((seeds[seed], nodes_influences[w][0]))
+            # Inverse influence
+            influences[w].append((seeds[seed] * -1, nodes_influences[w][1]))
 
     result = {}
     for lemma in influences:
@@ -227,20 +261,20 @@ if __name__=='__main__':
 
     graph = {
         'A': { 'val':[], 'ady':{
-            'B':{'p_dir': 0.8 },
-            'C':{'p_dir': 0.1 }
+            'B':{'p_dir': 0.8, 'p_inv': 0.7},
+            'C':{'p_dir': 0.1, 'p_inv': 0.6}
         }},
         'B': { 'val':[], 'ady':{
-            'A':{'p_dir': 0.8 },
-            'D':{'p_dir': 0.5 }
+            'A':{'p_dir': 0.8, 'p_inv': 0.2},
+            'D':{'p_dir': 0.5, 'p_inv': 0.5}
         }},
         'C': { 'val':[], 'ady':{
-            'A':{'p_dir': 0.1 },
-            'D':{'p_dir': 0.5 },
+            'A':{'p_dir': 0.1, 'p_inv': 0.9},
+            'D':{'p_dir': 0.5, 'p_inv': 0.1},
         }},
         'D': { 'val':[], 'ady':{
-            'B':{'p_dir': 0.5 },
-            'C':{'p_dir': 0.5 },
+            'B':{'p_dir': 0.5, 'p_inv': 0.1},
+            'C':{'p_dir': 0.5, 'p_inv': 0.5},
         }}
     }
 
