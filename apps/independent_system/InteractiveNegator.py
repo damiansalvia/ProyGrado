@@ -5,7 +5,7 @@ import os
 sys.path.append('../utilities')
 
 from analyzer import Analyzer
-from CorpusReader import review_correction
+from CorpusReader import _correction
 
 def new_model():
     option = raw_input("\nCreate new model or load saved model [ new / load ] > ").replace(' ','')
@@ -130,7 +130,7 @@ def start_evaluator(predict_function):
     sentence = raw_input("\nEscriba una frase a analizar o 'exit' para salir > ")
     while sentence != 'exit':
         try:
-            sentence = review_correction(sentence)
+            sentence = _correction(sentence)
             analized_sentence = [ item['form'] for item in an.analyze(sentence) ]
             Y = predict_function(analized_sentence)
             print '\nRESULTADO:'        

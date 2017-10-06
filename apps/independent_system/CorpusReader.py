@@ -12,33 +12,28 @@ log = Log("./log")
 
 
 SUBSTITUTIONS = [
-    # Replace non-spanish characters by the hipotetical correct character
-    (u"à",u"á"), (u"è",u"é"), (u"ì",u"í"), (u"ò",u"ó"), (u"ù",u"ú"),
-    (u"â",u"á"), (u"ê",u"é"), (u"î",u"í"), (u"ô",u"ó"), (u"û",u"ú"),
-    (u"À",u"Á"), (u"È",u"É"), (u"Ì",u"Í"), (u"Ò",u"Ó"), (u"ù",u"Ú"),
-    (u"ä",u"á"), (u"ë",u"é"), (u"ï",u"í"), (u"ö",u"ó"),
-    (u"Ä",u"A"), (u"Ë",u"E"), (u"Ï",u"I"), (u"Ö",u"O"),
-    (u"å",u"a"), (u"ç",u"c"),
-    # Eliminate english contractions
+    # Eliminate contractions
     (u"(\w)'(\w)",u"\\1\\2"),
+    (u"q'",u"q"),
     # Replace quotes variants by double quotes
     (u"`",u"\""),(u"´",u"\""),(u"\'",u"\""),
     (u"[\u201c\u201d]",u"\""),
+    ("\xc2\x93",u"\""),("\xc2\x94",u"\""),
     (u'\u2026',u'...'),
-    #     ("\xc2\x93",u"\""),("\xc2\x94",u"\""),
+    # Eliminate multiple co-joined quotes
+    (u"\"\s\*\"",u"\""),     
     # Replace multiple periods by one
     (u"(\.\s*)+",u"."),
-    # Replace every occurrence of repetitive characters except {l,r,c,e} [cabaLLo, coRRer, aCCion, crEE]
-    (u"(?i)([^lrce])\\1+",u"\\1"),
-    (u"(?i)([lrce])\\1\\1+",u"\\1\\1"),
-    (u"(?i)([lrce])\\1(\W)",u"\\1\\2"),
     # Replace emojis by a special tag
-    (u":\)",u" emoji_feliz "),(u"\(:",u" emoji_feliz "),
+    (u":\)",u" emoji_feliz "),(u"\(:",u" emoji_feliz "),(u"\sxD\s",u" emoji_feliz "),
     (u":\(",u" emoji_triste "),(u"\):",u" emoji_triste "),
     # Remove URIs with scheme http or https
     (u"(https?:\/\/\S+)",u""),
     # Separate alphabetical character from non-alphabetical character by a blank space
-    (u"(?i)([0-9a-záéíóúñüÁÉÍÓÚÑÜ\\\]?)([^0-9a-záéíóúñüÁÉÍÓÚÑÜ_\\\\s]+)([0-9a-záéíóúñüÁÉÍÓÚÑÜ\\\]?)",u"\\1 \\2 \\3"),
+    (u"([0-9a-záéíóúñü\\\]?)([^0-9a-záéíóúñü_\\\\s]+)([0-9a-záéíóúñü\\\]?)",u"\\1 \\2 \\3"),
+    # Separate alphabetical from numerical 
+    (u"([a-záéíóúñü])([0-9])",u"\\1 \\2"), 
+    (u"([0-9])([a-záéíóúñü])",u"\\1 \\2"),
     # Remove redundant quote marks  -- replace, delete, undo
     (u"(\")([^\"]*?)(?(1)\")",u"&quote;\\2&quote;"),
     (u"[\"]",u""),
@@ -49,30 +44,27 @@ SUBSTITUTIONS = [
     (u"[\(\)]",u""),
     (u"&lquo;",u"("),(u"&rquo;",u")"), 
     # Replace all non-alphabetical or special symbols by a whitespace
-    (u"(?i)[^0-9a-záéíóúñüÁÉÍÓÚÑÜ_¿\?¡!\(\),\.:;\"\$/<>]",u" "),
+    (u"[^0-9a-záéíóúñü_¿\?¡!\(\),\.:;\"\$/<>]",u" "),
     # Replace multiple blank spaces by one
     (u"(\s){2,}",u" ")
 ]
 
-
-def review_correction( # Apply simple pattern correction in the input text
-        text # Text for applying the correction.
-    ):
+def _correction(text):
     # Encode
     text = text.decode('utf8')
     if not isinstance(text,unicode):
         text = unicode(text,'utf8')
-    # Correct
-    text += u" ."
     for source,target in SUBSTITUTIONS:
-        text = re.sub(source,target,text,flags=re.DOTALL)
-    # Tags treatement (such as embedded tags and residual tags)
+        text = re.sub(source,target,text,flags=re.DOTALL|re.U|re.I)
+    # Tags treatment (embedded and residual)
     pattern = u"<\s(.*?)\s.*?>(.*?)</\s\\1\s>" 
     while re.search(pattern, text, flags=re.DOTALL):
         text = re.sub(pattern,u"\\2",text,flags=re.DOTALL)
     text = re.sub(u"<.*?>",u"",text,flags=re.DOTALL)
+    # Force dot ending
+    text += u" ."   
     # Normalize
-    text = text.lower() 
+#     text = text.lower() 
     return text    
 
     
@@ -177,27 +169,19 @@ def from_corpus(
         progress("Generating %s" % corpus_name,total,idx)
         rev = revs[idx]
         cat = cats[idx]
-        if "polarity" in review_correction(rev):
-            print
-            print pattern
-            print
-            print rev
-            print
-            print review_correction(rev)
-            import pdb;pdb.set_trace()
         if rev:
             opinion_data.append({
                 'idx'      : idx+1,
                 'source'   : corpus_name,
-                'text'     : review_correction(rev), 
+                'text'     : _correction(rev), 
                 'category' : category_mapping[cat] 
             })   
     if tofile: save(opinion_data,"from_%s" % corpus_name,tofile)
     return opinion_data
 
 if __name__ == '__main__':
-    print review_correction(u'Esto :( creo que ) eeees " una prueba! :) Usando ( corrrrrreccion ) de las ( palabras mal')
-    print review_correction(u"Can't ad teams Cant ad brazilian soccer teams .")
-    print review_correction(u"esta (es otra) prueba (con multiples) parentesis")
-    print review_correction(u"tengo (: una aca ( esta es otra ) de  ( prueba :) con ( multiples ) ) parentesis giles")
-    print review_correction(u"tengo \" una aca \" esta es otra \" de  \" prueba :\" con \" multiples \" \" parentesis giles")
+    print _correction(u'Esto :( creo que ) eeees " una prueba! :) Usando ( corrrrrreccion ) de las ( palabras mal')
+    print _correction(u"Can't ad teams Cant ad brazilian soccer teams .")
+    print _correction(u"esta (es otra) prueba (con multiples) parentesis")
+    print _correction(u"tengo (: una aca ( esta es otra ) de  ( prueba :) con ( multiples ) ) parentesis giles")
+    print _correction(u"tengo \" una aca \" esta es otra \" de  \" prueba :\" con \" multiples \" \" parentesis giles")
