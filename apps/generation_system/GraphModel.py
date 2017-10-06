@@ -58,10 +58,6 @@ TEST_GRAPHS = [
             }
         },{'A':[1,0], 'B': [0.8, 0], 'C': [0, 0.8], 'D': [0.64,0.64] , 'E': [0.512,0.512] }),
     ]
-<<<<<<< HEAD
-=======
-
->>>>>>> 33b018009084138bec3672fb514db88bf55f1c80
 
 
 # def get_dependent_lexicon_by_graph(source,seeds_path,val_key,filter_neutral=True,limit=None):    
@@ -170,46 +166,15 @@ def get_dependent_lexicon_by_graph(source,seeds_path,val_key,filter_neutral=True
         for idx,(ady,inv) in enumerate( graph[lem] ):
             pol = -pol if inv else pol
             queue.append( (ady,val,vis+1) )
-            
+    
     result = { 
-        lem:round( info['val'] * int(count[lem]/len(info)) , 3 ) # OBS: Trucating weight  
-        for lem,info in graph.items()
+        lem:{
+            "val" :round( info['val'] * int(count[lem]/len(info)) , 3 ),
+            "freq":count[lem],
+            "adys":len(info),
+            "weight": 1.0 * count[lem]/len(info)
+        } for lem,info in graph.items() 
     }
-<<<<<<< HEAD
-#     result = { 
-#         lem:round( info['val'] * int(count[lem]/len(info['ady'])) , 3 ) # OBS: Trucating weight  
-#         for lem,info in graph.items()
-#     }
-=======
->>>>>>> 33b018009084138bec3672fb514db88bf55f1c80
-    #     result = { 
-    #         lem:{
-    #             "val" :round( info['val'] * int(count[lem]/len(info)) , 3 ),
-    #             "freq":count[lem],
-    #             "adys":len(info),
-    #             "weight": 1.0 * count[lem]/len(info)
-    #         } for lem,info in graph.items() 
-    #     }
-<<<<<<< HEAD
-# #     result = { 
-# #         lem:{
-# #             "val" :round( info['val'] * int(count[lem]/len(info['ady'])) , 3 ),
-# #             "freq":count[lem],
-# #             "adys":len(info['ady']),
-# #             "weight": 1.0 * count[lem]/len(info['ady'])
-# #         } for lem,info in graph.items() 
-# #     }
-#     
-#     if filter_neutral:
-#         result = dict( filter( lambda x: x[1]!=0 , result.items() ) )
-#     
-#     if limit:
-#         result = dict( sorted( result.items() , key=lambda x: abs(x[1]) , reverse=True )[:limit] )
-#         
-#     suffix = "_top%i" % limit if limit else ""
-#     save(result,"dependent_lexicon_by_graph_%s_li%i" % (source,len(seeds)) + suffix,"../lexicon/dependent")
-=======
->>>>>>> 33b018009084138bec3672fb514db88bf55f1c80
     
     if filter_neutral:
         result = dict( filter( lambda x: x[1]!=0 , result.items() ))
@@ -383,16 +348,6 @@ def dijkstra_evaluation(tests, seed):
     if not error:
         print 'Every test was succesfull' 
 
-<<<<<<< HEAD
-# for source in dp.get_sources():    
-#     get_dependent_lexicon_by_graph(
-#         source=source,
-#         seeds_path='../lexicon/independent/indepentent_lexicon_by_senti_tfidf_150_80p.json',
-#         val_key='rank',
-#         limit = 300
-#     )
-=======
->>>>>>> 33b018009084138bec3672fb514db88bf55f1c80
 if __name__=='__main__':
 
     # for source in dp.get_sources():    
