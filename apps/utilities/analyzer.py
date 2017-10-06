@@ -83,7 +83,7 @@ class Analyzer:
                 known = token.found_in_dict()
                 fact = len(word) / ( word.count('_') + 1 )  
                 for wd in word.split('_'):
-                    wd = wd.lower() if len(wd) < 5 else wd
+                    wd = wd.lower() if word.count('_')==0 or len(wd) < 5 else wd
                     if not known:
                         unk.append( wd )
                     text += ' '+ wd

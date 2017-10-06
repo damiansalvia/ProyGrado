@@ -19,8 +19,14 @@ from Settings import *
 
 config_set = config_set_parsing()
 
-op = raw_input("Parse a(ll) or enter for none > ")
-op = len(config_set) if op.lower() == 'a' else 0
+
+batch =  raw_input("Batch mode? [ Y / N ] > ") in ['Y','y']
+
+if not batch:
+    op = raw_input("Parse a(ll) or enter for none > ")
+    op = len(config_set) if op.lower() == 'a' else 0
+else: 
+    op = len(config_set)
 
 count = 0
 for config in config_set[:op]:
@@ -48,33 +54,46 @@ for config in config_set[:op]:
 
 ###################################################################
 
-op = raw_input("Update negation for train? [y/n] > ")
-op = op.lower()
-if op == 'y': count += nt.load_corpus_negation()
+
+if not batch:
+    op = raw_input("Update negation for train? [y/n] > ")
+    op = op.lower()
+    if op == 'y': count += nt.load_corpus_negation()
+
            
 ###################################################################
 
-if count: raw_input("Total %i. Continue..." % count)
+if not batch:
+    if count: raw_input("Total %i. Continue..." % count)
 
 ###################################################################
 
-op = raw_input("Update embeddings? [y/n] > ")
-op = op.lower()
-if op == 'y': dp.update_embeddings(verbose=True)
+if not batch:
+    op = raw_input("Update embeddings? [y/n] > ")
+    op = op.lower()
+    if op == 'y': dp.update_embeddings(verbose=True)
+else:
+    dp.update_embeddings(verbose=True)
 
 ###################################################################
 
-op = raw_input("Start manual tagging? [y/n] > ")
-op = op.lower() 
-if op == 'y': nt.start_tagging(tofile="./outputs/negation") 
+if not batch:
+    op = raw_input("Start manual tagging? [y/n] > ")
+    op = op.lower() 
+    if op == 'y': nt.start_tagging(tofile="./outputs/negation") 
+
 
 ###################################################################
   
 config_set = config_set_neural_negation_tagger()
 
-op = raw_input("Training-predict a(ll) > ")
-op = len(config_set) if op.lower() == 'a' else 0
 
+if not batch:
+    op = raw_input("Training-predict a(ll) > ")
+    op = len(config_set) if op.lower() == 'a' else 0
+else: 
+    op = len(config_set)
+    
 stats = []
 for config in config_set[:op]:
     ann = nt.NeuralNegationTagger( config['wleft'], config['wright'] )    
