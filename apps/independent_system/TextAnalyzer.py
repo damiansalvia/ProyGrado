@@ -21,7 +21,7 @@ def analyze(opinions,tofile=None):
     analyzed = []
     _ids = []
     total = len(opinions)
-    fails = 0
+    fails = 0 
     for idx, opinion in enumerate(opinions):
         progress("Analyzing %s (%05.2f%%)" %  ( opinion['source'], 100.0*fails/total ), total, idx )
         try:
@@ -46,12 +46,19 @@ def analyze(opinions,tofile=None):
                     'lemma' : token['lemma'],
                     'tag'   : token['tag']
                 } for token in tokens ]
-                    
+                
                 analyzed.append(analysis)
+                
+                if idx % 500 == 0: # partial dump
+                    dp.save_opinions(analyzed)
+                    analyzed = []
                     
         except Exception as e:
             fails += 1
             log("Reason : %s for '%s' (at %s)" % (str(e),opinion['text'].encode('ascii','ignore'),opinion['source']) )
+        except KeyboardInterrupt:
+            fails += 1
+            log("Reason : Interrupted on '%s' (at %s)" % (opinion['text'].encode('ascii','ignore'),opinion['source']) )
         
     dp.save_opinions(analyzed)
     if tofile: save(analyzed,"analyzed_%s" % opinions[0]['source'],tofile)
@@ -63,28 +70,28 @@ if __name__ == '__main__':
     opinions = [
         {
             'source' : 'corpus_test',
-            'text' : u'Mola mundo .',
+            'text' : u'Me encantooooooooooooooooooooooooooo .  .',
             'category': 100,
             'idx' : 1
         },
-        {
-            'source' : 'corpus_test',
-            'text' : u'. Hola mundo .',
-            'category': 50,
-            'idx' : 2
-        },
-        {
-            'category': 1000, 
-            'source': 'corpus_test', 
-            'idx': 76, 
-            'text': u'Hola mundo ! .'
-        },
-        {
-            'category': 1000, 
-            'source': 'corpus_test', 
-            'idx': 76, 
-            'text': u'Hola ( mundo ! .' # Este caso da error para FreeLing
-        }
+#         {
+#             'source' : 'corpus_test',
+#             'text' : u'. Hola mundo .',
+#             'category': 50,
+#             'idx' : 2
+#         },
+#         {
+#             'category': 1000, 
+#             'source': 'corpus_test', 
+#             'idx': 76, 
+#             'text': u'Hola mundo ! .'
+#         },
+#         {
+#             'category': 1000, 
+#             'source': 'corpus_test', 
+#             'idx': 76, 
+#             'text': u'Hola ( mundo ! .' # Este caso da error para FreeLing
+#         }
     ]
 
     analyze(opinions) 
