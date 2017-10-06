@@ -181,6 +181,7 @@ class ANN:
         results = {}
         total = len(opinions)#opinions.count(with_limit_and_skip=True)
         for idx,opinion in enumerate(opinions): 
+            
             progress("Predicting on new data (%i words)" % len(opinion['text']),total,idx)
             x_curr = [np.array(dp.get_word_embedding(token['word'])) for token in opinion['text'] ]
             rest = self.window - len(x_curr) % self.window 
@@ -193,6 +194,11 @@ class ANN:
             except:
                 print 'ERROR'
             results[ opinion['_id'] ] =  [ round(y) == 1 for y in Y.tolist()[:len(opinion['text'])] ]
+            
+            if idx % 500 == 0: # partial dump
+                dp.save_negations(results,tagged_as='automatically')
+                result = {}
+                
         if tofile: save(results,"predict_untagged_LMST_window_%i" % (self.window),tofile)
         dp.save_negations(results,tagged_as='automatically')
         return results
@@ -221,5 +227,10 @@ if __name__ == '__main__':
 
     start_evaluator(ann.predict_opinion)
     if raw_input("Predict all? > "):
+        import time
+        start_time = time.time()
         ann.predict_untagged(tofile="./outputs/tmp")
+        elapsed = time.strftime('%H:%M:%S', time.gmtime(time.time()-start_time))
+        log( "LSTM predict - Elapsed: %s" % elapsed , level="INFO")
+        print "LSTM predict - Elapsed time: %s" % elapsed
         

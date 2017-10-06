@@ -79,15 +79,13 @@ class Analyzer:
         for sentence in ls :
             for token in sentence.get_words() :
                 word  = token.get_form()
-                alts  = token.get_alternatives()
                 known = token.found_in_dict()
-                fact = len(word) / ( word.count('_') + 1 )  
-                for wd in word.split('_'):
-                    wd = wd.lower() if word.count('_')==0 or len(wd) < 5 else wd
-                    if not known:
-                        unk.append( wd )
-                    text += ' '+ wd
-                
+                const = word.split('_')
+                if not known:
+                    const = [ wd.lower() for wd in const ]
+                    unk += const
+                const = [ wd.lower() if len(wd) < 5 else wd for wd in const ]
+                text += ' '+ ' '.join( const ) 
 #                 if raw_input(token.get_lc_form()+' > ') == 'd':
 #                     import pdb;pdb.set_trace()           
         if unk: # Do word correction

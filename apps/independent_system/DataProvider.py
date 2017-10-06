@@ -197,7 +197,7 @@ def update_embeddings(
     if verbose:
         if stats['Total']:
             for case in stats: print "%-17s : %i (%4.2f%%)" % (case,stats[case],100.0*stats[case]/stats['Total']) 
-            raw_input("Press enter to continue...")
+            #raw_input("Press enter to continue...")
         else:
             print "No embeddings has been processed"    
     
