@@ -76,6 +76,7 @@ class ANN:
             early_min_delta =  0,
             early_patience  =  2,
             early_mode      = 'auto',
+            verbose         = 2,
         ):
         
         # Callbacks settings
@@ -113,7 +114,7 @@ class ANN:
             )
         
         # Output layer
-        self.model.add( Dense( window, activation='sigmoid') )
+        self.model.add( Dense( self.window, activation='sigmoid') )
         
         # Compile model from parameters
         self.model.compile( loss=loss, 
@@ -123,10 +124,11 @@ class ANN:
 
         # Result
         log('MODEL ARQUITECTURE\n'+self.model.to_json(indent=4),level='info')
-        print self.model.summary()
+        if verbose != 0:
+            print self.model.summary()
      
 
-    def fit_tagged(self,testing_fraction=0.2,verbose=2, neg_as=False):    
+    def fit_tagged(self,testing_fraction=0.2, verbose=2, neg_as=False):    
         
         opinions = dp.get_tagged('manually') 
         if not opinions: raise Exception('Nothing to train')
@@ -135,17 +137,36 @@ class ANN:
         total = opinions.count(with_limit_and_skip=True)
         for idx,opinion in enumerate(opinions):
             progress("Loading training data",total,idx)
-
-            x_curr = [np.array(dp.get_word_embedding(token['word'])) for token in opinion['text'] ]
-            y_curr = [token['negated'] if token['negated'] is not None else neg_as for token in opinion['text'] ]
-            rest = self.window - len(x_curr) % self.window 
-            if rest > 0:
-                x_curr.extend([self.end_vecotr for i in range(rest)])
-                y_curr.extend([False for i in range(rest)])
-
-            X += [ x_curr[i*self.window : (i+1)*self.window] for i in range(len(x_curr)/self.window) ]
-            Y += [ y_curr[i*self.window : (i+1)*self.window] for i in range(len(y_curr)/self.window) ]
+            x_curr,y_curr = self.format_opinion(opinion['text'], neg_as)
+            X += x_curr
+            Y += y_curr
+        self.fit(X,Y, testing_fraction, verbose)
+        scores = self.get_scores(X,Y,verbose)
+        if verbose != 0:
+            log('MODEL EVALUATION\n'+str(scores),level='info')
+            print        
+            for metric,score in scores: print "%-20s: %.1f%%" % ( metric, score )
+            print "_________________________________________________________________"
+        return scores
         
+
+    def get_scores(self, X,Y, verbose=2):
+        scores = self.model.evaluate(X,Y,batch_size=10,verbose=verbose)
+        return zip( self.model.metrics_names , [ round(score*100,1) for score in scores ] )
+         
+
+    def format_opinion(self, opinion, neg_as=False):
+        x_curr = [np.array(dp.get_word_embedding(token['word'])) for token in opinion ]
+        y_curr = [token.get('negated') if token.get('negated') is not None else neg_as for token in opinion ]
+        rest = self.window - len(x_curr) % self.window 
+        if rest > 0:
+            x_curr.extend([self.end_vecotr for i in range(rest)])
+            y_curr.extend([False for i in range(rest)]) 
+        X = [ x_curr[i*self.window : (i+1)*self.window] for i in range(len(x_curr)/self.window) ]
+        Y = [ y_curr[i*self.window : (i+1)*self.window] for i in range(len(y_curr)/self.window) ]
+        return X,Y
+
+    def fit(self, X,Y, testing_fraction=0.2, verbose=2):
         X = np.array(X)
         Y = np.array(Y)
         self.model.fit( X , Y , 
@@ -154,16 +175,6 @@ class ANN:
             epochs=100 , 
             validation_split=testing_fraction
         )
-
-        scores = self.model.evaluate(X,Y,batch_size=10,verbose=verbose)
-        scores = [ round(score*100,1) for score in scores ]
-        scores = zip( self.model.metrics_names , scores )
-        log('MODEL EVALUATION\n'+str(scores),level='info')
-        print        
-        for metric,score in scores: print "%-20s: %.1f%%" % ( metric, score )
-        print "_________________________________________________________________"
-        return scores
-            
     
     def predict_untagged(self,tofile=None,limit=None):
         opinions = list( dp.get_untagged(limit=limit) )
@@ -182,7 +193,6 @@ class ANN:
             except:
                 print 'ERROR'
             results[ opinion['_id'] ] =  [ round(y) == 1 for y in Y.tolist()[:len(opinion['text'])] ]
-        
         if tofile: save(results,"predict_untagged_LMST_window_%i" % (self.window),tofile)
         dp.save_negations(results,tagged_as='automatically')
         return results
@@ -207,6 +217,8 @@ if __name__ == '__main__':
     else:
         ann = ANN(get_window())
         ann.load_model('./outputs/models/model_LSTM.h5')
+        import pdb; pdb.set_trace()  # breakpoint 69491b51 //
+
     start_evaluator(ann.predict_opinion)
     if raw_input("Predict all? > "):
         ann.predict_untagged(tofile="./outputs/tmp")
