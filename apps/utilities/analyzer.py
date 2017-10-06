@@ -81,16 +81,6 @@ class Analyzer:
                 word  = token.get_form()
                 alts  = token.get_alternatives()
                 known = token.found_in_dict()
-                const = word.split('_')
-                if not known:
-                    words = [ wd.lower() for wd in const ]
-                    unk += const
-                text += ' '+ ' '.join( const ) 
-#                 for wd in word.split('_'):
-#                     wd = wd.lower() if word.count('_')==0 or len(wd) < 5 else wd
-#                     if not known:
-#                         unk.append( wd )
-#                     text += ' '+ wd
                 fact = len(word) / ( word.count('_') + 1 )  
                 for wd in word.split('_'):
                     wd = wd.lower() if word.count('_')==0 or len(wd) < 5 else wd
