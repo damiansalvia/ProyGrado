@@ -78,9 +78,12 @@ class Analyzer:
         unk = [] ; text = ""
         for sentence in ls :
             for token in sentence.get_words() :
-                word  = token.get_lc_form()
+                word  = token.get_form()
+                alts  = token.get_alternatives()
                 known = token.found_in_dict()
+                fact = len(word) / ( word.count('_') + 1 )  
                 for wd in word.split('_'):
+                    wd = wd.lower() if len(wd) < 5 else wd
                     if not known:
                         unk.append( wd )
                     text += ' '+ wd
@@ -90,13 +93,14 @@ class Analyzer:
         if unk: # Do word correction
             chkr.set_text(text)
             for err in chkr:
+                if not err.word in unk: # Avoid correct nouns
+                    continue
                 sugg = [ s for s in chkr.suggest(err.word) if '-' not in s ]
                 alts = get_close_matches( err.word , sugg , 3 , 0.80 )
                 if alts   : corr = alts[0]
                 elif sugg : corr = sugg[0]
                 else      : corr = err.word
-                if err.word in unk: # Avoid correct nouns
-                    err.replace(corr)
+                err.replace(corr)
             text = chkr.get_text()
             unk = []
         
