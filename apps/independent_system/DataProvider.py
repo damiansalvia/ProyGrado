@@ -191,6 +191,9 @@ def update_embeddings(
                 'embedding':vector.tolist(),
                 'nearestOf':nearest 
             })
+        if idx % 500 == 0 and result:
+            db.embeddings.insert_many(result)
+            result = []
     
     # Save statistics results
     log("Embeddings integration result. %s" % str(stats),level='info')
