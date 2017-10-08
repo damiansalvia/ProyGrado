@@ -19,9 +19,7 @@ SUBSTITUTIONS = [
     (u"`",u"\""),(u"´",u"\""),(u"\'",u"\""),
     (u"[\u201c\u201d]",u"\""),
     ("\xc2\x93",u"\""),("\xc2\x94",u"\""),
-    (u'\u2026',u'...'),
-    # Eliminate multiple co-joined quotes
-    (u"\"\s\*\"",u"\""),     
+    (u'\u2026',u'...'),   
     # Replace multiple periods by one
     (u"(\.\s*)+",u"."),
     # Replace emojis by a special tag
@@ -31,6 +29,7 @@ SUBSTITUTIONS = [
     (u"(https?:\/\/\S+)",u""),
     # Separate alphabetical character from non-alphabetical character by a blank space
     (u"([0-9a-záéíóúñü\\\]?)([^0-9a-záéíóúñü_\\\\s]+)([0-9a-záéíóúñü\\\]?)",u"\\1 \\2 \\3"),
+    (u"([^0-9a-záéíóúñü_\s])([^0-9a-záéíóúñü_\s])",u"\\1 \\2"),
     # Separate alphabetical from numerical 
     (u"([a-záéíóúñü])([0-9])",u"\\1 \\2"), 
     (u"([0-9])([a-záéíóúñü])",u"\\1 \\2"),
@@ -45,8 +44,12 @@ SUBSTITUTIONS = [
     (u"&lquo;",u"("),(u"&rquo;",u")"), 
     # Replace all non-alphabetical or special symbols by a whitespace
     (u"[^0-9a-záéíóúñü_¿\?¡!\(\),\.:;\"\$/<>]",u" "),
+    # Replace multiple non-alphabetical characters by one
+#     (u'([¿\?¡!\(\),\.:;\"\$\/<>])(\\1\s*)+',u'\\1 '),
     # Replace multiple blank spaces by one
-    (u"(\s){2,}",u" ")
+    (u"(\s){2,}",u" "),
+    # Force dot ending
+    (u"([^\.])\s*$",u"\\1 .")
 ]
 
 def _correction(text):
@@ -61,10 +64,6 @@ def _correction(text):
     while re.search(pattern, text, flags=re.DOTALL):
         text = re.sub(pattern,u"\\2",text,flags=re.DOTALL)
     text = re.sub(u"<.*?>",u"",text,flags=re.DOTALL)
-    # Force dot ending
-    text += u" ."   
-    # Normalize
-#     text = text.lower() 
     return text    
 
     
@@ -112,6 +111,8 @@ def from_corpus(
     
     # Read the corpus from each file
     filenames = glob.glob(files_dir)
+    if not filenames:
+        raise Exception('Any corporea found in %s' % files_dir)
     revs , cats  = [] , []
     total = len(filenames)
     for idx, filename in enumerate(filenames):
@@ -180,8 +181,14 @@ def from_corpus(
     return opinion_data
 
 if __name__ == '__main__':
-    print _correction(u'Esto :( creo que ) eeees " una prueba! :) Usando ( corrrrrreccion ) de las ( palabras mal')
-    print _correction(u"Can't ad teams Cant ad brazilian soccer teams .")
-    print _correction(u"esta (es otra) prueba (con multiples) parentesis")
-    print _correction(u"tengo (: una aca ( esta es otra ) de  ( prueba :) con ( multiples ) ) parentesis giles")
-    print _correction(u"tengo \" una aca \" esta es otra \" de  \" prueba :\" con \" multiples \" \" parentesis giles")
+    while True:
+        text = raw_input('> ')
+        if not text: break
+        result = _correction(text)
+        print "INPUT:",text
+        print "OUTPUT:",result
+#     print _correction(u'Esto :( creo que ) eeees " una prueba! :) Usando ( corrrrrreccion ) de las ( palabras mal')
+#     print _correction(u"Can't ad teams Cant ad brazilian soccer teams .")
+#     print _correction(u"esta (es otra) prueba (con multiples) parentesis")
+#     print _correction(u"tengo (: una aca ( esta es otra ) de  ( prueba :) con ( multiples ) ) parentesis giles")
+#     print _correction(u"tengo \" una aca \" esta es otra \" de  \" prueba :\" con \" multiples \" \" parentesis giles")

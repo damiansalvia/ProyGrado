@@ -3,7 +3,7 @@ import freeling
 import os
 from enchant import DictWithPWL
 from enchant.checker import SpellChecker
-from difflib import get_close_matches
+from difflib import get_close_matches, SequenceMatcher
 
 
 DATA = "/usr/local/share/freeling/"
@@ -23,17 +23,13 @@ class Analyzer:
 
         # Create options set for maco analyzer
         op = freeling.maco_options(LANG)
-        op.set_data_files( 
-            "", 
-            DATA + "common/punct.dat",
-            DATA + LANG + "/es-ar/dicc.src",
-            DATA + LANG + "/afixos.dat",
-            "",
-            DATA + LANG + "/locucions.dat", 
-            DATA + LANG + "/np.dat",
-            DATA + LANG + "/quantities.dat",
-            DATA + LANG + "/probabilitats.dat"
-        )
+        op.PunctuationFile  = DATA + "common/punct.dat"
+        op.DictionaryFile   = DATA + LANG + "/es-ar/dicc.src"
+        op.AffixFile        = DATA + LANG + "/afixos.dat"
+        op.LocutionsFile    = DATA + LANG + "/locucions.dat"
+        op.NPdataFile       = DATA + LANG + "/np.dat"
+        op.QuantitiesFile   = DATA + LANG + "/quantities.dat" 
+        op.ProbabilityFile  = DATA + LANG + "/probabilitats.dat" 
 
         # Create analyzers
         self.tk  = freeling.tokenizer(DATA+LANG+"/tokenizer.dat")
@@ -43,19 +39,26 @@ class Analyzer:
         # create tagger and alternatives
         self.tg  = freeling.hmm_tagger(DATA+LANG+"/tagger.dat",True,2)
         self.alts_ort = freeling.alternatives(DATA+LANG+"/alternatives-ort.dat")
-        self.alts_phon = freeling.alternatives(DATA+LANG+"/alternatives-phon.dat")
+        
+        # known words
+        self.wknown = []
         
         self.sid = self.sp.open_session()
         
+        
     def __del__(self):
         self.sp.close_session(self.sid)
-
+    
 
     def analyze(self,text):
-        if not isinstance(text, unicode):
-            text = unicode(text, 'utf8')
         
-        # Correction from alternatives
+        def no_accent(text):
+            return text.replace(u'á',u'a').replace(u'é',u'e').replace(u'í',u'i').replace(u'ó',u'o').replace(u'ú',u'u').replace(u'ü',u'u')
+        
+        if not isinstance(text, unicode):
+            text = unicode(text, 'utf8') 
+        
+        # Check which words are correct
         self.mf.set_active_options(
             False, # User Map
             False,  # Number Detection 
@@ -66,42 +69,76 @@ class Analyzer:
             False, # Compound Analysis
             True,  # Retok Contractions
             False,  # Multiword Detection 
-            True,  # NER 
+            False,  # NER                    <-- Required
             False,  # Quantities Detection
             False   # Probability Assignment <-- Required
         )
-        ls = self.tk.tokenize(text)
+        ls = self.tk.tokenize( text )
         ls = self.sp.split(self.sid,ls,False)
         ls = self.mf.analyze(ls)
-        ls = self.alts_ort.analyze(ls)
-#         ls = self.alts_phon.analyze(ls)
-        unk = [] ; text = ""
+        ls = self.alts_ort.analyze(ls) 
+        ack = []  
         for sentence in ls :
             for token in sentence.get_words() :
-                word  = token.get_form()
-                known = token.found_in_dict()
-                const = word.split('_')
-                if not known:
-                    const = [ wd.lower() for wd in const ]
-                    unk += const
-                const = [ wd.lower() if len(wd) < 5 else wd for wd in const ]
-                text += ' '+ ' '.join( const ) 
-#                 if raw_input(token.get_lc_form()+' > ') == 'd':
-#                     import pdb;pdb.set_trace()           
-        if unk: # Do word correction
-            chkr.set_text(text)
-            for err in chkr:
-                if not err.word in unk: # Avoid correct nouns
-                    continue
-                sugg = [ s for s in chkr.suggest(err.word) if '-' not in s ]
-                alts = get_close_matches( err.word , sugg , 3 , 0.80 )
-                if alts   : corr = alts[0]
-                elif sugg : corr = sugg[0]
-                else      : corr = err.word
-                err.replace(corr)
-            text = chkr.get_text()
-            unk = []
+                word = token.get_form()
+                for word in word.split('_'):
+                    if token.found_in_dict(): 
+                        ack.append( word )
         
+        # Check which words are correct
+        self.mf.set_active_options(
+            False, # User Map
+            False,  # Number Detection 
+            True,  # Punctuation Detection 
+            False,  # Date Detection 
+            True,  # Dictionary Search 
+            True,  # Affix Analysis
+            False, # Compound Analysis
+            True,  # Retok Contractions
+            False,  # Multiword Detection 
+            True,  # NER                    <-- Required
+            False,  # Quantities Detection
+            False   # Probability Assignment <-- Required
+        )
+        ls = self.tk.tokenize( text )
+        ls = self.sp.split(self.sid,ls,False)
+        ls = self.mf.analyze(ls)
+        ls = self.alts_ort.analyze(ls) 
+        nouns = []  
+        for sentence in ls :
+            for token in sentence.get_words() :
+                word = token.get_form()
+                for word in word.split('_'):
+                    if token.found_in_dict(): 
+                        nouns.append( word )
+        nouns = list( set(nouns) - set(ack) )
+                    
+        # Replace those incorrect words and normalize correct ones 
+        words = text.split(' ')
+        for i in range( len(words) ):
+            word = words[i]
+            if not word: 
+                continue
+            if (word in ack) or chkr.check(word):
+                word = word.lower()
+            else:
+                word_na = no_accent(word)
+                sugg = { no_accent(s):s for s in chkr.suggest( word_na ) if ('-' not in s) }
+                alts = get_close_matches( word_na , sugg.keys() , 5 , 0.75   )
+                if   alts : corr = sugg[ alts[0] ].lower()
+                elif sugg : corr = sugg.keys()[0].lower() if (word not in nouns) else word
+                else : 
+                    chkr.set_text(word)
+                    for err in chkr:
+                        corr = chkr.suggest( err.word ) 
+                        err.replace( corr[0] if corr else err.word )
+                    word = chkr.get_text()
+                    corr = word.lower() if (word not in nouns) else word
+#                 import pdb;pdb.set_trace()
+                word = corr
+            words[i] = word
+        text = ' '.join(words)
+            
         # Analyze result
         self.mf.set_active_options(
             False, # User Map
@@ -129,8 +166,7 @@ class Analyzer:
                     "lemma" : token.get_lemma(), 
                     "tag"   : token.get_tag()
                 })
-                
-#         self.sp.close_session(sid)
+        
         return sent
 
 
@@ -143,6 +179,8 @@ if __name__ == "__main__":
         text = raw_input('> ')
         if not text: break
         result =  analiyzer.analyze(text)
+        print "INPUT :",text
+        print "OUTPUT:",' '.join([tok['form'] for tok in result])
         for res in result: print res
 #     #------------------------------------------------------
 #     print "\n   With unkown words"
