@@ -27,10 +27,12 @@ class _SingletonSettings(object):
     
     _instance = None
     
+    
     def __new__(cls, *args, **kwargs):
         if not cls._instance:
             cls._instance = super(_SingletonSettings, cls).__new__(cls, *args, **kwargs)
         return cls._instance
+
 
     def __init__(self,data,lang,pwl):
         
@@ -99,10 +101,10 @@ SUBSTITUTIONS = [
     (u"[^0-9a-záéíóúñü_¿\?¡!\(\),\.:;\"\$/<>]",u" "),
     # Replace multiple non-alphabetical characters by one
 #     (u'([¿\?¡!\(\),\.:;\"\$\/<>])(\\1\s*)+',u'\\1 '), # Issue when nested quotes
-    # Replace multiple blank spaces by one
-    (u"(\s){2,}",u" "),
     # Force dot ending
-    (u"([^\.])\.\s*$",u"\\1 .")
+    (u"([^\w\?!\)\"])$",u""), (u"([^\.])$",u"\\1 ."),
+    # Replace multiple blank spaces by one
+    (u"\s\s+",u" ")
 ]
     
 class _SpellCorrector(_SingletonSettings):
@@ -113,8 +115,34 @@ class _SpellCorrector(_SingletonSettings):
     def __new__(cls, *args, **kwargs):
         return super(_SpellCorrector, cls).__new__(cls, *args, **kwargs)
     
+    
     def _no_accent(self,text):
         return text.replace(u'á',u'a').replace(u'é',u'e').replace(u'í',u'i').replace(u'ó',u'o').replace(u'ú',u'u').replace(u'ü',u'u')
+    
+    
+    def _clean_unbalanced(self,text):
+        diff = text.count(u"(") - text.count(u")")
+        while diff <> 0:
+            if diff > 0 :
+                i = text.index(u"(") ; diff -= 1
+            if diff < 0 : 
+                i = text.index(u")") ; diff += 1
+            text = text[:i]+text[i+1:]
+        if text.count(u"¿") - text.count(u"?") <> 0: 
+            text = re.sub(u"[\?¿]",u".",text)
+        if text.count(u"¡") - text.count(u"!") <> 0: 
+            text = re.sub(u"[!¡]",u".",text)
+        if text.count(u"\"") % 2 == 1 :
+            i = text.index(u"\"")
+            text = text[:i] + text[i+1:]
+        return text
+    
+    
+    def _clean_tags(self,text):
+        pattern = u"<\s(.*?)\s.*?>(.*?)</\s\\1\s>" 
+        while re.search(pattern, text, flags=re.DOTALL):
+            text = re.sub(pattern,u"\\2",text,flags=re.DOTALL)
+        text = re.sub(u"<.*?>",u"",text,flags=re.DOTALL)
     
     def _correct(self,text):
         
@@ -123,20 +151,11 @@ class _SpellCorrector(_SingletonSettings):
             
         for source,target in SUBSTITUTIONS:
             text = re.sub(source,target,text,flags=re.DOTALL|re.U|re.I)
+            text = text.strip()
             
-        pattern = u"<\s(.*?)\s.*?>(.*?)</\s\\1\s>" 
-        while re.search(pattern, text, flags=re.DOTALL):
-            text = re.sub(pattern,u"\\2",text,flags=re.DOTALL)
-        text = re.sub(u"<.*?>",u"",text,flags=re.DOTALL)
+        text = self._clean_tags(text)
         
-        diff = text.count(u"(") - text.count(u")")
-        while diff <> 0:
-            if diff > 0 : 
-                text = text[ text.index(u"(") ] ; diff -= 1
-            if diff < 0 : 
-                text = text[ text.index(u")") ] ; diff += 1
-        if text.count(u"\"") % 2 == 1 : 
-            text = text[ text.index(u"\"") ]
+        text = self._clean_unbalanced(text)
         
         self.Morfo.set_active_options(
             False, # User Map
@@ -230,6 +249,7 @@ class _MorfoTokenizer(_SingletonSettings):
     
     def __new__(cls, *args, **kwargs):
         return super(_MorfoTokenizer, cls).__new__(cls, *args, **kwargs)
+    
     
     def _analyze(self,text):
         
