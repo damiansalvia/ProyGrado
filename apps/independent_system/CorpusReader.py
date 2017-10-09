@@ -64,6 +64,19 @@ def _correction(text):
     while re.search(pattern, text, flags=re.DOTALL):
         text = re.sub(pattern,u"\\2",text,flags=re.DOTALL)
     text = re.sub(u"<.*?>",u"",text,flags=re.DOTALL)
+    try:
+        diff = text.count(u"(") - text.count(u")")
+        while diff <> 0:
+            if diff > 0 : 
+                text = text[ text.index(u"(") ] ; diff -= 1
+            if diff < 0 : 
+                text = text[ text.index(u")") ] ; diff += 1
+        if text.count(u"\"") % 2 == 1 : 
+            text = text[ text.index(u"\"") ]
+    except Exception as e:
+        print str(e)
+        import pdb; pdb.set_trace()
+         
     return text    
 
     
