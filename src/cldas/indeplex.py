@@ -132,7 +132,7 @@ def by_senti_tfidf(pos_op, neg_op, lemmas=None, limit=None, eps=1e-5, verbose=Tr
     lexicon = { lemmas[idx]:round(pol,3) for idx,pol in enumerate(ld) }
     
     if limit:
-        lexicon = sorted(lexicon, key=lambda lem : abs(lexicon[lem]), reverse=True)
+        lexicon = dict( sorted(lexicon.items(), key=lambda elem : abs(elem[1]), reverse=True)[:limit] )
         
     if tofile:
         suffix = "_top%i" % limit if limit else ""  
@@ -159,7 +159,7 @@ def by_senti_qtf(pos_op, neg_op, lemmas=None, limit=None, eps=1e-5, verbose=True
     lexicon = { lemmas[idx]:round(pol,3) for idx,pol in enumerate(ld) }
     
     if limit:
-        lexicon = sorted(lexicon, key=lambda lem : abs(lexicon[lem]), reverse=True)
+        lexicon = dict( sorted(lexicon.items(), key=lambda elem : abs(elem[1]), reverse=True)[:limit] )
     
     if tofile:
         suffix = "_top%i" % limit if limit else ""  
@@ -186,7 +186,7 @@ def by_senti_pmi(pos_op, neg_op, lemmas=None, limit=None, eps=1e-5, verbose=True
     lexicon = { lemmas[idx]:round(pol,3) for idx,pol in enumerate(ld) }
     
     if limit:
-        lexicon = sorted(lexicon, key=lambda lem : abs(lexicon[lem]), reverse=True)
+        lexicon = dict( sorted(lexicon.items(), key=lambda elem : abs(elem[1]), reverse=True)[:limit] )
     
     if tofile:
         suffix = "_top%i" % limit if limit else "" 
@@ -211,7 +211,7 @@ def by_senti_avg(pos_op, neg_op, lemmas=None, limit=None, eps=1e-5, verbose=True
     lexicon = { lemmas[idx]:round(pol,3) for idx,pol in enumerate(ld) }
     
     if limit:
-        lexicon = sorted(lexicon, key=lambda lem : abs(lexicon[lem]), reverse=True)
+        lexicon = dict( sorted(lexicon.items(), key=lambda elem : abs(elem[1]), reverse=True)[:limit] )
     
     if tofile:
         suffix = "_top%i" % limit if limit else "" 
