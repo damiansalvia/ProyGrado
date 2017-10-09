@@ -31,6 +31,7 @@ SUBSTITUTIONS = [
     (u"([^lr])\\1+",u"\\1"),
     # Separate alphabetical character from non-alphabetical character by a blank space
     (u"([0-9a-záéíóúñü\\\]?)([^0-9a-záéíóúñü_\\\\s]+)([0-9a-záéíóúñü\\\]?)",u"\\1 \\2 \\3"),
+    # Separate non-alphabetical cojoined characters
     (u"([^0-9a-záéíóúñü_\s])([^0-9a-záéíóúñü_\s])",u"\\1 \\2"),
     # Separate alphabetical from numerical 
     (u"([a-záéíóúñü])([0-9])",u"\\1 \\2"), 
@@ -48,10 +49,10 @@ SUBSTITUTIONS = [
     (u"[^0-9a-záéíóúñü_¿\?¡!\(\),\.:;\"\$/<>]",u" "),
     # Replace multiple non-alphabetical characters by one
 #     (u'([¿\?¡!\(\),\.:;\"\$\/<>])(\\1\s*)+',u'\\1 '),
-    # Replace multiple blank spaces by one
-    (u"(\s){2,}",u" "),
     # Force dot ending
-    (u"([^\.])$",u"\\1 .")
+    (u"([^\w\?!\)\"])$",u""), (u"([^\.])$",u"\\1 ."),
+    # Replace multiple blank spaces by one
+    (u"\s\s+",u" ")
 ]
 
 def _correction(text):
@@ -63,26 +64,31 @@ def _correction(text):
         text = re.sub(source,target,text,flags=re.DOTALL|re.U|re.I)
         text = text.strip()
 #         print source,">>",text
-    # Tags treatment (embedded and residual)
+
+    text = _clean_tags(text)    
+    text = _clean_unbalanced(text)
+         
+    return text    
+
+def _clean_unbalanced(text):
+    if text.count(u"(") - text.count(u")") <> 0:
+        text = re.sub(u"[\(\)]",u" . ",text)
+    if text.count(u"¿") - text.count(u"?") <> 0: 
+        text = re.sub(u"[\?¿]",u" . ",text)
+    if text.count(u"¡") - text.count(u"!") <> 0: 
+        text = re.sub(u"[!¡]",u" . ",text)
+    if text.count(u"\"") % 2 == 1 :
+        i = text.index(u"\"")
+        text = text[:i] + text[i+1:]
+    return text
+
+def _clean_tags(text):
     pattern = u"<\s(.*?)\s.*?>(.*?)</\s\\1\s>" 
     while re.search(pattern, text, flags=re.DOTALL):
         text = re.sub(pattern,u"\\2",text,flags=re.DOTALL)
     text = re.sub(u"<.*?>",u"",text,flags=re.DOTALL)
-    try:
-        diff = text.count(u"(") - text.count(u")")
-        while diff <> 0:
-            if diff > 0 : 
-                text = text[ text.index(u"(") ] ; diff -= 1
-            if diff < 0 : 
-                text = text[ text.index(u")") ] ; diff += 1
-        if text.count(u"\"") % 2 == 1 : 
-            text = text[ text.index(u"\"") ]
-    except Exception as e:
-        print str(e)
-        import pdb; pdb.set_trace()
-         
-    return text    
-
+    return text
+    
     
 def from_corpus(
     # Read any sentiment analysis corpus by matching the review/opinion and its category from each file
