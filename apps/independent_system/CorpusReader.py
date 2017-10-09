@@ -36,14 +36,14 @@ SUBSTITUTIONS = [
     (u"([a-záéíóúñü])([0-9])",u"\\1 \\2"), 
     (u"([0-9])([a-záéíóúñü])",u"\\1 \\2"),
     # Remove redundant quote marks  -- replace, delete, undo
-    (u"(\")([^\"]*?)(?(1)\")",u"&quote;\\2&quote;"),
+    (u"(\")([^\"]*?)(?(1)\")",u"&quote;\\2&quote; "),
     (u"[\"]",u""),
     (u"&quote;\s+&quote;",u""),
     (u"&quote;",u"\""),
     # Remove redundant parenthesis -- replace, delete, undo
     (u"(\()([^\(]*?)(?(1)\))",u"&lquo;\\2&rquo;"),
     (u"[\(\)]",u""),
-    (u"&lquo;",u"("),(u"&rquo;",u")"), 
+    (u"&lquo;",u"("),(u"&rquo;",u") "), 
     # Replace all non-alphabetical or special symbols by a whitespace
     (u"[^0-9a-záéíóúñü_¿\?¡!\(\),\.:;\"\$/<>]",u" "),
     # Replace multiple non-alphabetical characters by one
@@ -51,7 +51,7 @@ SUBSTITUTIONS = [
     # Replace multiple blank spaces by one
     (u"(\s){2,}",u" "),
     # Force dot ending
-    (u"([^\.])\s*$",u"\\1 .")
+    (u"([^\.])\.\s*$",u"\\1 .")
 ]
 
 def _correction(text):
@@ -61,6 +61,7 @@ def _correction(text):
         text = unicode(text,'utf8')
     for source,target in SUBSTITUTIONS:
         text = re.sub(source,target,text,flags=re.DOTALL|re.U|re.I)
+        print source,">>",text
     # Tags treatment (embedded and residual)
     pattern = u"<\s(.*?)\s.*?>(.*?)</\s\\1\s>" 
     while re.search(pattern, text, flags=re.DOTALL):
