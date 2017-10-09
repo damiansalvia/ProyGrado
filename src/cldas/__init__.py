@@ -1,4 +1,4 @@
 from cldas.retrieval import CorpusReader
-from preprocess import Itemize
+from cldas.morpho import Preprocess
 
 __all__ = ['utils','neg']
