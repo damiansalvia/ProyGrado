@@ -27,6 +27,8 @@ SUBSTITUTIONS = [
     (u":\(",u" emoji_triste "),(u"\):",u" emoji_triste "),
     # Remove URIs with scheme http or https
     (u"(https?:\/\/\S+)",u""),
+    # Remove repetitive characters except ll, rr, cc
+    (u"([^lr])\\1+",u"\\1"),
     # Separate alphabetical character from non-alphabetical character by a blank space
     (u"([0-9a-záéíóúñü\\\]?)([^0-9a-záéíóúñü_\\\\s]+)([0-9a-záéíóúñü\\\]?)",u"\\1 \\2 \\3"),
     (u"([^0-9a-záéíóúñü_\s])([^0-9a-záéíóúñü_\s])",u"\\1 \\2"),
