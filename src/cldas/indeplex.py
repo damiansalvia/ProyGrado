@@ -63,7 +63,10 @@ def _LD(ds_pos, ds_neg, eps=1e-5):
     return ld  
 
 
-def _get_structures(pos_op, neg_op, lemmas=None, verbose=True):
+def _get_structures(pos_op, neg_op, strategy, lemmas=None, verbose=True):
+    '''
+    Generates frequency vector, presence vector and document quantity from positive and negative opinion sets
+    '''
     
     P = 1.0 * len(pos_op) ; N = 1.0 * len(neg_op)  
     
@@ -81,14 +84,14 @@ def _get_structures(pos_op, neg_op, lemmas=None, verbose=True):
     total = len(opinions)
     
     for jth,opinion in enumerate(opinions):
-        if verbose : progress("Building (%i words)" % len(opinion['text']),total,jth)
+        if verbose : progress("Building lexicon by %s (%i words)" % (strategy , len(opinion['text']) ), total, jth)
         
         cat = opinion['category']
         
         Pfreq = defaultdict(lambda:0)
         Nfreq = defaultdict(lambda:0)
         for item in opinion['text']:
-            neg = item.has_key('negated') and item['negated']
+            neg = item.get('negated',False)
             
             lem = item['lemma']
              
@@ -114,9 +117,12 @@ def _get_structures(pos_op, neg_op, lemmas=None, verbose=True):
 
 
 
-def by_senti_tfidf(pos_op,neg_op,lemmas=None,limit=None,eps=1e-5,verbose=True):
+def by_senti_tfidf(pos_op, neg_op, lemmas=None, limit=None, eps=1e-5, verbose=True, tofile=None):
+    '''
+    Generates a lexicon from positive and negative opinion sets by Logaritmic Diferential of TFIDF
+    '''
     
-    P, Pctd, Pt, N, Nctd, Nt = _get_structures(pos_op, neg_op, lemmas, verbose)
+    P, Pctd, Pt, N, Nctd, Nt = _get_structures(pos_op, neg_op, 'TFIDF', lemmas, verbose)
     
     ds_pos = _TFIDF(Pctd, Pt, P, eps) 
     ds_neg = _TFIDF(Nctd, Nt, N, eps)
@@ -127,14 +133,21 @@ def by_senti_tfidf(pos_op,neg_op,lemmas=None,limit=None,eps=1e-5,verbose=True):
     
     if limit:
         lexicon = sorted(lexicon, key=lambda lem : abs(lexicon[lem]), reverse=True)
+        
+    if tofile:
+        suffix = "_top%i" % limit if limit else ""  
+        save( lexicon , "indeplex_by_senti_tfidf" + suffix , tofile )
     
     return lexicon
     
     
     
-def by_senti_qtf(pos_op,neg_op,lemmas=None,limit=None,eps=1e-5,verbose=True):
+def by_senti_qtf(pos_op, neg_op, lemmas=None, limit=None, eps=1e-5, verbose=True, tofile=None):
+    '''
+    Generates a lexicon from positive and negative opinion sets by Logaritmic Diferential of QTF
+    '''
     
-    _, Pctd, Pt, _, Nctd, Nt = _get_structures(pos_op, neg_op, lemmas, verbose)
+    _, Pctd, Pt, _, Nctd, Nt = _get_structures(pos_op, neg_op, 'QTF', lemmas, verbose)
     
     Tctd = Pctd+Nctd ; Tt = Pt+Nt
     
@@ -148,13 +161,20 @@ def by_senti_qtf(pos_op,neg_op,lemmas=None,limit=None,eps=1e-5,verbose=True):
     if limit:
         lexicon = sorted(lexicon, key=lambda lem : abs(lexicon[lem]), reverse=True)
     
+    if tofile:
+        suffix = "_top%i" % limit if limit else ""  
+        save( lexicon , "indeplex_by_senti_qtf" + suffix , tofile )
+    
     return lexicon    
 
 
 
-def by_senti_pmi(pos_op,neg_op,lemmas=None,limit=None,eps=1e-5,verbose=True):
+def by_senti_pmi(pos_op, neg_op, lemmas=None, limit=None, eps=1e-5, verbose=True, tofile=None):
+    '''
+    Generates a lexicon from positive and negative opinion sets by Logaritmic Diferential of PMI
+    '''
     
-    P, Pctd, Pt, N, Nctd, Nt = _get_structures(pos_op, neg_op, lemmas, verbose)
+    P, Pctd, Pt, N, Nctd, Nt = _get_structures(pos_op, neg_op, 'PMI', lemmas, verbose)
     
     Tctd = Pctd+Nctd ; Tt = Pt+Nt ; T = P+N
     
@@ -168,13 +188,20 @@ def by_senti_pmi(pos_op,neg_op,lemmas=None,limit=None,eps=1e-5,verbose=True):
     if limit:
         lexicon = sorted(lexicon, key=lambda lem : abs(lexicon[lem]), reverse=True)
     
+    if tofile:
+        suffix = "_top%i" % limit if limit else "" 
+        save( lexicon , "indeplex_by_senti_pmi" + suffix , tofile )
+    
     return lexicon
 
 
 
-def by_senti_avg(pos_op,neg_op,lemmas=None,limit=None,eps=1e-5,verbose=True):
+def by_senti_avg(pos_op, neg_op, lemmas=None, limit=None, eps=1e-5, verbose=True, tofile=None):
+    '''
+    Generates a lexicon from positive and negative opinion sets by Logaritmic Diferential of AVG
+    '''
     
-    P, Pctd, Pt, N, Nctd, Nt = _get_structures(pos_op, neg_op, lemmas, verbose)
+    P, Pctd, Pt, N, Nctd, Nt = _get_structures(pos_op, neg_op, 'AVG', lemmas, verbose)
     
     ds_pos = _AVG(Pctd, Pt, P, eps)
     ds_neg = _AVG(Nctd, Nt, N, eps)
@@ -186,8 +213,8 @@ def by_senti_avg(pos_op,neg_op,lemmas=None,limit=None,eps=1e-5,verbose=True):
     if limit:
         lexicon = sorted(lexicon, key=lambda lem : abs(lexicon[lem]), reverse=True)
     
-    return lexicon
+    if tofile:
+        suffix = "_top%i" % limit if limit else "" 
+        save( lexicon , "indeplex_by_senti_avg" + suffix , tofile )
     
-  
-    
-    
+    return lexicon 
