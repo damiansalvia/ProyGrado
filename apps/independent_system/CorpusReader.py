@@ -51,7 +51,7 @@ SUBSTITUTIONS = [
     # Replace multiple blank spaces by one
     (u"(\s){2,}",u" "),
     # Force dot ending
-    (u"([^\.])\.\s*$",u"\\1 .")
+    (u"([^\.])$",u"\\1 .")
 ]
 
 def _correction(text):
@@ -61,6 +61,7 @@ def _correction(text):
         text = unicode(text,'utf8')
     for source,target in SUBSTITUTIONS:
         text = re.sub(source,target,text,flags=re.DOTALL|re.U|re.I)
+        text = text.strip()
 #         print source,">>",text
     # Tags treatment (embedded and residual)
     pattern = u"<\s(.*?)\s.*?>(.*?)</\s\\1\s>" 
