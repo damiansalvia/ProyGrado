@@ -8,10 +8,15 @@ Module for managing temporal resources
 from time import gmtime, strftime
 import os, io, json
 
+
+
 def save(data,name,path,overwrite=True):
+    
     if not data:
         print "Nothing to be saved" 
         return    
+    
+    path = path.replace("\\", "/")
     
     if not os.path.isdir(path): os.makedirs(path)
         
@@ -19,10 +24,27 @@ def save(data,name,path,overwrite=True):
             
     path = "%s/%s%s.json" % (path,name,suffix)         
     
-    with io.open(path,"w",encoding='utf8') as f:
+    with io.open(path,"w",encoding='utf8') as fp:
         content = json.dumps(data,indent=4,ensure_ascii=False)
         if not isinstance(content, unicode):
             content = unicode(content,'utf8')
-        f.write(content)
+        fp.write(content)
     print "Saved at",path
+    
+    
+    
+def load(abspath):
+    
+    abspath = abspath.replace("\\", "/")
+    
+    if not abspath or not os.path.exists(abspath) or abspath.split('.')[-1] <> 'json':
+        print "Nothing to be load from",abspath
+        return 
+    
+    with io.open(abspath,"w",encoding='utf8') as fp:
+        content = json.load(fp)
+        
+    return content
+    
+    
     
