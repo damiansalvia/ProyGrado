@@ -61,7 +61,7 @@ def _correction(text):
         text = unicode(text,'utf8')
     for source,target in SUBSTITUTIONS:
         text = re.sub(source,target,text,flags=re.DOTALL|re.U|re.I)
-        print source,">>",text
+#         print source,">>",text
     # Tags treatment (embedded and residual)
     pattern = u"<\s(.*?)\s.*?>(.*?)</\s\\1\s>" 
     while re.search(pattern, text, flags=re.DOTALL):
