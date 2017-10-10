@@ -113,7 +113,7 @@ def _get_structures(pos_op, neg_op, strategy, lemmas=None, verbose=True):
             Nctd[idx] += Nfreq[idx]
             Nt[idx]   += 1
     
-    return P, Pctd, Pt, N, Nctd, Nt
+    return lemmas, P, Pctd, Pt, N, Nctd, Nt
 
 
 
@@ -122,7 +122,7 @@ def by_senti_tfidf(pos_op, neg_op, lemmas=None, limit=None, eps=1e-5, verbose=Tr
     Generates a lexicon from positive and negative opinion sets by Logaritmic Diferential of TFIDF
     '''
     
-    P, Pctd, Pt, N, Nctd, Nt = _get_structures(pos_op, neg_op, 'TFIDF', lemmas, verbose)
+    lemmas, P, Pctd, Pt, N, Nctd, Nt = _get_structures(pos_op, neg_op, 'TFIDF', lemmas, verbose)
     
     ds_pos = _TFIDF(Pctd, Pt, P, eps) 
     ds_neg = _TFIDF(Nctd, Nt, N, eps)
@@ -147,7 +147,7 @@ def by_senti_qtf(pos_op, neg_op, lemmas=None, limit=None, eps=1e-5, verbose=True
     Generates a lexicon from positive and negative opinion sets by Logaritmic Diferential of QTF
     '''
     
-    _, Pctd, Pt, _, Nctd, Nt = _get_structures(pos_op, neg_op, 'QTF', lemmas, verbose)
+    lemmas, _, Pctd, Pt, _, Nctd, Nt = _get_structures(pos_op, neg_op, 'QTF', lemmas, verbose)
     
     Tctd = Pctd+Nctd ; Tt = Pt+Nt
     
@@ -174,7 +174,7 @@ def by_senti_pmi(pos_op, neg_op, lemmas=None, limit=None, eps=1e-5, verbose=True
     Generates a lexicon from positive and negative opinion sets by Logaritmic Diferential of PMI
     '''
     
-    P, Pctd, Pt, N, Nctd, Nt = _get_structures(pos_op, neg_op, 'PMI', lemmas, verbose)
+    lemmas, P, Pctd, Pt, N, Nctd, Nt = _get_structures(pos_op, neg_op, 'PMI', lemmas, verbose)
     
     Tctd = Pctd+Nctd ; Tt = Pt+Nt ; T = P+N
     
@@ -201,7 +201,7 @@ def by_senti_avg(pos_op, neg_op, lemmas=None, limit=None, eps=1e-5, verbose=True
     Generates a lexicon from positive and negative opinion sets by Logaritmic Diferential of AVG
     '''
     
-    P, Pctd, Pt, N, Nctd, Nt = _get_structures(pos_op, neg_op, 'AVG', lemmas, verbose)
+    lemmas, P, Pctd, Pt, N, Nctd, Nt = _get_structures(pos_op, neg_op, 'AVG', lemmas, verbose)
     
     ds_pos = _AVG(Pctd, Pt, P, eps)
     ds_neg = _AVG(Nctd, Nt, N, eps)
