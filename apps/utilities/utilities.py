@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 
 from time import gmtime, strftime
-import inspect, math, json, os, io
+import inspect, json, os, io
 
 
 tmp = os.popen('stty size', 'r').read().split()
 width = int(tmp[1])-15 if tmp else 100
 
 
-def save(data,name,path,overwrite=True):
+def save(data,name,path,overwrite=True, extension='json'):
     if not data:
         print "Nothing to be saved" 
         return    
@@ -17,7 +17,7 @@ def save(data,name,path,overwrite=True):
         
     suffix = "" if overwrite else strftime("%Y%m%d_%H-%M-%S", gmtime()) 
             
-    path = "%s/%s%s.json" % (path,name,suffix)         
+    path = "%s/%s%s.%s" % (path,name,suffix, extension)         
     
     with io.open(path,"w",encoding='utf8') as f:
         content = json.dumps(data,indent=4,ensure_ascii=False)

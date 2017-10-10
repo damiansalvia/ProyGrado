@@ -223,7 +223,6 @@ if __name__ == '__main__':
     else:
         ann = ANN(get_window())
         ann.load_model('./outputs/models/model_LSTM.h5')
-        import pdb; pdb.set_trace()  # breakpoint 69491b51 //
 
     start_evaluator(ann.predict_opinion)
     if raw_input("Predict all? > "):
