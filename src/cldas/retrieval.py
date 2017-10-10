@@ -16,7 +16,7 @@ class Position(Enum):
 
 import glob, re
 from _collections import defaultdict
-from utils import progress, Log
+from utils import progress, Log, save
 
 log = Log("./log")
 
@@ -25,15 +25,16 @@ class CorpusReader(object):
     Retrieves opinion and category from corporea source files
     '''
 
-    def __init__(self, directory, extension, verbose=True, **kwargs):
+    def __init__(self, directory, extension, verbose=True, tofile=None, **kwargs):
         '''
         Constructor from source directory and extension pattern
         '''
         directory = directory.replace("\\","/")
         extension = '*.'+extension if extension.isalnum() else extension
         
-        self._directory = directory if directory[-1] != "/" else directory[:-1]
-        self._files = glob.glob(directory+'/'+extension)
+        self._directory   = directory if directory[-1] != "/" else directory[:-1]
+        self._files       = glob.glob(directory+'/'+extension)
+        self._source = directory.split("/")[-1]
         
         self.filesid = []
         
@@ -92,10 +93,10 @@ class CorpusReader(object):
         if 'decoding' in kwargs:
             decoding = kwargs['decoding']
             del kwargs['decoding']
-        self._parse(decoding,verbose)  
+        self._parse(decoding,verbose,tofile)  
         
     
-    def _parse(self,decoding,verbose):    
+    def _parse(self,decoding,verbose,tofile):    
         
         pattern = None
         if self._path_pattern is not None:
@@ -143,14 +144,15 @@ class CorpusReader(object):
             revs = [] ; cats = []
                 
             assert len(revs) == len(cats)      
-                
+         
+        if tofile: save( self._c2o ,"retriv_%s" % self._source , tofile )       
         
     def __repr__(self):
-        return "<%s.%s in %s >" % (self.__class__.__module__, self.__class__.__name__, self._directory)
+        return "< %s.%s in %s >" % (self.__class__.__module__, self.__class__.__name__, self._directory)
     
     
     def __str__(self):
-        return self._directory.split("/")[-1] 
+        return self._source 
     
     
     def _add(self,opinion,category):

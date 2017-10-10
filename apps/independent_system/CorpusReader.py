@@ -19,9 +19,7 @@ SUBSTITUTIONS = [
     (u"`",u"\""),(u"´",u"\""),(u"\'",u"\""),
     (u"[\u201c\u201d]",u"\""),
     ("\xc2\x93",u"\""),("\xc2\x94",u"\""),
-    (u'\u2026',u'...'),
-    # Eliminate multiple co-joined quotes
-    (u"\"\s\*\"",u"\""),     
+    (u'\u2026',u'...'),   
     # Replace multiple periods by one
     (u"(\.\s*)+",u"."),
     # Replace emojis by a special tag
@@ -29,24 +27,32 @@ SUBSTITUTIONS = [
     (u":\(",u" emoji_triste "),(u"\):",u" emoji_triste "),
     # Remove URIs with scheme http or https
     (u"(https?:\/\/\S+)",u""),
+    # Remove repetitive characters except ll, rr, cc
+    (u"([^lr])\\1+",u"\\1"),
     # Separate alphabetical character from non-alphabetical character by a blank space
     (u"([0-9a-záéíóúñü\\\]?)([^0-9a-záéíóúñü_\\\\s]+)([0-9a-záéíóúñü\\\]?)",u"\\1 \\2 \\3"),
+    # Separate non-alphabetical cojoined characters
+    (u"([^0-9a-záéíóúñü_\s])([^0-9a-záéíóúñü_\s])",u"\\1 \\2"),
     # Separate alphabetical from numerical 
     (u"([a-záéíóúñü])([0-9])",u"\\1 \\2"), 
     (u"([0-9])([a-záéíóúñü])",u"\\1 \\2"),
     # Remove redundant quote marks  -- replace, delete, undo
-    (u"(\")([^\"]*?)(?(1)\")",u"&quote;\\2&quote;"),
+    (u"(\")([^\"]*?)(?(1)\")",u"&quote;\\2&quote; "),
     (u"[\"]",u""),
     (u"&quote;\s+&quote;",u""),
     (u"&quote;",u"\""),
     # Remove redundant parenthesis -- replace, delete, undo
     (u"(\()([^\(]*?)(?(1)\))",u"&lquo;\\2&rquo;"),
     (u"[\(\)]",u""),
-    (u"&lquo;",u"("),(u"&rquo;",u")"), 
+    (u"&lquo;",u"("),(u"&rquo;",u") "), 
     # Replace all non-alphabetical or special symbols by a whitespace
     (u"[^0-9a-záéíóúñü_¿\?¡!\(\),\.:;\"\$/<>]",u" "),
+    # Replace multiple non-alphabetical characters by one
+#     (u'([¿\?¡!\(\),\.:;\"\$\/<>])(\\1\s*)+',u'\\1 '),
+    # Force dot ending
+    (u"([^\w\?!\)\"])$",u""), (u"([^\.])$",u"\\1 ."),
     # Replace multiple blank spaces by one
-    (u"(\s){2,}",u" ")
+    (u"\s\s+",u" ")
 ]
 
 def _correction(text):
@@ -56,17 +62,33 @@ def _correction(text):
         text = unicode(text,'utf8')
     for source,target in SUBSTITUTIONS:
         text = re.sub(source,target,text,flags=re.DOTALL|re.U|re.I)
-    # Tags treatment (embedded and residual)
+        text = text.strip()
+#         print source,">>",text
+
+    text = _clean_tags(text)    
+    text = _clean_unbalanced(text)
+         
+    return text    
+
+def _clean_unbalanced(text):
+    if text.count(u"(") - text.count(u")") <> 0:
+        text = re.sub(u"[\(\)]",u" . ",text)
+    if text.count(u"¿") - text.count(u"?") <> 0: 
+        text = re.sub(u"[\?¿]",u" . ",text)
+    if text.count(u"¡") - text.count(u"!") <> 0: 
+        text = re.sub(u"[!¡]",u" . ",text)
+    if text.count(u"\"") % 2 == 1 :
+        i = text.index(u"\"")
+        text = text[:i] + text[i+1:]
+    return text
+
+def _clean_tags(text):
     pattern = u"<\s(.*?)\s.*?>(.*?)</\s\\1\s>" 
     while re.search(pattern, text, flags=re.DOTALL):
         text = re.sub(pattern,u"\\2",text,flags=re.DOTALL)
     text = re.sub(u"<.*?>",u"",text,flags=re.DOTALL)
-    # Force dot ending
-    text += u" ."   
-    # Normalize
-#     text = text.lower() 
-    return text    
-
+    return text
+    
     
 def from_corpus(
     # Read any sentiment analysis corpus by matching the review/opinion and its category from each file
@@ -112,6 +134,8 @@ def from_corpus(
     
     # Read the corpus from each file
     filenames = glob.glob(files_dir)
+    if not filenames:
+        raise Exception('Any corporea found in %s' % files_dir)
     revs , cats  = [] , []
     total = len(filenames)
     for idx, filename in enumerate(filenames):
@@ -180,8 +204,14 @@ def from_corpus(
     return opinion_data
 
 if __name__ == '__main__':
-    print _correction(u'Esto :( creo que ) eeees " una prueba! :) Usando ( corrrrrreccion ) de las ( palabras mal')
-    print _correction(u"Can't ad teams Cant ad brazilian soccer teams .")
-    print _correction(u"esta (es otra) prueba (con multiples) parentesis")
-    print _correction(u"tengo (: una aca ( esta es otra ) de  ( prueba :) con ( multiples ) ) parentesis giles")
-    print _correction(u"tengo \" una aca \" esta es otra \" de  \" prueba :\" con \" multiples \" \" parentesis giles")
+    while True:
+        text = raw_input('> ')
+        if not text: break
+        result = _correction(text)
+        print "INPUT:",text
+        print "OUTPUT:",result
+#     print _correction(u'Esto :( creo que ) eeees " una prueba! :) Usando ( corrrrrreccion ) de las ( palabras mal')
+#     print _correction(u"Can't ad teams Cant ad brazilian soccer teams .")
+#     print _correction(u"esta (es otra) prueba (con multiples) parentesis")
+#     print _correction(u"tengo (: una aca ( esta es otra ) de  ( prueba :) con ( multiples ) ) parentesis giles")
+#     print _correction(u"tengo \" una aca \" esta es otra \" de  \" prueba :\" con \" multiples \" \" parentesis giles")
