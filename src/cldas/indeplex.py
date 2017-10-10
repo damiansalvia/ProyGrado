@@ -20,23 +20,27 @@ def _IDF(Xt, X, eps=1e-5):
     '''
     Calculates Inverse Document Frequency from presence vector and document quantity 
     '''
-    return np.log2( 1.0 * X / (Xt + eps ) )
+    num = 1.0 * X
+    den = Xt ;den[den==0 ] = eps
+    return np.log2( num/den )
 
 
 def _PMI(Xctd, Xt, X, Tctd, Tt, T, eps=1e-5):
     '''
     Calculates Pointwise Mutual Information from frequency vector, presence vector and document quantity in target and total
     '''
-    den = _TF( Xctd , Xt ) * sum( _TF( Tctd , Tt ) ) * T 
-    div = 2.0 * _TF( Xctd , Xt ) * X
-    return np.log2( den / ( div + eps ) )  
+    num = _TF( Xctd , Xt ) * sum( _TF( Tctd , Tt ) ) * T 
+    den = 2.0 * _TF( Xctd , Xt ) * X ; den[ den == 0 ] = eps
+    return np.log2( num/den )  
 
 
-def _QTF(Xctd, Xt, Tt, Tctd):
+def _QTF(Xctd, Xt, Tt, Tctd, eps=1e-5):
     '''
     Calculates Quotient Term Frequency from frequency vector and presence vector in target and total 
     '''
-    return _TF( Xctd , Xt ) / _TF( Tctd , Tt )
+    num = _TF( Xctd , Xt )
+    den = _TF( Tctd , Tt ) ; den[ den == 0 ] = eps
+    return num/den
 
 
 def _TFIDF(Xctd, Xt, X, eps=1e-5):
@@ -50,16 +54,18 @@ def _AVG(Xctd, Xt, X, eps=1e-5):
     '''
     Calculates Average from frequency vector, presence vector and document quantity 
     '''
-    return _TF( Xctd , Xt ) / ( X + eps )
+    X[ X == 0 ] = eps
+    return _TF( Xctd , Xt ) / X 
 
 
 def _LD(ds_pos, ds_neg, eps=1e-5):
     '''
     Calculates Logaritmic Differential from positive and negative valences
     '''
-    ld = np.log2( ds_pos / (ds_neg + eps) )
-    where_are_NaNs = np.isnan( ld ) 
-    ld[where_are_NaNs] = 0.0
+    ds_neg[ ds_neg == 0 ] = eps
+    ld = np.log2( ds_pos / ds_neg )  
+    ld[ np.isnan( ld ) ] = 0.0
+    ld[ np.isinf( ld ) ] = 0.0 # np.nanmin( ld[ld != -np.inf] )
     return ld  
 
 
@@ -67,6 +73,8 @@ def _get_structures(pos_op, neg_op, strategy, lemmas=None, verbose=True):
     '''
     Generates frequency vector, presence vector and document quantity from positive and negative opinion sets
     '''
+    
+    pos_op = list(pos_op) ; neg_op = list(neg_op) 
     
     P = 1.0 * len(pos_op) ; N = 1.0 * len(neg_op)  
     
@@ -90,8 +98,11 @@ def _get_structures(pos_op, neg_op, strategy, lemmas=None, verbose=True):
         
         Pfreq = defaultdict(lambda:0)
         Nfreq = defaultdict(lambda:0)
+        has_negation = False
         for item in opinion['text']:
             neg = item.get('negated',False)
+            if not neg: neg = False
+            has_negation |= neg
             
             lem = item['lemma']
              
@@ -112,7 +123,11 @@ def _get_structures(pos_op, neg_op, strategy, lemmas=None, verbose=True):
         for idx in Nfreq:
             Nctd[idx] += Nfreq[idx]
             Nt[idx]   += 1
-    
+        
+        if has_negation: 
+            if   cat > 50: N += 1
+            elif cat < 50: P += 1
+            
     return lemmas, P, Pctd, Pt, N, Nctd, Nt
 
 
