@@ -358,7 +358,6 @@ def get_connected_component(graph, nodes = None):
         component = set()
         queue = set([seeds.pop()])
         visited = set()
-
         while queue:
             root = queue.pop()
             for edge in graph[root]:

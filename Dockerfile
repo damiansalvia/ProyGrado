@@ -58,7 +58,9 @@ RUN apt update && apt install -y \
     python-pip \
     graphviz \
     libgraphviz-dev \
-    pkg-config 
+    pkg-config \
+    python-enchant \
+    aspell-es
 
 RUN pip install --upgrade pip
 
