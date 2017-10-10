@@ -16,56 +16,58 @@ def _TF(Xcdt, Xt):
     return 1.0 * Xcdt / sum(Xt)
 
 
-def _IDF(Xt, X, eps=1e-5):
+def _IDF(Xt, X, eps=1e-3):
     '''
     Calculates Inverse Document Frequency from presence vector and document quantity 
     '''
     num = 1.0 * X
-    den = Xt ;den[den==0 ] = eps
+    den = Xt + eps
     return np.log2( num/den )
 
 
-def _PMI(Xctd, Xt, X, Tctd, Tt, T, eps=1e-5):
+def _PMI(Xctd, Xt, X, Tctd, Tt, T, eps=1e-3):
     '''
     Calculates Pointwise Mutual Information from frequency vector, presence vector and document quantity in target and total
     '''
     num = _TF( Xctd , Xt ) * sum( _TF( Tctd , Tt ) ) * T 
-    den = 2.0 * _TF( Xctd , Xt ) * X ; den[ den == 0 ] = eps
+    den = 2.0 * _TF( Xctd , Xt ) * X + eps
     return np.log2( num/den )  
 
 
-def _QTF(Xctd, Xt, Tt, Tctd, eps=1e-5):
+def _QTF(Xctd, Xt, Tt, Tctd, eps=1e-3):
     '''
     Calculates Quotient Term Frequency from frequency vector and presence vector in target and total 
     '''
     num = _TF( Xctd , Xt )
-    den = _TF( Tctd , Tt ) ; den[ den == 0 ] = eps
+    den = _TF( Tctd , Tt ) + eps
     return num/den
 
 
-def _TFIDF(Xctd, Xt, X, eps=1e-5):
+def _TFIDF(Xctd, Xt, X, eps=1e-3):
     '''
     Calculates Term Frequency Inverse Document Frequency from frequency vector, presence vector and document quantity 
     '''
     return _TF(Xctd, Xt) * _IDF(Xt, X, eps)
 
 
-def _AVG(Xctd, Xt, X, eps=1e-5):
+def _AVG(Xctd, Xt, X, eps=1e-3):
     '''
     Calculates Average from frequency vector, presence vector and document quantity 
     '''
-    X[ X == 0 ] = eps
-    return _TF( Xctd , Xt ) / X 
+    num = _TF( Xctd , Xt )
+    den = X + eps
+    return num/den 
 
 
-def _LD(ds_pos, ds_neg, eps=1e-5):
+def _LD(ds_pos, ds_neg, eps=1e-3):
     '''
     Calculates Logaritmic Differential from positive and negative valences
     '''
-    ds_neg[ ds_neg == 0 ] = eps
-    ld = np.log2( ds_pos / ds_neg )  
+    num = ds_pos
+    den = ds_neg + eps
+    ld = np.log2( num/den )  
     ld[ np.isnan( ld ) ] = 0.0
-    ld[ np.isinf( ld ) ] = 0.0 # np.nanmin( ld[ld != -np.inf] )
+    ld[ np.isinf( ld ) ] = np.nanmin( ld[ld != -np.inf] )
     return ld  
 
 
@@ -132,7 +134,7 @@ def _get_structures(pos_op, neg_op, strategy, lemmas=None, verbose=True):
 
 
 
-def by_senti_tfidf(pos_op, neg_op, lemmas=None, limit=None, eps=1e-5, verbose=True, tofile=None):
+def by_senti_tfidf(pos_op, neg_op, lemmas=None, limit=None, eps=1e-3, verbose=True, tofile=None):
     '''
     Generates a lexicon from positive and negative opinion sets by Logaritmic Diferential of TFIDF
     '''
@@ -157,7 +159,7 @@ def by_senti_tfidf(pos_op, neg_op, lemmas=None, limit=None, eps=1e-5, verbose=Tr
     
     
     
-def by_senti_qtf(pos_op, neg_op, lemmas=None, limit=None, eps=1e-5, verbose=True, tofile=None):
+def by_senti_qtf(pos_op, neg_op, lemmas=None, limit=None, eps=1e-3, verbose=True, tofile=None):
     '''
     Generates a lexicon from positive and negative opinion sets by Logaritmic Diferential of QTF
     '''
@@ -184,7 +186,7 @@ def by_senti_qtf(pos_op, neg_op, lemmas=None, limit=None, eps=1e-5, verbose=True
 
 
 
-def by_senti_pmi(pos_op, neg_op, lemmas=None, limit=None, eps=1e-5, verbose=True, tofile=None):
+def by_senti_pmi(pos_op, neg_op, lemmas=None, limit=None, eps=1e-3, verbose=True, tofile=None):
     '''
     Generates a lexicon from positive and negative opinion sets by Logaritmic Diferential of PMI
     '''
@@ -211,7 +213,7 @@ def by_senti_pmi(pos_op, neg_op, lemmas=None, limit=None, eps=1e-5, verbose=True
 
 
 
-def by_senti_avg(pos_op, neg_op, lemmas=None, limit=None, eps=1e-5, verbose=True, tofile=None):
+def by_senti_avg(pos_op, neg_op, lemmas=None, limit=None, eps=1e-3, verbose=True, tofile=None):
     '''
     Generates a lexicon from positive and negative opinion sets by Logaritmic Diferential of AVG
     '''
