@@ -84,10 +84,9 @@ SUBSTITUTIONS = [
     (u"([^lrc])\\1+",u"\\1"),
     # Separate alphabetical character from non-alphabetical character by a blank space
     (u"([0-9a-záéíóúñü\\\]?)([^0-9a-záéíóúñü_\\\\s]+)([0-9a-záéíóúñü\\\]?)",u"\\1 \\2 \\3"),
-    (u"([^0-9a-záéíóúñü_\s])([^0-9a-záéíóúñü_\s])",u"\\1 \\2"),
+    (u"([^0-9a-záéíóúñü_\s])",u" \\1 "),
     # Separate alphabetical from numerical 
-    (u"([a-záéíóúñü])([0-9])",u"\\1 \\2"), 
-    (u"([0-9])([a-záéíóúñü])",u"\\1 \\2"),
+    (u"[([a-záéíóúñü])([0-9])]",u" \\1 \\2 "),
     # Remove redundant quote marks  -- replace, delete, undo
     (u"(\")([^\"]*?)(?(1)\")",u"&quote;\\2&quote;"),
     (u"[\"]",u""),
@@ -233,7 +232,6 @@ class _SpellCorrector(_SingletonSettings):
                         err.replace( corr[0] if corr else err.word )
                     word = self.Checker.get_text()
                     corr = word.lower() if (word not in nouns) else word
-                import pdb;pdb.set_trace()
                 word = corr
             words[i] = word
         text = ' '.join(words)
