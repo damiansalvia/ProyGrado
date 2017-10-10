@@ -14,7 +14,7 @@ def _valid_tag(tag, tagset):
     return False
 
 
-def _generate_graph(opinions, source, prefix_tag_list, max_weight, win, verbose=True):
+def _generate_graph(opinions, source, filter_tags, max_weight, win, verbose=True):
     
     graph = defaultdict(lambda : defaultdict(lambda: {'p_dir': 0, 'p_inv':0}))
      
@@ -25,8 +25,8 @@ def _generate_graph(opinions, source, prefix_tag_list, max_weight, win, verbose=
 
         text = opinion['text']   
 
-        if prefix_tag_list: # Remove tokens having irrelevant information
-            text =  [token for token in text if _valid_tag( token['tag'] , prefix_tag_list ) ]
+        if filter_tags: # Remove tokens having irrelevant information
+            text =  [token for token in text if _valid_tag( token['tag'] , filter_tags ) ]
 
         size = len(text)
         for i,item in enumerate(text):
@@ -129,7 +129,7 @@ def _dijkstra(graph, initial, threshold):
 
 
 def by_dijkstra(source, opinions, seeds, 
-        prefix_tag_list    = None,
+        filter_tags        = None,
         max_weight         = 1,
         threshold          = 0.005,
         context_window     = 1,  
@@ -144,7 +144,7 @@ def by_dijkstra(source, opinions, seeds,
     Generates a lexicon from an opinion set and seeds words by Dijkstra Search like model
     '''
     
-    graph = _generate_graph(opinions, source, prefix_tag_list, max_weight, context_window, verbose=verbose)
+    graph = _generate_graph(opinions, source, filter_tags, max_weight, context_window, verbose=verbose)
     
     influences = defaultdict(list) ; total = len(seeds)
     
@@ -192,7 +192,7 @@ def by_dijkstra(source, opinions, seeds,
 
 
 def by_bfs(source, opinions, seeds, 
-        prefix_tag_list = None,
+        filter_tags     = None,
         max_weight      = 1, 
         threshold       = 0.005,
         context_window  = 1, 
@@ -206,7 +206,7 @@ def by_bfs(source, opinions, seeds,
     Generates a lexicon from an opinion set and seeds words by Breath First Search model
     '''
     
-    graph = _generate_graph(opinions, source, prefix_tag_list, max_weight, context_window, verbose=verbose)
+    graph = _generate_graph(opinions, source, filter_tags, max_weight, context_window, verbose=verbose)
     
     lexicon = { lem:0 for lem in graph.keys() }
     

@@ -8,19 +8,27 @@ import numpy as np
 from utils import progress, save
 from _collections import defaultdict
     
+
+def _valid_tag(tag, tagset):
+    for prefix in tagset:
+        if tag.startswith(prefix): return True
+    return False    
+    
     
 def _TF(Xcdt, Xt):
     '''
     Calculates the Term Frequency from frequency vector and presence vector 
     '''
-    return 1.0 * Xcdt / sum(Xt)
+    num = Xcdt
+    den = sum(Xt)
+    return num/den
 
 
 def _IDF(Xt, X, eps=1e-3):
     '''
     Calculates Inverse Document Frequency from presence vector and document quantity 
     '''
-    num = 1.0 * X
+    num = X + eps
     den = Xt + eps
     return np.log2( num/den )
 
@@ -29,7 +37,7 @@ def _PMI(Xctd, Xt, X, Tctd, Tt, T, eps=1e-3):
     '''
     Calculates Pointwise Mutual Information from frequency vector, presence vector and document quantity in target and total
     '''
-    num = _TF( Xctd , Xt ) * sum( _TF( Tctd , Tt ) ) * T 
+    num = _TF( Xctd , Xt ) * sum( _TF( Tctd , Tt ) ) * T + eps
     den = 2.0 * _TF( Xctd , Xt ) * X + eps
     return np.log2( num/den )  
 
@@ -38,7 +46,7 @@ def _QTF(Xctd, Xt, Tt, Tctd, eps=1e-3):
     '''
     Calculates Quotient Term Frequency from frequency vector and presence vector in target and total 
     '''
-    num = _TF( Xctd , Xt )
+    num = _TF( Xctd , Xt ) + eps
     den = _TF( Tctd , Tt ) + eps
     return num/den
 
@@ -54,7 +62,7 @@ def _AVG(Xctd, Xt, X, eps=1e-3):
     '''
     Calculates Average from frequency vector, presence vector and document quantity 
     '''
-    num = _TF( Xctd , Xt )
+    num = _TF( Xctd , Xt ) + eps
     den = X + eps
     return num/den 
 
@@ -63,7 +71,7 @@ def _LD(ds_pos, ds_neg, eps=1e-3):
     '''
     Calculates Logaritmic Differential from positive and negative valences
     '''
-    num = ds_pos
+    num = ds_pos + eps
     den = ds_neg + eps
     ld = np.log2( num/den )  
     ld[ np.isnan( ld ) ] = 0.0
@@ -71,7 +79,7 @@ def _LD(ds_pos, ds_neg, eps=1e-3):
     return ld  
 
 
-def _get_structures(pos_op, neg_op, strategy, lemmas=None, verbose=True):
+def _get_structures(pos_op, neg_op, strategy, filter_tags=None, lemmas=None, verbose=True):
     '''
     Generates frequency vector, presence vector and document quantity from positive and negative opinion sets
     '''
@@ -101,7 +109,12 @@ def _get_structures(pos_op, neg_op, strategy, lemmas=None, verbose=True):
         Pfreq = defaultdict(lambda:0)
         Nfreq = defaultdict(lambda:0)
         has_negation = False
+        
         for item in opinion['text']:
+            
+            if not _valid_tag(item['tag'], filter_tags):
+                continue
+            
             neg = item.get('negated',False)
             if not neg: neg = False
             has_negation |= neg
@@ -134,19 +147,19 @@ def _get_structures(pos_op, neg_op, strategy, lemmas=None, verbose=True):
 
 
 
-def by_senti_tfidf(pos_op, neg_op, lemmas=None, limit=None, eps=1e-3, verbose=True, tofile=None):
+def by_senti_tfidf(pos_op, neg_op, lemmas=None, filter_tags=None, limit=None, eps=1e-3, verbose=True, tofile=None):
     '''
     Generates a lexicon from positive and negative opinion sets by Logaritmic Diferential of TFIDF
     '''
     
-    lemmas, P, Pctd, Pt, N, Nctd, Nt = _get_structures(pos_op, neg_op, 'TFIDF', lemmas, verbose)
+    lemmas, P, Pctd, Pt, N, Nctd, Nt = _get_structures(pos_op, neg_op, 'TFIDF', filter_tags=filter_tags, lemmas=lemmas, verbose=verbose)
     
     ds_pos = _TFIDF(Pctd, Pt, P, eps) 
     ds_neg = _TFIDF(Nctd, Nt, N, eps)
     
     ld = _LD(ds_pos, ds_neg, eps)
     
-    lexicon = { lemmas[idx]:round(pol,3) for idx,pol in enumerate(ld) }
+    lexicon = { lemmas[idx]:round(val,3) for idx,val in enumerate(ld) }
     
     if limit:
         lexicon = dict( sorted(lexicon.items(), key=lambda elem : abs(elem[1]), reverse=True)[:limit] )
@@ -159,12 +172,12 @@ def by_senti_tfidf(pos_op, neg_op, lemmas=None, limit=None, eps=1e-3, verbose=Tr
     
     
     
-def by_senti_qtf(pos_op, neg_op, lemmas=None, limit=None, eps=1e-3, verbose=True, tofile=None):
+def by_senti_qtf(pos_op, neg_op, lemmas=None, filter_tags=None, limit=None, eps=1e-3, verbose=True, tofile=None):
     '''
     Generates a lexicon from positive and negative opinion sets by Logaritmic Diferential of QTF
     '''
     
-    lemmas, _, Pctd, Pt, _, Nctd, Nt = _get_structures(pos_op, neg_op, 'QTF', lemmas, verbose)
+    lemmas, _, Pctd, Pt, _, Nctd, Nt = _get_structures(pos_op, neg_op, 'QTF', filter_tags=filter_tags, lemmas=lemmas, verbose=verbose)
     
     Tctd = Pctd+Nctd ; Tt = Pt+Nt
     
@@ -173,7 +186,7 @@ def by_senti_qtf(pos_op, neg_op, lemmas=None, limit=None, eps=1e-3, verbose=True
     
     ld = _LD(ds_pos, ds_neg, eps)
     
-    lexicon = { lemmas[idx]:round(pol,3) for idx,pol in enumerate(ld) }
+    lexicon = { lemmas[idx]:round(val,3) for idx,val in enumerate(ld) }
     
     if limit:
         lexicon = dict( sorted(lexicon.items(), key=lambda elem : abs(elem[1]), reverse=True)[:limit] )
@@ -186,12 +199,12 @@ def by_senti_qtf(pos_op, neg_op, lemmas=None, limit=None, eps=1e-3, verbose=True
 
 
 
-def by_senti_pmi(pos_op, neg_op, lemmas=None, limit=None, eps=1e-3, verbose=True, tofile=None):
+def by_senti_pmi(pos_op, neg_op, lemmas=None, filter_tags=None, limit=None, eps=1e-3, verbose=True, tofile=None):
     '''
     Generates a lexicon from positive and negative opinion sets by Logaritmic Diferential of PMI
     '''
     
-    lemmas, P, Pctd, Pt, N, Nctd, Nt = _get_structures(pos_op, neg_op, 'PMI', lemmas, verbose)
+    lemmas, P, Pctd, Pt, N, Nctd, Nt = _get_structures(pos_op, neg_op, 'PMI', filter_tags=filter_tags, lemmas=lemmas, verbose=verbose)
     
     Tctd = Pctd+Nctd ; Tt = Pt+Nt ; T = P+N
     
@@ -200,7 +213,7 @@ def by_senti_pmi(pos_op, neg_op, lemmas=None, limit=None, eps=1e-3, verbose=True
     
     ld = _LD(ds_pos, ds_neg, eps)
     
-    lexicon = { lemmas[idx]:round(pol,3) for idx,pol in enumerate(ld) }
+    lexicon = { lemmas[idx]:round(val,3) for idx,val in enumerate(ld) }
     
     if limit:
         lexicon = dict( sorted(lexicon.items(), key=lambda elem : abs(elem[1]), reverse=True)[:limit] )
@@ -213,19 +226,19 @@ def by_senti_pmi(pos_op, neg_op, lemmas=None, limit=None, eps=1e-3, verbose=True
 
 
 
-def by_senti_avg(pos_op, neg_op, lemmas=None, limit=None, eps=1e-3, verbose=True, tofile=None):
+def by_senti_avg(pos_op, neg_op, lemmas=None, filter_tags=None, limit=None, eps=1e-3, verbose=True, tofile=None):
     '''
     Generates a lexicon from positive and negative opinion sets by Logaritmic Diferential of AVG
     '''
     
-    lemmas, P, Pctd, Pt, N, Nctd, Nt = _get_structures(pos_op, neg_op, 'AVG', lemmas, verbose)
+    lemmas, P, Pctd, Pt, N, Nctd, Nt = _get_structures(pos_op, neg_op, 'AVG', filter_tags=filter_tags, lemmas=lemmas, verbose=verbose)
     
     ds_pos = _AVG(Pctd, Pt, P, eps)
     ds_neg = _AVG(Nctd, Nt, N, eps)
     
     ld = _LD(ds_pos, ds_neg, eps)
     
-    lexicon = { lemmas[idx]:round(pol,3) for idx,pol in enumerate(ld) }
+    lexicon = { lemmas[idx]:round(val,3) for idx,val in enumerate(ld) }
     
     if limit:
         lexicon = dict( sorted(lexicon.items(), key=lambda elem : abs(elem[1]), reverse=True)[:limit] )
