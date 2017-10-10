@@ -72,14 +72,14 @@ if __name__ == '__main__':
             "category": 90, 
             "source": "test", 
             "idx": 1, 
-            "text": "la pelicula es muy divertida , es genial ."
+            "text": "La pelicula es muy divertida , es genial ."
         }, 
         {
             "category": 80, 
             "source": "test", 
             "idx": 2, 
-            "text": "me parece encantadora la pelicula , la recomiendo , genial . "
+            "text": "Me parece encantadora la pelicula , la recomiendo , genial ."
         }
     ]
 
-    analyze(opinions) 
+    print analyze(opinions) 
