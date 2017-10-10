@@ -18,7 +18,9 @@ import glob, re
 from _collections import defaultdict
 from utils import progress, Log, save
 
+
 log = Log("./log")
+
 
 class CorpusReader(object):
     '''
@@ -124,7 +126,7 @@ class CorpusReader(object):
                     
             regex = re.compile(pattern,flag)
             
-            content = open(filename,'r').read().decode(decoding,'replace').encode('utf8')
+            content = '\n'.join( [line.decode(decoding,'replace').encode('utf8') for line in open(filename,'r').readline()][self._read_start:] )
             found = regex.findall(content)
             if not found:
                 log("Nothing match in %s" % filename, level="warning")
