@@ -21,7 +21,7 @@ from DataProvider import db
 
 from InteractiveNegator import get_params, start_evaluator, new_model, get_window
 
-from GraphModel import get_dependent_lexicon_by_dijkstra
+from GraphModel import get_dependent_lexicon_by_dijkstra, generate_graph
 
 log = Log("./log")
 
@@ -48,12 +48,17 @@ config_set = config_set_parsing()
  
 if not batch:
     op = raw_input("Parse a(ll) or enter for none > ")
-    op = len(config_set) if op.lower() == 'a' else 0
+    op = op.split(',')
+    beg = int(op[0]) if len(op) == 2 else 0
+    end = int(op[1]) if len(op) == 2 else op[0]
+    end = len(config_set) if end.lower() == 'a' else int(end) if not end else 0
 else: 
+    beg = 0
+    end = len(config_set)
     op = len(config_set)
  
 count = 0
-for config in config_set[:op]:
+for config in config_set[beg:end]:
          
     start_time = time.time()
          
@@ -180,15 +185,17 @@ for source in dp.get_sources():
     
     seeds = { lem:pol[val_key] for lem,pol in json.load( open(seeds_path) ).items() }
 
-    lexicon = get_dependent_lexicon_by_dijkstra(source, reviews, seeds,
+    graph = generate_graph(reviews, source, 
         prefix_tag_list  = PREFIX_TAGS, 
+        max_weight = 1,
+        graph_context_window = 1
+    )
+    lexicon = get_dependent_lexicon_by_dijkstra(source, graph, seeds,
         filter_neutral = True, 
         limit = 300, 
         neutral_resistance = 0.3,
-        max_weight = 1,
         filter_seeds = True,
         dijkstra_threshold = 0.005,
-        graph_context_window = 2
     )
     save(lexicon,"dependent_lexicon_by_dijkstra_%s" % source,"../lexicon/dependent")
 
