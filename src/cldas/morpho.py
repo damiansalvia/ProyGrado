@@ -17,7 +17,7 @@ log = Log("./log")
 
 DATA = "/usr/local/share/freeling/"
 LANG = "es"
-PWL  = os.path.join( os.path.dirname(__file__) , "files/es-lat.dic" )
+PWL  = os.path.join( os.path.dirname(__file__) , "files/aspell-es-lat.dic" )
 
 
 class _SingletonSettings(object):
