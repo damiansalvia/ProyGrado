@@ -27,10 +27,35 @@ class CorpusReader(object):
     Retrieves opinion and category from corporea source files
     '''
 
-    def __init__(self, directory, extension, verbose=True, tofile=None, **kwargs):
+    def __init__(self, directory, extension, 
+            op_pattern    = None,
+            path_pattern  = None,
+            path_level    = 0,
+            file_pattern  = None,
+            file_position = None,
+            start_from    = 0,
+            decoding      = 'utf8',
+            verbose = True, 
+            tofile  = None,
+        ):
         '''
         Constructor from source directory and extension pattern
         '''
+        if not op_pattern and not (path_pattern or file_pattern):
+            raise ValueError('Expected keyword argument op_pattern with file_pattern or path_pattern.')
+        if re.compile(op_pattern).groups > 1:
+            raise ValueError("Only one group is admitted for op_pattern argument.")
+        if path_pattern and re.compile(path_pattern).groups > 1: 
+            raise ValueError("Only one group is admitted for path_pattern argument.")
+        if path_pattern and path_level < 0:
+            raise ValueError('Expected keyword argument path_level to be positive.')
+        if file_pattern and re.compile(file_pattern).groups > 1:
+            raise ValueError("Only one group is admitted for file_pattern argument.")
+        if file_pattern and (not file_position or file_position not in Position):
+            raise ValueError('Expected keyword argument file_position in Position values when file_pattern.')
+        if start_from < 0:
+            raise ValueError('Expected keyword argument start_from to be positive.')
+        
         directory = directory.replace("\\","/")
         extension = '*.'+extension if extension.isalnum() else extension
         
@@ -40,61 +65,15 @@ class CorpusReader(object):
         
         self.filesid = []
         
-        self._op_pattern    = None # Regex specifying the opinion mapping
-        self._path_pattern  = None # Regex specifying the category mapping in path
-        self._path_level    = 0    # Number specifying the category level in path
-        self._file_pattern  = None # Regex specifying the category mapping in file
-        self._file_position = None # Number specifying the category position in file 
-        self._read_start    = None # Number specifying the first line to be read 
+        self._op_pattern    = op_pattern    # Regex specifying the opinion mapping
+        self._path_pattern  = path_pattern  # Regex specifying the category mapping in path
+        self._path_level    = path_level    # Number specifying the category level in path
+        self._file_pattern  = file_pattern  # Regex specifying the category mapping in file
+        self._file_position = file_position # Number specifying the category position in file 
+        self._start_from    = start_from    # Number specifying the first line to be read 
         
-        if 'op_content' in kwargs:
-            self._op_pattern = kwargs['op_content']
-            del kwargs['op_content']
-        else:
-            raise ValueError('Expected keyword argument op_content.')
+        self._c2o = defaultdict(list)
         
-        if 'cat_path' in kwargs:
-            _path_pattern = self._path_pattern = kwargs['cat_path']
-            if re.compile(_path_pattern).groups > 1:
-                raise ValueError("Only one group is admitted for opinion pattern.")
-            self._path_pattern = _path_pattern
-            del kwargs['cat_path']
-            if 'cat_level' in kwargs:
-                _path_level = kwargs['cat_level']
-                if _path_level < 0:
-                    raise ValueError("Category level must be greater or equal to zero.")
-                self._path_level = _path_level
-                del kwargs['cat_level']
-        elif 'cat_file' in kwargs:
-            _file_pattern = kwargs['cat_file']
-            if re.compile(_file_pattern).groups > 1:
-                raise ValueError("Only one group is admitted for opinion pattern.")
-            self._file_pattern = _file_pattern 
-            del kwargs['cat_file']
-            if 'cat_position' in kwargs:
-                position = kwargs['cat_position']
-                if position not in Position:
-                    raise ValueError('Expected cat_position be BEFORE (1) or AFTER (2).')
-                self._file_position = position
-                del kwargs['cat_position']
-            else:
-                raise ValueError('Expected keyword argument cat_position when cat_file.')                
-        else:
-            raise ValueError('Expected keyword argument cat_path or cat_file.')
-        
-        if 'start_line' in kwargs:
-            self._read_start = kwargs['start_line']
-            del kwargs['start_line']
-        
-        if 'cat_path' in kwargs or 'cat_file' in kwargs:
-            raise ValueError('Specify exactly one of: cat_path, cat_file.')
-        
-        self._c2o = defaultdict(set)
-        
-        decoding = 'utf8'
-        if 'decoding' in kwargs:
-            decoding = kwargs['decoding']
-            del kwargs['decoding']
         self._parse(decoding,verbose,tofile)  
         
     
@@ -120,14 +99,16 @@ class CorpusReader(object):
             if verbose: progress("Parsing %s" % self.__str__(),total,idx)   
             
             if self._path_pattern is not None:
-                tmp      = "%s/(?:.*?/){%i}%s" % ( re.escape(self.directory), self._path_level, self._path_pattern )
+                tmp      = "%s/(?:.*?/){%i}%s" % ( re.escape(self._directory), self._path_level, self._path_pattern )
                 regex    = re.compile(tmp,re.DOTALL)
                 category = regex.findall(filename)
                     
             regex = re.compile(pattern,flag)
             
-            content = '\n'.join( [line.decode(decoding,'replace').encode('utf8') for line in open(filename,'r').readline()][self._read_start:] )
+            content = open(filename,'r').read().decode(decoding,'replace').encode('utf8')
+            content = '\n'.join( [ line for line in content.split('\n') ][ self._start_from: ] )
             found = regex.findall(content)
+            
             if not found:
                 log("Nothing match in %s" % filename, level="warning")
                 continue
@@ -158,7 +139,7 @@ class CorpusReader(object):
     
     
     def _add(self,opinion,category):
-        self._c2o[category].add(opinion)
+        self._c2o[ category ].append( opinion )
     
         
     def categories(self):
