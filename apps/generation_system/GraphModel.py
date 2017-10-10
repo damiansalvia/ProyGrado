@@ -11,7 +11,6 @@ from _collections import defaultdict
 from DataProvider import db
 import DataProvider as dp
 
-FLATTNER = 5000
 
 PREFIX_TAGS = [
     'AQ', # Adjetivo calificativos     - EJ: alegre   -
@@ -192,7 +191,7 @@ def valid_tag(tag, list):
     return False
 
 
-def generate_graph(reviews, source, prefix_tag_list, max_weight, win):
+def generate_graph(reviews, source, prefix_tag_list  = None, max_weight = 1, graph_context_window = 1):
     ''' Generates the weighted bidirectional multigraph corresponding to reviews
     '''
     graph = defaultdict(lambda : defaultdict(lambda: {'p_dir': 0, 'p_inv':0}))
@@ -280,19 +279,15 @@ def dijkstra(graph, initial, threshold):
 
     return dict(influence)
 
-def get_dependent_lexicon_by_dijkstra(source, reviews, seeds, 
-    prefix_tag_list  = None, 
+def get_dependent_lexicon_by_dijkstra(source, graph , seeds, 
     filter_neutral = True, 
     limit = None, 
     neutral_resistance = 1,
-    max_weight = 1,
     filter_seeds = True, 
     dijkstra_threshold = 0.005,
-    graph_context_window = 1
     ):
 
-    # Create Graph
-    graph = generate_graph(reviews, source, prefix_tag_list, max_weight, graph_context_window)
+   
     influences = defaultdict(list)
     total_seeds = len(seeds)
     print '\nPROCESS SEEDS'
@@ -313,21 +308,25 @@ def get_dependent_lexicon_by_dijkstra(source, reviews, seeds,
     total_influences = len(influences)
     progress("Creating dependent_lexicon", total_influences, -1)
     for idx, lemma in enumerate(influences):
-        total_influence = sum([ inf[1] for inf in influences[lemma] ]) 
+        influnece = sum([ inf[1] for inf in influences[lemma] ]) 
         if lemma not in seeds.keys():
-            total_influence += neutral_resistance * 1.0
-        result[lemma] = sum([ inf[0] * inf[1] for inf in influences[lemma] ]) / total_influence
+            total_influence = influnece + neutral_resistance * 1.0
+        result[lemma] = {
+            'valence': sum([ inf[0] * inf[1] for inf in influences[lemma] ]) / total_influence,
+            'influence': influnece
+        }
         progress("Creating dependent_lexicon", total_influences, idx)
 
+
     if filter_neutral:
-        result = dict( filter( lambda x: abs(x[1]) > 0.3 , result.items() ) )
+        result = dict( filter( lambda x: abs(x[1]['valence']) > 0.3 , result.items() ) )
     
-    if limit:
-        result = dict( sorted( result.items() , key=lambda x: abs(x[1]) , reverse=True )[:limit] )
-        
     if filter_seeds:
         result = dict( filter( lambda x: x[0] not in seeds , result.items() ) )
-
+        
+    if limit:
+        result = dict( sorted( result.items() , key=lambda x: x[1]['influence'] , reverse=True )[:limit] )
+        
     suffix = "_top%i" % limit if limit else ""
     save(result,"dependent_lexicon_by_dijkstra_%s_li%i" % (source,len(seeds)) + suffix,"../lexicon/dependent")
     return result
@@ -348,33 +347,113 @@ def dijkstra_evaluation(tests, seed):
     if not error:
         print 'Every test was succesfull' 
 
+
+def get_connected_component(graph, nodes = None):
+    connected_components = []
+    if nodes:
+        seeds = set(nodes.keys)
+    else:
+        seeds = set(graph.keys)
+    while seeds:
+        component = set()
+        queue = set([seeds.pop()])
+        visited = set()
+
+        while queue:
+            root = queue.pop()
+            for edge in graph[root]:
+                if not edge in visited:
+                    queue.add(edge)
+                    if edge in seeds:
+                        seeds.remove(edge)
+                        component.add(edge)
+        connected_components.append(component)
+    return connected_components
+
+
+def get_GML(graph, lexicon):
+    tab = ' '*4
+    gml_nodes = ''
+    gml_edges = ''
+    for node, edges in graph.items():
+        gml_nodes += '{br}node [{br}{t}id {node}{br}{t}value {val}{br}]'.format(
+            t = tab,
+            br = '\n' + tab,
+            node = node, 
+            val = lexicon[node] * 1.0
+        )
+        for edge, weights in edges.items():
+
+            gml_edges += '{br}edge [{br}{t}source {node}{br}{t}target {edge}{br}{t}label direct{br}{t}weight {val} {br}]'.format(
+                t = tab,
+                br = '\n' + tab,
+                node = node, 
+                edge = edge, 
+                val = weights['p_dir'] * 1.0
+            )
+
+            gml_edges += '{br}edge [{br}{t}source {node}{br}{t}target {edge}{br}{t}label inverse{br}{t}weight {val} {br}]'.format(
+                t = tab,
+                br = '\n' + tab,
+                node = node, 
+                edge = edge, 
+                val = weights['p_inv'] * 1.0
+            )
+    gml = 'graph [' + gml_nodes + gml_edges + '\n]'
+    return gml
+
 if __name__=='__main__':
 
-    # for source in dp.get_sources():    
-    #     get_dependent_lexicon_by_graph(
-    #         source=source,
-    #         seeds_path='indepentent_lexicon.json',
-    #         val_key='rank',
-    #         limit = 300
+    # # for source in dp.get_sources():    
+    # #     get_dependent_lexicon_by_graph(
+    # #         source=source,
+    # #         seeds_path='indepentent_lexicon.json',
+    # #         val_key='rank',
+    # #         limit = 300
+    # #     )
+    # seeds_path = '../lexicon/independent/independent_lexicon.json'
+    # source = 'corpus_apps_android'
+    # val_key = 'rank'
+    # seeds = { lem:pol[val_key] for lem,pol in json.load( open(seeds_path) ).items() }
+    # # seeds = { "genial": 4.8748148332370644 }
+    # reviews = db.reviews.find({"source":source})
+
+    # graph = generate_graph(reviews, source, 
+    #     prefix_tag_list = PREFIX_TAGS, 
+    #     max_weight = 1, 
+    #     graph_context_window = 1
+    # )
+
+    # lexicon = get_dependent_lexicon_by_dijkstra(source, reviews, seeds,
+    #     prefix_tag_list  = PREFIX_TAGS, 
+    #     filter_neutral = True, 
+    #     limit = None, 
+    #     neutral_resistance = 1,
+    #     max_weight = 1,
+    #     filter_seeds = True,
+    #     dijkstra_threshold = 0.005,
+    #     graph_context_window = 2
     #     )
-    seeds_path = '../lexicon/independent/independent_lexicon.json'
-    source = 'corpus_apps_android'
-    val_key = 'rank'
-    seeds = { lem:pol[val_key] for lem,pol in json.load( open(seeds_path) ).items() }
-    # seeds = { "genial": 4.8748148332370644 }
-    reviews = db.reviews.find({"source":source})
 
-    lexicon = get_dependent_lexicon_by_dijkstra(source, reviews, seeds,
-        prefix_tag_list  = PREFIX_TAGS, 
-        filter_neutral = True, 
-        limit = None, 
-        neutral_resistance = 1,
-        max_weight = 1,
-        filter_seeds = True,
-        dijkstra_threshold = 0.005,
-        graph_context_window = 2
-        )
-    print lexicon
+    # print lexicon
 
-    print '\n\n\n--- END OF SCRIPT ---'
-    # dijkstra_evaluation(TEST_GRAPHS, 'A')
+    # print '\n\n\n--- END OF SCRIPT ---'
+
+    graph ={
+        'A': {
+           'B':{'p_dir': 0.5, 'p_inv': 0.1}
+        },
+        'B': {
+           'C':{'p_dir': 0.1, 'p_inv': 0.5}
+        },
+        'C': {
+        }
+    }
+
+    lexicon = {'A':5, 'B': -2, 'C': 0.1 }
+    gml = get_GML(graph, lexicon)
+    print gml
+    with io.open('graphs/test.gml',"w",encoding='utf8') as f:
+        if not isinstance(gml, unicode):
+            gml = unicode(gml,'utf8')
+        f.write(gml)
