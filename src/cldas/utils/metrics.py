@@ -1,3 +1,10 @@
+# -*- encoding: utf-8 -*-
+'''
+Module with a set of common metrics
+
+@author: Nicolás Mechulam, Damán Salvia
+'''
+
 import numpy as np
 import keras.backend as K
 

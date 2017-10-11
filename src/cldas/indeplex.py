@@ -6,7 +6,7 @@ Module for generating an minimal context independent lexicon from positive and n
 
 import numpy as np
 from utils import progress, save
-from _collections import defaultdict
+from collections import defaultdict
     
 
 def _valid_tag(tag, tagset):

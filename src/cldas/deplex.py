@@ -6,15 +6,12 @@ Module for generating a context dependent lexicon corpus and seeds
 '''
 
 from cldas.utils import progress, save
-from cldas.utils.graph import _generate_graph, _search_influences
-from _collections import defaultdict
+from cldas.utils.graph import MultiGraph, _search_influences
+from collections import defaultdict
 
 
-def by_influence(source, opinions, seeds, 
-        filter_tags        = None,
-        max_weight         = 1,
-        threshold          = 0.005,
-        context_window     = 1,  
+def by_influence(graph, seeds, 
+        threshold          = 0.005,  
         neutral_resistance = 1,
         filter_neutral     = True,
         filter_seeds       = True, 
@@ -26,13 +23,14 @@ def by_influence(source, opinions, seeds,
     Generates a lexicon from an opinion set and seeds words by Influence Search like model
     '''
     
-    graph = _generate_graph(opinions, source, filter_tags, max_weight, context_window, verbose=verbose)
+    if not isinstance(graph, MultiGraph):
+        raise ValueError('Expected argument graph to be a MultiGraph instance.')
     
     influences = defaultdict(list) ; total = len(seeds)
     
     for idx, seed in enumerate(seeds):
         
-        if verbose : progress("Processing seeds for %s" % source, total,idx)
+        if verbose : progress("Processing seeds for %s" % graph.source, total,idx)
         
         nodes_influences = _search_influences(graph, seed, threshold)
         
@@ -45,7 +43,7 @@ def by_influence(source, opinions, seeds,
     
     for idx, lemma in enumerate(influences):
         
-        if verbose : progress("Building lexicon by influence for %s" % source,total,idx)
+        if verbose : progress("Building lexicon by influence for %s" % graph.source,total,idx)
         
         total_influence = sum([ inf[1] for inf in influences[lemma] ]) 
         
@@ -64,7 +62,7 @@ def by_influence(source, opinions, seeds,
         lexicon = dict( filter( lambda item: item[0] not in seeds , lexicon.items ) ) 
     
     if tofile:
-        suffix  = "_%s" % source
+        suffix  = "_%s" % graph.source
         suffix += "_top%03i" % limit if limit else ""
         suffix += "_seeds%03i" % len(seeds)
         save( lexicon , "deplex_by_influence" + suffix , tofile )
@@ -73,11 +71,8 @@ def by_influence(source, opinions, seeds,
 
 
 
-def by_bfs(source, opinions, seeds, 
-        filter_tags     = None,
-        max_weight      = 1, 
+def by_bfs(graph, seeds,
         threshold       = 0.005,
-        context_window  = 1, 
         filter_neutral  = True,
         filter_seeds    = True, 
         limit           = None,
@@ -87,8 +82,6 @@ def by_bfs(source, opinions, seeds,
     '''
     Generates a lexicon from an opinion set and seeds words by Breath First Search model
     '''
-    
-    graph = _generate_graph(opinions, source, filter_tags, max_weight, context_window, verbose=verbose)
     
     lexicon = { lem:0 for lem in graph.keys() }
     
@@ -101,11 +94,11 @@ def by_bfs(source, opinions, seeds,
         size = len(queue)
         top  = max(size,top)
         
-        if verbose : progress("Building lexicon by bfs for %s" % source,top,top-size)
+        if verbose : progress("Building lexicon by bfs for %s" % graph.source,top,top-size)
         
         (lem,val) = queue.pop(0)
         
-        if not graph.has_key(lem) or abs(val) < threshold:
+        if lem not in graph or abs(val) < threshold:
             continue
         
         lexicon[lem] += val
@@ -132,7 +125,7 @@ def by_bfs(source, opinions, seeds,
         lexicon = dict( filter( lambda item: item[0] not in seeds , lexicon.items() ) ) 
     
     if tofile:
-        suffix  = "_%s" % source
+        suffix  = "_%s" % graph.source
         suffix += "_top%03i" % limit if limit else ""
         suffix += "_seeds%03i" % len(seeds)
         save( lexicon , "deplex_by_bfs" + suffix , tofile )

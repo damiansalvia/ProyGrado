@@ -15,7 +15,7 @@ class Position(Enum):
 
 
 import glob, re
-from _collections import defaultdict
+from collections import defaultdict
 from utils import progress, Log, save
 
 
@@ -135,7 +135,7 @@ class CorpusReader(object):
     
     
     def __str__(self):
-        return self._source 
+        return "Retrieval of %s" % self._source 
     
     
     def _add(self,opinion,category):
