@@ -61,7 +61,7 @@ class CorpusReader(object):
         
         self._directory   = directory if directory[-1] != "/" else directory[:-1]
         self._files       = glob.glob(directory+'/'+extension)
-        self._source = directory.split("/")[-1]
+        self.source = directory.split("/")[-1]
         
         self.filesid = []
         
@@ -128,14 +128,15 @@ class CorpusReader(object):
                 
             assert len(revs) == len(cats)      
          
-        if tofile: save( self._c2o ,"retriv_%s" % self._source , tofile )       
+        if tofile: save( self._c2o ,"retriv_%s" % self.source , tofile )       
+    
         
     def __repr__(self):
         return "< %s.%s in %s >" % (self.__class__.__module__, self.__class__.__name__, self._directory)
     
     
     def __str__(self):
-        return "Retrieval of %s" % self._source 
+        return "Retrieval of %s" % self.source 
     
     
     def _add(self,opinion,category):

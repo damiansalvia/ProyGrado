@@ -54,12 +54,12 @@ def by_influence(graph, seeds,
         
     if filter_neutral:
         lexicon = dict( filter( lambda item: abs( item[1] ) > 0.3 , lexicon.items() ) )
-    
+         
+    if filter_seeds:
+        lexicon = dict( filter( lambda item: item[0] not in seeds , lexicon.items() ) ) 
+     
     if limit:
         lexicon = dict( sorted( lexicon.items() , key=lambda item: abs( item[1] ) , reverse=True )[:limit] )
-        
-    if filter_seeds:
-        lexicon = dict( filter( lambda item: item[0] not in seeds , lexicon.items ) ) 
     
     if tofile:
         suffix  = "_%s" % graph.source
@@ -117,12 +117,12 @@ def by_bfs(graph, seeds,
     
     if filter_neutral:
         lexicon = dict( filter( lambda item: abs( item[1] ) > 0.3 , lexicon.items() ) )
-    
-    if limit:
-        lexicon = dict( sorted( lexicon.items() , key=lambda item: abs( item[1] ) , reverse=True )[:limit] )
         
     if filter_seeds:
         lexicon = dict( filter( lambda item: item[0] not in seeds , lexicon.items() ) ) 
+    
+    if limit:
+        lexicon = dict( sorted( lexicon.items() , key=lambda item: abs( item[1] ) , reverse=True )[:limit] )
     
     if tofile:
         suffix  = "_%s" % graph.source
