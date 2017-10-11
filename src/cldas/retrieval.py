@@ -3,9 +3,9 @@
 Module for reading multiple sources
 @author: Nicolás Mechulam, Damián Salvia
 '''
-from cldas.utils.misc import _Enum
+from cldas.utils.misc import EnumItems
 
-class Position(_Enum):
+class Position(EnumItems):
     BEFORE = 1
     AFTER  = 2    
 

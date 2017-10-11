@@ -36,8 +36,10 @@ class Iterable(object):
         if not isinstance(other, self.__class__): #or type(other) != list:
             raise TypeError('unsupported operand type(s) for +: \'%s\' and \'%s\'' % (self.__class__.__name__, other.__class__.__name__))
         return Iterable( chain(self.__iterable,other) )
+ 
+ 
     
-class _Enum:
+class EnumItems:
     class __metaclass__(type):
         def __contains__(self,item):
             return item in self.__dict__.values()

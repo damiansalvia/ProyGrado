@@ -297,7 +297,7 @@ class Preprocess(_SpellCorrector,_MorfoTokenizer):
     
     def __init__(self, source, opinions, data=DATA, lang=LANG, pwl=PWL, verbose=True, *args, **kwargs):
         super(Preprocess, self).__init__(data, lang, pwl, *args, **kwargs)
-        self._source = source
+        self.source = source
         self._lang   = lang
         self._sents  = defaultdict(list)
          
@@ -312,12 +312,12 @@ class Preprocess(_SpellCorrector,_MorfoTokenizer):
         total = len( opinions ) ; fails = 0 
         for idx, opinion in enumerate(opinions):
             
-            if verbose: progress("Preprocessing %s (Fails %05.2f%%)" %  ( self._source, 100.0*fails/total ), total, idx )  
+            if verbose: progress("Preprocessing %s (Fails %05.2f%%)" %  ( self.source, 100.0*fails/total ), total, idx )  
                          
             _id = md5.new(str(opinion['category']) + opinion['text'].encode('ascii', 'ignore')).hexdigest()
             
             if _id in _ids:
-                log("Repeated opinion '%s' (at %s)" % ( opinion['text'].encode('ascii','ignore') , self._source ) )
+                log("Repeated opinion '%s' (at %s)" % ( opinion['text'].encode('ascii','ignore') , self.source ) )
                 continue
                 
             _ids.append(_id)
@@ -328,7 +328,7 @@ class Preprocess(_SpellCorrector,_MorfoTokenizer):
             
             if not sent:
                 fails += 1
-                log("Empty analysis for '%s' (at %s)" % ( opinion['text'].encode('ascii','ignore') , self._source ) )
+                log("Empty analysis for '%s' (at %s)" % ( opinion['text'].encode('ascii','ignore') , self.source ) )
                 continue
             
             self._sents[ opinion['category'] ].append({
@@ -342,11 +342,11 @@ class Preprocess(_SpellCorrector,_MorfoTokenizer):
     
        
     def __repr__(self):
-        return "< %s.%s in %s (%s) >" % (self.__class__.__module__, self.__class__.__name__, self._source, self._lang)
+        return "< %s.%s in %s (%s) >" % (self.__class__.__module__, self.__class__.__name__, self.source, self._lang)
         
         
     def __str__(self):
-        return "Preprocess for %s in %s" % ( self._source , self._lang.upper() )        
+        return "Preprocess for %s in %s" % ( self.source , self._lang.upper() )        
         
     
     def categories(self,mapping=None):
@@ -365,11 +365,11 @@ class Preprocess(_SpellCorrector,_MorfoTokenizer):
     def data(self,mapping=None):
         def _gen(mapping):
             for category in self.categories(mapping=mapping):
-                for text in self.sents(category=category):
-                    yield {'text':text,'category':category}
+                for sent in self.sents(category=category):
+                    yield { "_id":sent['_id'], 'source':self.source,'text':sent['text'],'category':category } 
         return Iterable( _gen(mapping) )
             
     
     def to_json(self,dirpath='./'):
-        save( self._sents , "preproc_%s.json" % self._source , dirpath )
+        save( self._sents , "preproc_%s.json" % self.source , dirpath )
     
