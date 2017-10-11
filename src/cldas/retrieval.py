@@ -16,7 +16,9 @@ class Position(Enum):
 
 import glob, re
 from collections import defaultdict
-from utils import progress, Log, save
+
+from cldas.utils import progress, Log, save
+from cldas.utils.misc import Iterable
 
 
 log = Log("./log")
@@ -137,19 +139,30 @@ class CorpusReader(object):
     
     
     def _add(self,opinion,category):
+        if not isinstance(opinion,unicode):
+            opinion = unicode(opinion,'utf8')
         self._c2o[ category ].append( opinion )
     
         
-    def categories(self):
-        return self._c2o.keys()
+    def categories(self,mapping=None):
+        if mapping is None:
+            return self._c2o.keys()
+        return [ mapping[category] for category in self._c2o.keys() ]
     
     
     def opinions(self,category=None):
         if category is None:
             return sum( self._c2o.values() , [] )
-        else:
-            return self._c2o[category]
+        return self._c2o[category]
         
+    
+    def data(self,mapping=None):
+        def _gen(mapping):
+            for category in self.categories(mapping=mapping):
+                for text in self.opinions(category=category):
+                    yield {'text':text,'category':category}
+        return Iterable( _gen(mapping) )
+    
     
     def to_json(self,dirpath='./'):
         save( self._c2o ,"retriv_%s" % self.source , dirpath )        

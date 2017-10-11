@@ -99,7 +99,7 @@ def _get_structures(pos_op, neg_op, strategy, filter_tags=None, lemmas=None, ver
     Pctd = np.zeros(size) ; Nctd = np.zeros(size)
     Pt   = np.zeros(size) ; Nt   = np.zeros(size) 
     
-    total = len(opinions)
+    total = len( opinions )
     
     for jth,opinion in enumerate(opinions):
         if verbose : progress("Building lexicon by %s (%i words)" % (strategy , len(opinion['text']) ), total, jth)

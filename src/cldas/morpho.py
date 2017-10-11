@@ -8,9 +8,11 @@ Module for preprocessing corporea text
 import freeling, os, enchant, re, md5
 from enchant.checker import SpellChecker
 from difflib import get_close_matches
-from utils import progress, Log, save
 from pprint import _id
 from collections import defaultdict
+
+from cldas.utils import progress, Log, save
+from cldas.utils.misc import Iterable
 
 log = Log("./log")
 
@@ -35,7 +37,7 @@ class _SingletonSettings(object):
 
 
     def __init__(self,data,lang,pwl):
-        
+                
         if not os.path.exists(pwl): 
             raise ValueError("%s cannot be found" % pwl)
         
@@ -61,6 +63,7 @@ class _SingletonSettings(object):
         
         self.SessionId = self.Splitter.open_session()
         
+        
     def __del__(self):
         self.Splitter.close_session(self.SessionId)
     
@@ -83,10 +86,10 @@ SUBSTITUTIONS = [
     # Remove repetitive characters (except (ll)egar, pe(rr)o and a(cc)ion ) <-- will be corrected by aspell
     (u"([^lrc])\\1+",u"\\1"),
     # Separate alphabetical character from non-alphabetical character by a blank space
-    (u"([0-9a-záéíóúñü\\\]?)([^0-9a-záéíóúñü_\\\\s]+)([0-9a-záéíóúñü\\\]?)",u"\\1 \\2 \\3"),
+    (u"([\d\W])",u" \\1 "),
     (u"([^0-9a-záéíóúñü_\s])",u" \\1 "),
     # Separate alphabetical from numerical 
-    (u"[([a-záéíóúñü])([0-9])]",u" \\1 \\2 "),
+    (u"(\d+)",u"  \\1 "),
     # Remove redundant quote marks  -- replace, delete, undo
     (u"(\")([^\"]*?)(?(1)\")",u"&quote;\\2&quote;"),
     (u"[\"]",u""),
@@ -121,30 +124,32 @@ class _SpellCorrector(_SingletonSettings):
     
     def _clean_unbalanced(self,text):
         diff = text.count(u"(") - text.count(u")")
-        while diff <> 0:
-            if diff > 0 :
-                i = text.index(u"(") ; diff -= 1
-            if diff < 0 : 
-                i = text.index(u")") ; diff += 1
+        while diff != 0:
+            if diff > 0 : i = text.index(u"(") ; diff -= 1
+            if diff < 0 : i = text.index(u")") ; diff += 1
             text = text[:i]+text[i+1:]
-        if text.count(u"¿") - text.count(u"?") <> 0: 
-            text = re.sub(u"[\?¿]",u".",text)
-        if text.count(u"¡") - text.count(u"!") <> 0: 
-            text = re.sub(u"[!¡]",u".",text)
+        diff = text.count(u"¿") - text.count(u"?")
+        while diff != 0:
+            if diff > 0 : i = text.index(u"¿") ; diff -= 1
+            if diff < 0 : i = text.index(u"?") ; diff += 1
+            text = text[:i]+u"."+text[i+1:]
+        diff = text.count(u"¡") - text.count(u"!")
+        while diff != 0:
+            if diff > 0 : i = text.index(u"¡") ; diff -= 1
+            if diff < 0 : i = text.index(u"!") ; diff += 1
+            text = text[:i]+u"."+text[i+1:]
         if text.count(u"\"") % 2 == 1 :
             i = text.index(u"\"")
-            text = text[:i] + text[i+1:]
+            text = text[:i]+u"."+text[i+1:]
         return text
     
     
     def _clean_tags(self,text):
-        pattern = u"<\s(.*?)\s.*?>(.*?)</\s\\1\s>" 
-        while re.search(pattern, text, flags=re.DOTALL):
-            text = re.sub(pattern,u"\\2",text,flags=re.DOTALL)
-        text = re.sub(u"<.*?>",u"",text,flags=re.DOTALL)
+        return re.sub(u"<.*?>",u"",text,flags=re.DOTALL|re.U)
+    
     
     def _correct(self,text):
-        
+        x = text
         if not isinstance(text,unicode):
             text = unicode(text,'utf8')
             
@@ -153,7 +158,6 @@ class _SpellCorrector(_SingletonSettings):
             text = text.strip()
             
         text = self._clean_tags(text)
-        
         text = self._clean_unbalanced(text)
         
         self.Morfo.set_active_options(
@@ -292,28 +296,23 @@ class Preprocess(_SpellCorrector,_MorfoTokenizer):
         return super(Preprocess, cls).__new__(cls, *args, **kwargs)
     
     
-    def __init__(self, source, data=DATA, lang=LANG, pwl=PWL, *args, **kwargs):
+    def __init__(self, source, opinions, data=DATA, lang=LANG, pwl=PWL, verbose=True, *args, **kwargs):
         super(Preprocess, self).__init__(data, lang, pwl, *args, **kwargs)
         self._source = source
         self._lang   = lang
         self._sents  = defaultdict(list)
+         
+        self._run(opinions,verbose)
         
         
-    def __repr__(self):
-        return "< %s.%s in %s (%s) >" % (self.__class__.__module__, self.__class__.__name__, self._source, self._lang)
-        
-        
-    def __str__(self):
-        return "Preprocess for %s in %s" % ( self._source , self._lang.upper() ) 
-        
-        
-    def run(self, opinions, verbose=True):
+    def _run(self, opinions, verbose):
         if not opinions:
             raise ValueError('Nothing to itemize')
         
         _ids = []
-        total = len( list ( opinions ) ) ; fails = 0 
+        total = len( opinions ) ; fails = 0 
         for idx, opinion in enumerate(opinions):
+            
             if verbose: progress("Preprocessing %s (Fails %05.2f%%)" %  ( self._source, 100.0*fails/total ), total, idx )  
                          
             _id = md5.new(str(opinion['category']) + opinion['text'].encode('ascii', 'ignore')).hexdigest()
@@ -341,13 +340,20 @@ class Preprocess(_SpellCorrector,_MorfoTokenizer):
                     'tag'   : token['tag']
                 } for token in sent ]
             })
-            
-            if idx % 500 == 0 and tofile: # partial dump
-                save( self._sents , "preproc_%s" % self._source , tofile )        
+        
+        
+    def __repr__(self):
+        return "< %s.%s in %s (%s) >" % (self.__class__.__module__, self.__class__.__name__, self._source, self._lang)
+        
+        
+    def __str__(self):
+        return "Preprocess for %s in %s" % ( self._source , self._lang.upper() )        
         
     
-    def categories(self):
-        return self._sents.keys()
+    def categories(self,mapping=None):
+        if mapping is None:
+            return self._sents.keys()
+        return [ mapping[category] for category in self._sents.keys() ]
     
         
     def sents(self,category=None):
@@ -355,6 +361,14 @@ class Preprocess(_SpellCorrector,_MorfoTokenizer):
             return sum( self._sents.values() , [] )
         else:
             return self._sents[category]
+    
+    
+    def data(self,mapping=None):
+        def _gen(mapping):
+            for category in self.categories(mapping=mapping):
+                for text in self.sents(category=category):
+                    yield {'text':text,'category':category}
+        return Iterable( _gen(mapping) )
             
     
     def to_json(self,dirpath='./'):
