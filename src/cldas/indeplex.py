@@ -88,7 +88,7 @@ def _get_structures(pos_op, neg_op, strategy, filter_tags=None, lemmas=None, ver
     
     P = 1.0 * len(pos_op) ; N = 1.0 * len(neg_op)  
     
-    opinions = pos_op + neg_op ; del pos_op ; del neg_op
+    opinions = pos_op + neg_op
     
     if not lemmas: 
         lemmas = list( set([ tok['lemma'] for op in opinions for tok in op['text'] ]) )
