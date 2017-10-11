@@ -1,6 +1,6 @@
 # -*- encoding: utf-8 -*-
 '''
-Module for generating a context dependent lexicon corpus and seeds
+Module for generating a context dependent lexicon corpus from a set of seeds
 
 @author: Nicolás Mechulam, Damián Salvia
 '''

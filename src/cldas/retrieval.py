@@ -35,8 +35,7 @@ class CorpusReader(object):
             file_position = None,
             start_from    = 0,
             decoding      = 'utf8',
-            verbose = True, 
-            tofile  = None,
+            verbose = True,
         ):
         '''
         Constructor from source directory and extension pattern
@@ -74,10 +73,10 @@ class CorpusReader(object):
         
         self._c2o = defaultdict(list)
         
-        self._parse(decoding,verbose,tofile)  
+        self._parse(decoding,verbose)  
         
     
-    def _parse(self,decoding,verbose,tofile):    
+    def _parse(self,decoding,verbose):    
         
         pattern = None
         if self._path_pattern is not None:
@@ -126,9 +125,7 @@ class CorpusReader(object):
                 self._add( revs[i] , cats[i] )
             revs = [] ; cats = []
                 
-            assert len(revs) == len(cats)      
-         
-        if tofile: save( self._c2o ,"retriv_%s" % self.source , tofile )       
+            assert len(revs) == len(cats)             
     
         
     def __repr__(self):
@@ -146,11 +143,16 @@ class CorpusReader(object):
     def categories(self):
         return self._c2o.keys()
     
+    
     def opinions(self,category=None):
         if category is None:
             return sum( self._c2o.values() , [] )
         else:
-            return self._c2o[category]        
+            return self._c2o[category]
+        
+    
+    def to_json(self,dirpath='./'):
+        save( self._c2o ,"retriv_%s" % self.source , dirpath )        
     
 
         

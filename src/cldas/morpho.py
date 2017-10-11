@@ -307,7 +307,7 @@ class Preprocess(_SpellCorrector,_MorfoTokenizer):
         return "Preprocess for %s in %s" % ( self._source , self._lang.upper() ) 
         
         
-    def run(self, opinions, verbose=True, tofile=None):
+    def run(self, opinions, verbose=True):
         if not opinions:
             raise ValueError('Nothing to itemize')
         
@@ -343,9 +343,7 @@ class Preprocess(_SpellCorrector,_MorfoTokenizer):
             })
             
             if idx % 500 == 0 and tofile: # partial dump
-                save( self._sents , "preproc_%s" % self._source , tofile )
-            
-        if tofile: save( self._sents , "preproc_%s.json" % self._source , tofile )
+                save( self._sents , "preproc_%s" % self._source , tofile )        
         
     
     def categories(self):
@@ -358,3 +356,7 @@ class Preprocess(_SpellCorrector,_MorfoTokenizer):
         else:
             return self._sents[category]
             
+    
+    def to_json(self,dirpath='./'):
+        save( self._sents , "preproc_%s.json" % self._source , dirpath )
+    
