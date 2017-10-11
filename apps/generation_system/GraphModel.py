@@ -209,10 +209,10 @@ def generate_graph(reviews, source, prefix_tag_list  = None, max_weight = 1, gra
         for i,item in enumerate(text):
             lem = item['lemma'] 
             is_negated_item = item.get('negated', False) 
-            for j in range(max(i-win,0),i) + range(i+1, min(i+1+win, size)):
+            for j in range(max(i-graph_context_window,0),i) + range(i+1, min(i+1+graph_context_window, size)):
                 nb  = text[j]['lemma'] 
                 inv = text[j].get('negated', False) != is_negated_item
-                graph[ lem ][nb]['p_inv' if inv else 'p_dir'] += win + 1 - abs(i-j)
+                graph[ lem ][nb]['p_inv' if inv else 'p_dir'] += graph_context_window + 1 - abs(i-j)
 
     for lemma in graph:
         # The weights are generated as a markovian model
