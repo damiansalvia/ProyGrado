@@ -3,13 +3,9 @@
 Module for reading multiple sources
 @author: Nicolás Mechulam, Damián Salvia
 '''
+from cldas.utils.misc import _Enum
 
-class Enum:
-    class __metaclass__(type):
-        def __contains__(self,item):
-            return item in self.__dict__.values()
-    
-class Position(Enum):
+class Position(_Enum):
     BEFORE = 1
     AFTER  = 2    
 

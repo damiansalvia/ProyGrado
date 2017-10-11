@@ -102,7 +102,7 @@ SUBSTITUTIONS = [
     # Replace all non-alphabetical or special symbols by a whitespace
     (u"[^0-9a-záéíóúñü_¿\?¡!\(\),\.:;\"\$/<>]",u" "),
     # Replace multiple non-alphabetical characters by one
-#     (u'([¿\?¡!\(\),\.:;\"\$\/<>])(\\1\s*)+',u'\\1 '), # Issue when nested quotes
+    (u'([^\w\d])\\1+',u'\\1 '), # Issue when nested quotes
     # Force dot ending
     (u"([^\w\?!\)\"])$",u""), (u"([^\.])$",u"\\1 ."),
     # Replace multiple blank spaces by one
