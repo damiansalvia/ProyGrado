@@ -149,7 +149,6 @@ class _SpellCorrector(_SingletonSettings):
     
     
     def _correct(self,text):
-        x = text
         if not isinstance(text,unicode):
             text = unicode(text,'utf8')
             
@@ -340,8 +339,8 @@ class Preprocess(_SpellCorrector,_MorfoTokenizer):
                     'tag'   : token['tag']
                 } for token in sent ]
             })
-        
-        
+    
+       
     def __repr__(self):
         return "< %s.%s in %s (%s) >" % (self.__class__.__module__, self.__class__.__name__, self._source, self._lang)
         
