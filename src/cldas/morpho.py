@@ -10,7 +10,7 @@ from enchant.checker import SpellChecker
 from difflib import get_close_matches
 from utils import progress, Log, save
 from pprint import _id
-from _collections import defaultdict
+from collections import defaultdict
 
 log = Log("./log")
 
@@ -304,7 +304,7 @@ class Preprocess(_SpellCorrector,_MorfoTokenizer):
         
         
     def __str__(self):
-        return "%s in %s" % ( self._source , self._lang.upper() ) 
+        return "Preprocess for %s in %s" % ( self._source , self._lang.upper() ) 
         
         
     def run(self, opinions, verbose=True, tofile=None):
