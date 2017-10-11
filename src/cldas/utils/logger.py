@@ -18,4 +18,4 @@ class Log:
     def __call__(self,message, level='error'):
         with open(self.logpath, 'a') as log:
             time = strftime("%Y-%m-%d %H:%M:%S", gmtime())
-            log.write( "\n%s : %s at %s > %s \n" % ( level.upper() , time , inspect.stack()[1][0].f_code.co_name.upper() , message ) )
+            log.write( "\n%s : %s at %s > %s \n" % ( level.upper() , time , inspect.stack()[1][0].f_code.co_name , message ) )
