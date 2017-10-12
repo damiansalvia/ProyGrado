@@ -35,7 +35,13 @@ class Iterable(object):
     def __add__(self,other):
         if not isinstance(other, self.__class__): #or type(other) != list:
             raise TypeError('unsupported operand type(s) for +: \'%s\' and \'%s\'' % (self.__class__.__name__, other.__class__.__name__))
-        return Iterable( chain(self.__iterable,other) )
+        return Iterable( chain(self.__iterable,other) )            
+        
+    def __repr__(self):
+        return "< %s.%s - size(%s) >" % ( self.__class__.__module__, self.__class__.__name__, self.__count )
+    
+    def __str__(self):
+        return "<%s object with %i items of %s>" % (self.__class__.__name__,self.__count,self.__iterable.__repr__()) 
  
  
     
