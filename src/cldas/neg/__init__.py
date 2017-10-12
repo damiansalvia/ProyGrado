@@ -1,2 +1,5 @@
-from FFN import NegScopeFFN
-from LSTM import NegScopeLSTM
+from model import NegScopeFFN, NegScopeLSTM
+    
+        
+        
+        
