@@ -43,7 +43,12 @@ class Iterable(object):
     def __str__(self):
         return "<%s object with %i items of %s>" % (self.__class__.__name__,self.__count,self.__iterable.__repr__()) 
  
- 
+    def __getitem__(self, i):
+        for_real , for_iter = tee(self.__iterable)
+        self.__iterable = for_real
+        for pos,val in enumerate(for_iter):
+            if pos==i: return val
+    
     
 class EnumItems:
     class __metaclass__(type):
