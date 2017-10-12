@@ -1,12 +1,11 @@
 # -*- encoding: utf-8 -*-
 '''
 Module with a set of models for determining the scope negation 
-@author: Nicol�s Mechulam, Dami�n Salvia
+@author: Nicolás Mechulam, Damián Salvia
 '''
 
 from cldas.utils import progress, save, Log
 from cldas.utils.metrics import precision, recall, fmeasure, mse, bce, binacc
-from cldas.neg import _DEFAULT_LAYER_SIZE, _DEFAULT_DROPOUT, _DEFAULT_ACTIVATION
 
 from keras.models import Sequential,load_model
 from keras.layers import Dense,LSTM
