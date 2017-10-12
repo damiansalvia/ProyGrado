@@ -1,6 +1,7 @@
 # -*- encoding: utf-8 -*-
 '''
 Module with a set of models for determining the scope negation 
+
 @author: Nicolás Mechulam, Damián Salvia
 '''
 
