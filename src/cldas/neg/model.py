@@ -139,7 +139,7 @@ class NegScopeFFN(_NegScopeModel):
 class NegScopeLSTM(_NegScopeModel):
     
     def __init__(self, window, **kwargs):
-        super(NegScopeFFN,self).__init__(**kwargs)
+        super(NegScopeLSTM,self).__init__(**kwargs)
         
         # Model definition     
         self._model = Sequential()
