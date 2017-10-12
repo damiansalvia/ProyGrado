@@ -44,12 +44,20 @@ class _NegScopeModel(object):
         self._metrics  = metrics
         self._loss     = loss
     
+       
+    def __repr__(self):
+        return "< %s.%s - dim(%i) >" % (self.__class__.__module__, self.__class__.__name__, self._vec_size)
+    
+    
+    def __str__(self):
+        return "%s" % self.__class__.__name__ 
+    
     
     def save_model(self, filename, dirpath= './'):
         dirpath = dirpath if dirpath [-1] != "/" else dirpath[:-1]
         if not os.path.isdir(dirpath): 
             os.makedirs(dirpath)
-        self._model.save( dirpath+"/model_%s.h5" % filename )
+        self._model.save( dirpath+"/model_%s_%s.h5" % (self.__class__.__name__,filename) )
        
         
     def load_model(self, source):

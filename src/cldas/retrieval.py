@@ -127,11 +127,11 @@ class CorpusReader(object):
     
         
     def __repr__(self):
-        return "< %s.%s in %s >" % (self.__class__.__module__, self.__class__.__name__, self._directory)
+        return "< %s.%s - %s >" % ( self.__class__.__module__, self.__class__.__name__, self._directory )
     
     
     def __str__(self):
-        return "Retrieval of %s" % self.source 
+        return "%s(%s)" % (self.__class__.__name__,self.source) 
     
     
     def _add(self,opinion,category):

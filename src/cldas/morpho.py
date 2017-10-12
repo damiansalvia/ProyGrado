@@ -342,11 +342,11 @@ class Preprocess(_SpellCorrector,_MorfoTokenizer):
     
        
     def __repr__(self):
-        return "< %s.%s in %s (%s) >" % (self.__class__.__module__, self.__class__.__name__, self.source, self._lang)
+        return "< %s.%s - %s (%s) >" % (self.__class__.__module__, self.__class__.__name__, self.source, self._lang)
         
         
     def __str__(self):
-        return "Preprocess for %s in %s" % ( self.source , self._lang.upper() )        
+        return "%s(%s,%s)" % ( self.__class__.__name__, self.source , self._lang.upper() )        
         
     
     def categories(self,mapping=None):

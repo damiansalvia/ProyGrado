@@ -72,11 +72,11 @@ class MultiGraph(object):
     
     
     def __repr__(self):
-        return "< %s.%s of %s >" % (self.__class__.__module__, self.__class__.__name__,self.source)
+        return "< %s.%s - %s >" % (self.__class__.__module__, self.__class__.__name__,self.source)
     
     
     def __str__(self):
-        return "Graph of %s" % self.source
+        return "%s(%s)" % ( self.__class__.__name__ , self.source )
     
     
     def __getitem__(self, word):
