@@ -22,10 +22,10 @@ log = Log("./log")
 
 class CorpusReader(object):
     '''
-    Retrieves opinion and category from corporea source files
+    Class for retrieving opinion and category from corporea source files
     '''
 
-    def __init__(self, directory, extension, 
+    def __init__(self, directory, filename, 
             op_pattern    = None,
             path_pattern  = None,
             path_level    = 0,
@@ -54,10 +54,14 @@ class CorpusReader(object):
             raise ValueError('Expected keyword argument start_from to be positive.')
         
         directory = directory.replace("\\","/")
-        extension = '*.'+extension if extension.isalnum() else extension
+        directory = directory if directory[-1] != "/" else directory[:-1]
+        files = glob.glob(directory+'/'+filename)
         
-        self._directory   = directory if directory[-1] != "/" else directory[:-1]
-        self._files       = glob.glob(directory+'/'+extension)
+        if not files:
+            raise Exception('There are no files in \'%s\'.' % (directory+'/'+filename))
+        
+        self._directory   = directory
+        self._files       = files
         self.source = directory.split("/")[-1]
         
         self.filesid = []
