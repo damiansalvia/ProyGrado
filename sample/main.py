@@ -241,8 +241,8 @@ for corpus in dp.get_sources():
     for li in indep_lex:
         
         ld = by_bfs( graph, li, limit=300 )
-        save(ld, 'ld_by_bfs'.format(name=name), './deplex')
+        save(ld, 'ld_by_bfs', './deplex')
         
         ld = by_influence( graph, li, limit=300 )
-        save(ld, 'ld_by_influence'.format(name=name), './deplex')
+        save(ld, 'ld_by_influence', './deplex')
 
