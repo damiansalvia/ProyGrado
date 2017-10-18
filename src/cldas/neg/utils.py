@@ -7,7 +7,7 @@ Module with negation utilities
 import os
 clean = 'cls' if os.name == 'nt' else 'clear'
 
-from colorama import init, Fore, Style
+from colorama import init, Fore, Style, Back
 init(autoreset=True) 
 
 from cldas.utils import progress, save, title, Log, load
@@ -16,39 +16,41 @@ from cldas.morpho import Preprocess
 log = Log("../log") 
 
 
-def interactive_prediction(model,formatter):
+def interactive_prediction(model,formatter, **kwrgs):
     '''
     Makes predictions interactively from console input.
     @param model      : Keras model of a Neural Networ (FFN or LSTM).
     @param formmatter : Function to format X and Y dataset from input.  
-    '''    
-    os.system(clean)
-    print Fore.YELLOW + Style.BRIGHT + 'New text'
-    print '>', ; text = raw_input()
-    
-    preproc = Preprocess('Test', [{'text':text,'category':None}], verbose=False)
-    data = preproc.data()
-    
-    X,_ = formatter(data)
-    Y = model.predict(X)
-    
-    os.system(clean)
-    print Fore.YELLOW + Style.BRIGHT +'Result'
-    print ' '.join(["%s" % (Fore.MAGENTA+Style.BRIGHT+word if neg else Fore.RESET+Style.RESET_ALL+word) for word,neg in \
-            zip([token['text'] for token in data], Y ) ])  
-    
-    raw_input("Continue...")
+    ''' 
+    while True:   
+        os.system(clean)
+        print Fore.YELLOW + Style.BRIGHT + 'New text'
+        print '>', ; text = raw_input()
+        
+        preproc = Preprocess( 'Test', [{'text':text,'category':None}], verbose=False )
+        data = preproc.data()
+        
+        X,_ = formatter( data, **kwrgs )
+        Y = model.predict( X )
+        
+        os.system(clean)
+        print Fore.YELLOW + Style.BRIGHT +'Result'
+        print ' '.join(["%s" % (
+                    Fore.MAGENTA+Style.BRIGHT+word if neg 
+                    else Fore.RESET+Style.RESET_ALL+word 
+                ) for word,neg in zip( [token['word'] for token in data[0]['text']], Y ) ])  
+        
+        if not raw_input("\nContinue..."):
+            os.system(clean)
+            break
 
 
-def manual_tagging(tofile=None):
+def manual_tagging(dp,tofile='./neg/manual'):
     '''
-    Makes predictions interactively from console input.
-    @param model      : Keras model of a Neural Networ (FFN or LSTM).
-    @param formmatter : Function to format X and Y dataset from input.  
+    Displays command-line interface for start manual tagging
+    @param dp    : Data provider as cldas.db.crud operations.
+    @param tofle : Directory path where negation tags will be stored.  
     '''
-    
-    try: import cldas.db.crud as dp
-    except: raise Exception('Database nedded.')
     
     sources = dp.get_sources()
     sources_size = len( sources )
@@ -57,9 +59,9 @@ def manual_tagging(tofile=None):
         os.system(clean)
         title("MENU")
         print "0 . exit"
-        for i in range(sources):
-            qty = len(dp.get_tagged('manually',sources[i])) 
-            print i+1,".","%-20s" % sources[i], "(%i)" % qty
+        for i in range( len(sources) ): 
+            qty = len( dp.get_tagged( dp.TaggedType.MANUAL , sources[i]) ) 
+            print i+1,".","%-30s" % sources[i], "(%i)" % qty
         return 
      
     def DisplayReview(_id,current,total,words,tags):
@@ -68,17 +70,17 @@ def manual_tagging(tofile=None):
         print "<<",
         for i in range(total):
             if i < current and tags[i] == 'n':
-                print words[i]+"\033[93m/"+tags[i]+"\033[0m",
+                print words[i] + Fore.GREEN + Style.BRIGHT + "/"+tags[i] + Style.RESET_ALL,
             elif i < current:
-                print words[i]+"\033[91m/"+tags[i]+"\033[0m",
+                print words[i] + Fore.MAGENTA + Style.BRIGHT +"/"+tags[i] + Style.RESET_ALL,
             elif i > current:
                 print words[i]+"  ",
             else:
-                print "\033[92m\033[4m"+words[i]+"\033[0m\033[0m  ",
+                print Back.BLUE + Fore.WHITE +words[i]+Style.RESET_ALL,
         print ">>"
         
     def chunkstring(string, length):
-        return (string[0+i:length+i] for i in range(0, len(string), length))
+        return ( string[0+i:length+i] for i in range(0, len(string), length) )
     
     def ViewSave(result,source):
         os.system(clean)
@@ -90,46 +92,47 @@ def manual_tagging(tofile=None):
             op = raw_input("Are you sure? [y/n] > ")
             if op.lower() == 'y':
                 return
-            
-        dp.save_negations(result,tagged_as='manually')
-        if tofile:save(result,"negtag_%s" % source,tofile,overwrite=False)
+        
+        save( result,"negtag_%s" % source, tofile, overwrite=False )
         
     # #------- Execute Function -------#
     
     while True:
-        # Display menu options
         DisplayMenu()
         
         op = raw_input("\nOption > ")
         if not op.isdigit():
             raw_input("Opcion invalida")
             continue
+        
         op = int(op)
         if op == 0:
-            break # Exit
+            break 
+        
         if op > sources_size:
             raw_input("Opcion invalida")
             continue
+        
         else:    
             result = {}        
             source = sources[op-1]
             try:     
-                # Ask for retrieving options 
+                
                 op = raw_input("\nInsert indexes separated by ',' or <intro> for pick up randomly > ")
+                
                 if op: # From indexes
                     indexes = list(set(int(i) for i in op.split(',')))
                     quantity = len(indexes)
                     indexes = indexes[:quantity]
+                    
                 else: # Randomly
                     while not op.isdigit():
                         op = raw_input("How many? > ")
                     quantity = int(op)
                     indexes = []
                 
-                # Get a sample of reviews from options
                 samples = dp.get_sample(quantity,source,indexes)
                 
-                # Tag every review
                 left = quantity
                 while left != 0:   
                                      
@@ -144,15 +147,15 @@ def manual_tagging(tofile=None):
                     tags  = ['  ' for _ in range(total)]
                     
                     # For each word, annotate with (N) or (I) and give the possibility of back by pressing (B)
-                    cat = ""
-                    idx = 0
+                    cat = "" ; idx = 0
+                    
                     while True:
-                        # Display review
-                        DisplayReview(sample['_id'],idx,total,words,tags)
+                        
+                        DisplayReview( sample['_id'], idx, total, words, tags )
                         
                         # Check end condition
                         if idx == total:
-                            op = raw_input("\nDone. Proceed with the next review (left %i)? [y/n] > " % (left-1))
+                            op = raw_input("\nDone. Proceed with the next review (left %i)? [y/n] > " % (left-1)) if left-1 != 0 else 'y'
                             if op == 'y':
                                 break
                             idx = idx - 1 if idx != 0 else 0
@@ -166,7 +169,7 @@ def manual_tagging(tofile=None):
                         tag = raw_input(tooltip)
                         
                         if not tag and not cat: # Prevents parse empty cat
-                            print "Input a category first";raw_input()
+                            raw_input("Input a category first")
                             continue
                         elif tag:
                             cat = tag
@@ -174,11 +177,9 @@ def manual_tagging(tofile=None):
                         # Action from decision
                         cat = cat.lower()
                         if not cat or cat not in 'nibasq':
-                            print "Option",cat,"is not correct." ;raw_input()
+                            raw_input("Option '%s' is not correct." % cat)
                             continue
-                        if cat == 'q':
-                            break
-                        if cat == 's':
+                        if cat == 'q'or cat == 's':
                             break
                         elif cat == 'b': # Back
                             idx = idx - 1 if idx != 0 else 0
@@ -198,8 +199,8 @@ def manual_tagging(tofile=None):
                         continue
                             
                     # Once the text is tagged, add it to the result
-                    tags = map(lambda cat : cat =='i', tags)
-                    result.update({ _id : tags })
+                    tags = map( lambda cat : cat =='i', tags )
+                    result.update({ _id:tags })
                     
                     # Update
                     left -= 1

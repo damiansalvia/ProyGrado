@@ -330,7 +330,6 @@ def update_embeddings(femb='../../embeddings/emb39-word2vec.npy', ftok='../../em
     # Save results in database
     save_embeddings(result)
 
-
 # ----------------------------------------------------------------------------------------------------------------------
 
 

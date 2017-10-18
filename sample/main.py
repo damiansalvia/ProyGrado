@@ -14,7 +14,6 @@ from cldas.utils.file import save
 from cldas.utils import USEFUL_TAGS
 
 import cldas.db.crud as dp
-from cldas.db.crud import TaggedType
 
 '''
 ---------------------------------------------
@@ -96,13 +95,15 @@ for (reader,mapping) in corporea:
       Adding Negation Scope tagging
 ---------------------------------------------
 '''
+dp.save_negations_from_files('./neg/manual/*')    
+    
 reader = CorpusReader( '../corpus/corpus_variado_sfu_neg', '*/*.xml', scope_pattern='<scope>(.*?)<\/scope>', negexp_pattern='<negex.*?>(.*?)<\/negexp>', op_pattern='<review.*?>(.*?)<\/review>', wd_pattern='<.*?wd=\"(.*?)\".*?\/>', file_pattern='<review.*?polarity=\"(.*?)\">' )
 print "Classes:", reader.categories()
 print "Opinions:", len( reader.opinions() )
 mapping = { 'negative':20, 'positive':80 }
 
 source  = reader.source
-data    = reader.data( mapping=mapping, tagged=TaggedType.MANUAL )
+data    = reader.data( mapping=mapping, tagged=dp.TaggedType.MANUAL )
 preproc = Preprocess( source, data )
 print "Classes:", preproc.categories()
 print "Success:", len( preproc.sents() ),", Fails:", len( preproc.failures() ) 
@@ -115,7 +116,7 @@ dp.save_opinions( preproc.data() )
       Adding embeddings to database
 ---------------------------------------------
 '''
-dp.update_embeddings(femb='../../embeddings/emb39-word2vec.npy', ftok='../../embeddings/emb39-word2vec.txt')
+dp.update_embeddings(femb='../embeddings/emb39-word2vec.npy', ftok='../embeddings/emb39-word2vec.txt')
 
 
 '''
@@ -131,17 +132,17 @@ vec_size = len( dp.get_null_embedding() )
 
 wleft, wright = 2, 2
 ffn = NegScopeFFN( wleft, wright, vec_size )
-X,Y = dp.get_ffn_dataset( tagged, wleft, wright )
-ffn.fit( X, Y )
-X,_ = dp.get_ffn_dataset( untagged, wleft , wright )
-ffn.predict( X )
+X_train, Y_train = dp.get_ffn_dataset( tagged, wleft, wright )
+ffn.fit( X_train, Y_train )
+X_pred, _ = dp.get_ffn_dataset( untagged, wleft , wright )
+ffn.predict( X_pred )
 
 win = 10
 lstm = NegScopeLSTM( win, vec_size )
-X,Y = dp.get_lstm_dataset( tagged, win )
-lstm.fit( X, Y )
-X,_ = dp.get_lstm_dataset( untagged, win )
-lstm.predict( X )
+X_train, Y_train = dp.get_lstm_dataset( tagged, win )
+lstm.fit( X_train, Y_train )
+X_pred ,_ = dp.get_lstm_dataset( untagged, win )
+lstm.predict( X_pred )
 
 
 '''
