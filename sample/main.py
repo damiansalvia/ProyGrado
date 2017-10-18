@@ -125,19 +125,20 @@ log( "Preprocessing stage - Elapsed: %s" % elapsed , level=Level.DEBUG)
 start_time = time.time()
 
 dp.save_negations_from_files('./neg/manual/*')    
+
+if not dp.get_opinions(source='corpus_variado_sfu_neg'):    
+    reader = CorpusReader( '../corpus/corpus_variado_sfu_neg', '*/*.xml', scope_pattern='<scope>(.*?)<\/scope>', negexp_pattern='<negex.*?>(.*?)<\/negexp>', op_pattern='<review.*?>(.*?)<\/review>', wd_pattern='<.*?wd=\"(.*?)\".*?\/>', file_pattern='<review.*?polarity=\"(.*?)\">' )
+    print "Classes:", reader.categories()
+    print "Opinions:", len( reader.opinions() )
+    mapping = { 'negative':20, 'positive':80 }
     
-reader = CorpusReader( '../corpus/corpus_variado_sfu_neg', '*/*.xml', scope_pattern='<scope>(.*?)<\/scope>', negexp_pattern='<negex.*?>(.*?)<\/negexp>', op_pattern='<review.*?>(.*?)<\/review>', wd_pattern='<.*?wd=\"(.*?)\".*?\/>', file_pattern='<review.*?polarity=\"(.*?)\">' )
-print "Classes:", reader.categories()
-print "Opinions:", len( reader.opinions() )
-mapping = { 'negative':20, 'positive':80 }
-
-source  = reader.source
-data    = reader.data( mapping=mapping )
-preproc = Preprocess( source, data )
-print "Classes:", preproc.categories()
-print "Success:", len( preproc.sents() ),", Fails:", len( preproc.failures() ) 
-
-dp.save_opinions( preproc.data( tagged=dp.TaggedType.MANUAL ) )
+    source  = reader.source
+    data    = reader.data( mapping=mapping )
+    preproc = Preprocess( source, data )
+    print "Classes:", preproc.categories()
+    print "Success:", len( preproc.sents() ),", Fails:", len( preproc.failures() ) 
+    
+    dp.save_opinions( preproc.data( tagged=dp.TaggedType.MANUAL ) )
    
 elapsed = time.strftime('%H:%M:%S', time.gmtime(time.time()-start_time))
 print "\n","Elapsed:",elapsed,"\n"
