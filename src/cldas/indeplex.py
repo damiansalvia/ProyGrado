@@ -5,7 +5,7 @@ Module for generating an minimal context independent lexicon from positive and n
 '''
 
 import numpy as np
-from utils import progress, save
+from cldas.utils import progress, save
 from collections import defaultdict
     
 

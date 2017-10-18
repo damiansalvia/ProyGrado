@@ -10,8 +10,9 @@ from enchant.checker import SpellChecker
 from difflib import get_close_matches
 from collections import defaultdict
 
-from cldas.utils import progress, Log, save
+from cldas.utils import progress, save
 from cldas.utils.misc import Iterable
+from cldas.utils.logger import Log, Level
 
 log = Log("./log")
 
@@ -317,7 +318,7 @@ class Preprocess(_SpellCorrector,_MorfoTokenizer):
             _id = md5.new( "%s %s" % (str(opinion['category']),opinion['text'].encode('ascii', 'ignore')) ).hexdigest()
             
             if _id in _ids:
-                log("Repeated opinion '%s' (at %s)" % ( opinion['text'].encode('ascii','ignore') , self.source ) )
+                log("Repeated opinion '%s' (at %s)" % ( opinion['text'].encode('ascii','ignore') , self.source ) , level=Level.ERROR)
                 continue
             
             text = opinion['text']
@@ -327,7 +328,7 @@ class Preprocess(_SpellCorrector,_MorfoTokenizer):
             if not sent:
                 fails += 1
                 self._fails.append( "'%s'\n\n==>'%s'" % ( opinion['text'], text ) )
-                log("Empty analysis for '%s' (at %s)" % ( opinion['text'].encode('ascii','ignore') , self.source ) )
+                log("Empty analysis for '%s' (at %s)" % ( opinion['text'].encode('ascii','ignore') , self.source ) , level=Level.ERROR)
                 continue
                 
             _ids.append(_id)
@@ -343,7 +344,7 @@ class Preprocess(_SpellCorrector,_MorfoTokenizer):
                 try: items = self.__get_items_from_tags(tags,opinion,sent)
                 except Exception as e:
                     self._fails.append( "'%s'\n\n==>'%s'" % ( ' '.join( wd+"/"+tag for wd,tag in zip(opinion['text'],tags) ), text ) ) 
-                    log("BIO parsing fail for '%s' (at %s)" % ( opinion['text'].encode('ascii','ignore') , self.source ) )
+                    log("BIO parsing fail for '%s' (at %s)" % ( opinion['text'].encode('ascii','ignore') , self.source ) , level=Level.ERROR)
                     fails += 1 
                     continue
             

@@ -8,7 +8,8 @@ from cldas.utils.misc import EnumItems
 import glob, re
 from collections import defaultdict
 
-from cldas.utils import progress, Log, save
+from cldas.utils import progress, save
+from cldas.utils.logger import Log, Level
 from cldas.utils.misc import Iterable
 
 
@@ -158,7 +159,7 @@ class CorpusReader(object):
                 cats = re.findall(self._file_pattern, content, self._file_flags)
                 
             if not revs and not ( len(revs) == len(cats) ):
-                raise Exception("Nothing match in %s" % filename)
+                log("Nothing match in %s" % filename, level=Level.WARN)
             
             for i in range( len(revs) ):
                 self._add( revs[i] , cats[i] )

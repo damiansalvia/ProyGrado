@@ -11,7 +11,8 @@ from difflib import get_close_matches
 from colorama import init, Fore, Style
 init(autoreset=True) 
 
-from cldas.utils import Log, progress, load
+from cldas.utils import progress, save
+from cldas.utils.logger import Log, Level 
 from cldas.utils.misc import EnumItems, Iterable
 
 
@@ -70,7 +71,7 @@ def save_negations(negations,tag_as,do_correction=False):
         
         opinion = db.reviews.find_one({'_id':_id})
         if not opinion:
-            log("Opinion %s skipped (not found)" %  _id , level='error')
+            log("Opinion %s skipped (not found)" %  _id , level=Level.ERROR)
             continue
         
         negation = { 'tagged' : tag_as }
@@ -323,7 +324,7 @@ def update_embeddings(femb='../../embeddings/emb39-word2vec.npy', ftok='../../em
             result = []
     
     # Save statistics results
-    log("Embeddings integration result. %s" % str(stats),level='info')
+    log("Embeddings integration result. %s" % str(stats),level=Level.INFO)
     if verbose: 
         for case in stats: print "%-17s : %i (%4.2f%%)" % ( case,stats[case],100.0*stats[case]/sum(stats.values()) )     
     

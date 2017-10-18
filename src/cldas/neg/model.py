@@ -5,9 +5,8 @@ Module with a set of models for determining the scope negation
 @author: Nicolás Mechulam, Damián Salvia
 '''
 
-from cldas.utils import progress, save, Log
-from cldas.utils.metrics import precision, recall, fmeasure, mse, bce, binacc
-from cldas.morpho import Preprocess
+from cldas.utils import Log, Level
+from cldas.utils.metrics import *
 
 from keras.models import Sequential,load_model
 from keras.layers import Dense,LSTM
@@ -89,6 +88,8 @@ class _NegScopeModel(object):
             validation_split=testing_fraction , 
             verbose=verbose 
         )
+        
+        log( self.get_scores(X, Y, verbose) , level=Level.INFO)
 
     
     def predict(self,X):

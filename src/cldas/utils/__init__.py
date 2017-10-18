@@ -1,4 +1,4 @@
-from cldas.utils.logger import Log
+from cldas.utils.logger import Log, Level
 from cldas.utils.file import save, load
 from cldas.utils.visual import progress, title
 from cldas.utils import metrics

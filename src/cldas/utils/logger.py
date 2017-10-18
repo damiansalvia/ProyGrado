@@ -7,6 +7,15 @@ Module for manage application logging
 
 from time import gmtime, strftime
 import inspect, os
+from cldas.utils.misc import EnumItems
+
+
+class Level(EnumItems):
+    ERROR = "ERROR"
+    DEBUG = "DEBUG"
+    WARN  = "WARN"
+    INFO  = "INFO" 
+    
 
 class Log:
     
@@ -15,7 +24,7 @@ class Log:
         if not os.path.isdir(logdir): os.makedirs(logdir)
         self.logpath = logdir+"/"+logname
 
-    def __call__(self,message, level='error'):
+    def __call__(self,message, level=Level.ERROR):
         with open(self.logpath, 'a') as log:
             time = strftime("%Y-%m-%d %H:%M:%S", gmtime())
             log.write( "\n%s : %s at %s > %s \n" % ( level.upper() , time , inspect.stack()[1][0].f_code.co_name , message ) )
