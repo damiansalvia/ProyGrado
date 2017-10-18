@@ -7,7 +7,7 @@ import sys
 sys.path.append('../src')
 
 from cldas.neg.model import NegScopeLSTM
-from cldas.neg.utils import interactive_prediction, manual_tagging
+from cldas.neg.interface import interactive_prediction, manual_tagging
 import cldas.db.crud as dp
 
 '''

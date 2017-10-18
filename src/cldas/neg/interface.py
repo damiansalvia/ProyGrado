@@ -19,7 +19,7 @@ log = Log("../log")
 def interactive_prediction(model,formatter, **kwrgs):
     '''
     Makes predictions interactively from console input.
-    @param model      : Keras model of a Neural Networ (FFN or LSTM).
+    @param model      : Keras model of a Neural Network (FFN or LSTM).
     @param formmatter : Function to format X and Y dataset from input.  
     ''' 
     while True:   
