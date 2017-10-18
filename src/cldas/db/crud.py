@@ -257,7 +257,7 @@ def update_embeddings(femb='../../embeddings/emb39-word2vec.npy', ftok='../../em
     @param verbose: Print progress. 
     '''
       
-    stats = { "ByWord":0,"ByRepl":0,"ByClos":0,"IsNull":0,"Fails":0 }
+    stats = { "ByWord":0,"ByRepl":0,"ByClos":0,"IsNull":0 }
     
     # Load vectors and its words
     vocabulary  = unicode( open(ftok).read().lower().replace("_","") ,'utf8' )    
@@ -334,20 +334,20 @@ def update_embeddings(femb='../../embeddings/emb39-word2vec.npy', ftok='../../em
 # ----------------------------------------------------------------------------------------------------------------------
 
 
-def _format_ffn(text, wleft, wright, null, neg_as):
+def _format_ffn(text, wleft, wright, null, neg_as, is_train):
     X,Y = [],[]
     for idx, token in enumerate(text):       
         x_curr = [ get_aprox_embedding( token['word'] ) if 0 <= idx < len(text) else null for idx in range(wleft + wright + 1) ]
         x_curr = np.array( x_curr ).flatten()
-        y_curr = token['negated'] if text[idx]['negated'] is not None else neg_as
+        y_curr = None if not is_train else token['negated'] if token['negated'] is not None else neg_as
         X.append( x_curr )
         Y.append( y_curr )
     return X,Y
 
 
-def _format_lstm(text, win, null, neg_as):
+def _format_lstm(text, win, null, neg_as, is_train):
     x_curr = [ get_aprox_embedding( token['word'] ) for token in text ]
-    y_curr = [ token.get('negated') if token.get('negated',None) is not None else neg_as for token in text ]
+    y_curr = [ None if not is_train else token['negated'] if token['negated'] is not None else neg_as for token in text ]
     rest = (win - len(x_curr)) % win 
     if rest > 0:
         x_curr.extend( [ null for _ in range(rest) ] )
@@ -364,12 +364,11 @@ def _format_embeddings(formatter, opinions, **kwargs):
     total    = len( opinions )
     X , Y = [] , []
     for idx,opinion in enumerate(opinions):
-        if not opinion.has_key('tagged'):
-            raise ValueError('Expected argument \'opinion\' to be tagged with negation scope (id:%s).' % opinion['_id'])
+        is_train = opinion.has_key('tagged') and opinion['tagged'] == TaggedType.MANUAL
         if verbose: progress("Loading training data (%i words)"  % len(opinion['text']),total,idx)
-        x_curr, y_curr = formatter( opinion['text'], null=null, **kwargs )
+        x_curr, y_curr = formatter( opinion['text'], null=null, is_train=is_train, **kwargs )
         X += x_curr
-        Y += y_curr    
+        Y += y_curr if is_train else []    
     yield np.array(X)
     yield np.array(Y)
 
