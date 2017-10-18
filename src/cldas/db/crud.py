@@ -109,7 +109,7 @@ def save_negations_from_files(sources,verbose=True):
     for idx,source in enumerate(sources):
         if verbose: progress("Load negation tags from %s" % source,total,idx)
         content = load(source)   
-        save_negations(content,tagged_as=TaggedType.MANUAL)
+        save_negations(content,TaggedType.MANUAL)
 
 
 def get_opinion(_id):

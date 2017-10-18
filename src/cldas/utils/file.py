@@ -41,8 +41,8 @@ def load(abspath):
         print "Nothing to be load from",abspath
         return 
     
-    with io.open(abspath,"w",encoding='utf8') as fp:
-        content = json.load(fp)
+    with io.open(abspath,"r",encoding='utf8') as fp:
+        content = json.load(fp,'utf8')
         
     return content
     
