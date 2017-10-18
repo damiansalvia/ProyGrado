@@ -13,13 +13,20 @@ from cldas.utils.misc import Iterable
 from cldas.utils.file import save
 from cldas.utils import USEFUL_TAGS
 
+from cldas.utils.logger import Log, Level
+log = Log('./')
+
 import cldas.db.crud as dp
+
+
 
 '''
 ---------------------------------------------
       Retrieval stage
 ---------------------------------------------
 '''
+start_time = time.time()
+
 from cldas.retrieval import CorpusReader
 
 corporea = []
@@ -72,12 +79,19 @@ print "Opinions:", len( reader.opinions() )
 mapping = { '1': 0, '2': 25, '3': 50, '4': 75, '5': 100 }
 corporea.append( ( reader, mapping) )
 
+elapsed = time.strftime('%H:%M:%S', time.gmtime(time.time()-start_time))
+print "\n","Elapsed:",elapsed,"\n"
+log( "Retrieval stage - Elapsed: %s" % elapsed , level=Level.DEBUG)
+
+
 
 '''
 ---------------------------------------------
       Preprocessing stage
 ---------------------------------------------
 '''
+start_time = time.time()
+
 from cldas.morpho import Preprocess
 
 for (reader,mapping) in corporea:
@@ -89,12 +103,19 @@ for (reader,mapping) in corporea:
     
     dp.save_opinions( preproc.data() )
 
+elapsed = time.strftime('%H:%M:%S', time.gmtime(time.time()-start_time))
+print "\n","Elapsed:",elapsed,"\n"
+log( "Preprocessing stage - Elapsed: %s" % elapsed , level=Level.DEBUG)
+
+
 
 '''
 ---------------------------------------------
       Adding Negation Scope tagging
 ---------------------------------------------
 '''
+start_time = time.time()
+
 dp.save_negations_from_files('./neg/manual/*')    
     
 reader = CorpusReader( '../corpus/corpus_variado_sfu_neg', '*/*.xml', scope_pattern='<scope>(.*?)<\/scope>', negexp_pattern='<negex.*?>(.*?)<\/negexp>', op_pattern='<review.*?>(.*?)<\/review>', wd_pattern='<.*?wd=\"(.*?)\".*?\/>', file_pattern='<review.*?polarity=\"(.*?)\">' )
@@ -110,13 +131,25 @@ print "Success:", len( preproc.sents() ),", Fails:", len( preproc.failures() )
 
 dp.save_opinions( preproc.data() )
    
+elapsed = time.strftime('%H:%M:%S', time.gmtime(time.time()-start_time))
+print "\n","Elapsed:",elapsed,"\n"
+log( "Adding negations - Elapsed: %s" % elapsed , level=Level.DEBUG)
+
+
 
 '''
 ---------------------------------------------
       Adding embeddings to database
 ---------------------------------------------
 '''
+start_time = time.time()
+
 dp.update_embeddings(femb='../embeddings/emb39-word2vec.npy', ftok='../embeddings/emb39-word2vec.txt')
+
+elapsed = time.strftime('%H:%M:%S', time.gmtime(time.time()-start_time))
+print "\n","Elapsed:",elapsed,"\n"
+log( "Adding embeddings- Elapsed: %s" % elapsed , level=Level.DEBUG)
+
 
 
 '''
@@ -124,6 +157,8 @@ dp.update_embeddings(femb='../embeddings/emb39-word2vec.npy', ftok='../embedding
       Negation Scope stage
 ---------------------------------------------
 '''
+start_time = time.time()
+
 from cldas.neg.model import NegScopeLSTM, NegScopeFFN
 
 tagged   = dp.get_tagged(dp.TaggedType.MANUAL)
@@ -143,6 +178,11 @@ X_train, Y_train = dp.get_lstm_dataset( tagged, win )
 lstm.fit( X_train, Y_train )
 X_pred ,_ = dp.get_lstm_dataset( untagged, win )
 lstm.predict( X_pred )
+
+elapsed = time.strftime('%H:%M:%S', time.gmtime(time.time()-start_time))
+print "\n","Elapsed:",elapsed,"\n"
+log( "Negation stage - LSTM - Elapsed: %s" % elapsed , level=Level.DEBUG)
+
 
 
 '''
@@ -195,11 +235,14 @@ stats.append( get_balance_by_source       )
 table_print(stats)
 
 
+
 '''
 ---------------------------------------------
       Independent Lexicon stage
 ---------------------------------------------
 '''
+start_time = time.time()
+
 from cldas.indeplex import by_senti_tfidf, by_senti_avg, by_senti_qtf, by_senti_pmi
 
 pos = dp.get_opinions( cat_cond={"$gt":50} )
@@ -224,12 +267,19 @@ li = by_senti_pmi( pos, neg, lemmas, filter_tags=USEFUL_TAGS, limit=150 )
 save(li, 'by_senti_pmi', './indeplex')
 indep_lexicons.append( li  )
 
+elapsed = time.strftime('%H:%M:%S', time.gmtime(time.time()-start_time))
+print "\n","Elapsed:",elapsed,"\n"
+log( "Indeplex stage - Elapsed: %s" % elapsed , level=Level.DEBUG)
+
+
 
 '''
 ---------------------------------------------
       Dependent Lexicon stage
 ---------------------------------------------
 '''
+start_time = time.time()
+
 from cldas.deplex import by_influence, by_bfs
 from cldas.utils.graph import MultiGraph
 
@@ -247,3 +297,6 @@ for corpus in dp.get_sources():
         ld = by_influence( graph, li, limit=300 )
         save(ld, 'ld_by_influence', './deplex')
 
+elapsed = time.strftime('%H:%M:%S', time.gmtime(time.time()-start_time))
+print "\n","Elapsed:",elapsed,"\n"
+log( "Deplex stage - Elapsed: %s" % elapsed , level=Level.DEBUG)
