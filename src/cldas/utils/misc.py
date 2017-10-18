@@ -8,7 +8,7 @@ Module with miscellaneous methods
 from itertools import tee, chain
 
 
-def _type(opinion):
+def OpinionType(opinion):
     if not opinion.has_key('category'):
         return 1 # unpreprocessed opinion
     if opinion.has_key('text') and type(opinion['text']) == list and opinion['text'][0].has_key('lemma') and opinion['text'][0].has_key('tag'):

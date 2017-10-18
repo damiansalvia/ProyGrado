@@ -6,11 +6,13 @@ Module with a set of models for determining the scope negation
 '''
 
 import numpy as np
-import random, re
+import random, glob
 from difflib import get_close_matches
+from colorama import init, Fore, Style
+init(autoreset=True) 
 
-from cldas.utils import Log, progress
-from cldas.utils.misc import EnumItems, Iterable, _type
+from cldas.utils import Log, progress, load
+from cldas.utils.misc import EnumItems, Iterable
 
 
 log = Log("./log")
@@ -35,17 +37,34 @@ db.reviews.create_index('tagged', name='negation_index')
 
 
 
-class Tagged(EnumItems):
-    MAN = "manually"
-    AUT = "automatically" 
+class TaggedType(EnumItems):
+    MANUAL    = "manually"
+    AUTOMATIC = "automatically" 
+    
+    
+    
+class DataSetType(EnumItems):
+    TRAIN   = 0
+    PREDICT = 1     
         
         
         
 def save_opinions(opinions):
+    '''
+    Saves a set of opinions in the database.
+    @param opinions: Collection of opinions (check cldas.utils.misc.OpinionType, value 2)
+    '''
     if opinions: db.reviews.insert_many(opinions)
 
 
 def save_negations(negations,tag_as,do_correction=False):
+    '''
+    Saves negation scope for a set of opinions.
+    @param negations     : Set of _id:collection where _id is the identifier of a review and collection a set of 
+                           boolean values correlated to words in the opinion which will be negated or not.
+    @param tag_as        : Can be manually (TaggedType.MANUAL) or automatically (TaggedType.AUTOMATIC)
+    @param do_corrections: Display UI for correct missmatch.  
+    '''
     
     for _id in negations:
         
@@ -67,48 +86,102 @@ def save_negations(negations,tag_as,do_correction=False):
         db.reviews.update( { '_id': _id } , { '$set': negation } )
 
 
+def save_negations_from_files(sources,verbose=True):
+    '''
+    Saves negation scope read from a set of source files.
+    @param source_dir : Pattern source directory to files (e.g. "my/path/*") or specific file path.
+    @param verbose    : For print progress.  
+    '''
+    sources = glob.glob(sources)
+    total = len(sources)
+    for idx,source in enumerate(sources):
+        if verbose: progress("Load negation tags from %s" % source,total,idx)
+        content = load(source)   
+        save_negations(content,tagged_as='manually')
+
+
 def get_opinion(_id):
-    return db.reviews.find_one( {' _id':_id } ) 
+    '''
+    Gets an opinions.
+    @param _id: Identiifier of the opinion.  
+    '''
+    return db.reviews.find_one( {'_id':_id } ) 
 
 
-def get_opinions(source=None):
-    query = {'source': source} if source else {}
+def get_opinions(cat_cond=None,source=None):
+    '''
+    Gets a set of opinions.
+    @param category: Filter by category condition. 
+    @param source: Filter by source.  
+    '''
+    query = {}
+    if cat_cond:
+        query.update({ 'category' : cat_cond })
+    if source:
+        query.update({ 'source' : source })
     result = db.reviews.find(query)
     return Iterable( result )
 
 
 def get_sources(pattern=None):
-    result = db.reviews.distinct("source")
+    '''
+    Gets a set of sources.
+    @param pattern: Filter sources given a pattern. 
+    '''
     if pattern:
-        result = [ source for source in result if re.match(pattern,source) ]
+        result = db.reviews.distinct("source", {'source' : { '$regex' : pattern } })
+    else:
+        result = db.reviews.distinct("source")
     return Iterable( result )
 
 
 def get_lemmas(source=None):
-    query = []
+    '''
+    Gets vocabulary by lemma.
+    @param source: Filter by source. 
+    '''
     if source:
-        query.append( { '$match': {'source': source}} )
-    query.append( { '$unwind': "$text" } )
-    query.append( { '$group': { '_id':'$text.lemma' } } )
-    result = db.reviews.aggregate( query )
+        result = db.reviews.distinct('text.lemma', { "source" : source })
+    else:
+        result = db.reviews.distinct('text.lemma')
     return Iterable( result )
 
 
-def get_sample(quantity, source, indexes = None):
-    if indexes:
-        result = db.reviews.find({
-            'source': source,
-            'idx' :{ '$in': indexes} 
-        })
+def get_words(source=None):
+    '''
+    Gets vocabulary by word.
+    @param source: Filter by source. 
+    '''
+    if source:
+        result = db.reviews.distinct('text.word', {"source" : source })
+    else:
+        result = db.reviews.distinct('text.word')
+    return Iterable( result )
+
+
+def get_sample(quantity, source, identifiers=None):
+    '''
+    Gets an opinion sampling.
+    @param quantity: How many reviews will be in the sample.
+    @param source : Filter by source.
+    @param indexes: Ignores Quantity and retrieves a fix sample from a list of identifiers. 
+    '''
+    if identifiers:
+        result = db.reviews.find({ 'source': source, '_id' :{ '$in': identifiers} })
     else:
         result = db.reviews.aggregate([ 
-            { '$match' : { "source" : source,"tagged" : { "$exists" : False } } },
-            { '$sample': { 'size': quantity } } 
+            { '$match' : { "source" : source, "tagged" :{ "$exists" : False } } },
+            { '$sample': { 'size' : quantity } } 
         ]) 
     return Iterable( result )
 
 
 def get_tagged(tag_as,source=None):
+    '''
+    Gets those opinions tagged with negation scope.
+    @param tag_as: Can be manually (TaggedType.MANUAL) or automatically (TaggedType.AUTOMATIC)
+    @param source: Filter by source. 
+    '''
     query = { "tagged" : tag_as  }
     if source:
         query.update({ "source" : source })
@@ -117,6 +190,11 @@ def get_tagged(tag_as,source=None):
 
 
 def get_untagged(limit=None,seed=None):
+    '''
+    Gets those opinions untagged with negation scope.
+    @param limit: Quantity of opinions retrieved.
+    @param seed : For setting the seed of random selection. 
+    '''
     result = db.reviews.find({ "tagged" : { "$exists" : False } }) 
     if limit:
         random.seed( seed )  
@@ -125,87 +203,92 @@ def get_untagged(limit=None,seed=None):
     return Iterable( result )
 
 
+# ----------------------------------------------------------------------------------------------------------------------
+
+
+def save_embeddings(embeddings):
+    '''
+    Saves a set of embeddings in the database.
+    @param embeddings: Collection of embeddings with format ["<word>":{'embedding':[X1,...,Xn],...}]
+    '''
+    if embeddings: db.embeddings.insert_many(embeddings)
+
+
 def get_null_embedding(null_as='.'):
+    '''
+    Gets a null embedding.
+    @param null_as: Which word will cosider null. By default, dot word ('.').
+    '''
     result = db.embeddings.find_one({ '_id':null_as })['embedding']
     return result 
 
 
-def get_word_embedding(word):
-    item = db.embeddings.find_one({ "_id" : word })
+def get_embedding(word):
+    '''
+    Gets the embedding for the given word. 
+    Can be None if the word has not an associated embedding. 
+    @param word: Word which embedding will be retrieved
+    '''
+    result = db.embeddings.find_one({ "_id" : word })
+    return result
+
+
+def get_aprox_embedding(word):
+    '''
+    Gets an approximated embedding for the given word.
+    Priors the embedding for such word.
+    @param word: Word which approximated embedding will be retrieved
+    '''
+    item = get_embedding(word)
     if not item:
         vocabulary = db.embeddings.distinct("_id")
         match = get_close_matches( word , vocabulary , 1 , 0.75 )
         if match: item = db.embeddings.find_one({ "_id" : match[0] })
         else    : item = db.embeddings.find_one({ "_id" : "." })
-    return item['embedding']
+    result = item['embedding']
+    return result
 
 
-def _sequences(wleft, wright, embeddings):
-    ratio = wleft+wright+1
-    size  = len(embeddings[0])
-    null  = np.zeros(size)
-    embeddings = np.concatenate( ( np.array([null,]*wleft) , embeddings , np.array([null,]*wright) ) )
-    return np.fromfunction( lambda i, j: embeddings[i+j], ( len(embeddings)-ratio+1, ratio ), dtype=int )
-
-
-def get_ffn_dataset(wleft,wright,verbose=True):
-    def _gen(wl,wr):
-        opinions = get_tagged(Tagged.MAN)
-        total = len( opinions )
-        for idx,opinion in enumerate(opinions):
-            if verbose: progress("Training data (%i words)"  % len(opinion['text']),total,idx)
-            embs = [] ; negs = []
-            for item in opinion['text']:
-                word = item['word']
-                ctx_emb = get_word_embedding( word )
-                embs.append( ctx_emb )
-                neg  = item.get('negated',False)
-                negs.append( neg )
-            X = _sequences(wl,wr,embs)
-            Y = negs
-            yield X,Y
-    return Iterable( _gen(wleft,wright) )
-
-def update_embeddings(
-        femb='../../embeddings/emb39-word2vec.npy',
-        ftok='../../embeddings/emb39-word2vec.txt',
-        verbose=False
-    ):
+def update_embeddings(femb='../../embeddings/emb39-word2vec.npy', ftok='../../embeddings/emb39-word2vec.txt', verbose=True):
+    '''
+    Reads embeddings and saves only if the word is in the current vocabulary.
+    @param femb   : Embedding file (.npy).
+    @param ftok   : Word list file (.txt).
+    @param verbose: Print progress. 
+    '''
       
-    stats = { "ByWord":0,"ByRepl":0,"ByClos":0,"IsNull":0,"Fails":0,"Total":0 }
+    stats = { "ByWord":0,"ByRepl":0,"ByClos":0,"IsNull":0,"Fails":0 }
     
     # Load vectors and its words
     vocabulary  = unicode( open(ftok).read().lower().replace("_","") ,'utf8' )    
     index_for   = { token:index for index,token in enumerate(vocabulary.splitlines()) }
     embeddings  = np.load(femb)
     
-    # Get simension and create the null vector
+    # Get dimension and create the null vector
     dimension  = len(embeddings[0])
     nullvector = np.zeros(dimension)
     
     # Get vocabulary
-    vocabulary = db.reviews.distinct("text.word")  
+    vocabulary = get_words()  
     
     # Get difference of vector-words and vocabulary-words for improving get_close_matches performance 
-    # PROBLEM: 'pizería' could be excluded and 'pizerías' (in the vocabulary) won't have a closest match
+    # PROBLEM: 'pizería' is excluded although 'pizerías' is in the vocabulary (i.e. won't have a closest match)
     dif_keys = set(index_for.keys()) - set(vocabulary)
     for key in list(dif_keys): index_for.pop(key,None)
     
     replaces = {u'a':u'á',u'e':u'é',u'i':u'í',u'o':u'ó',u'u':u'ú'}
     
-    def get_vectors( # Get the associated vector of a word and its match (null if it is the same or null vector)
+    def get_nearest_vector( # Get the associated vector of a word and its match (null if it is the same or null vector)
             word
         ):
-        
-        stats['Total'] += 1
         
         if index_for.has_key(word):
             stats['ByWord'] += 1
             return None , embeddings[ index_for[ word ] ]
         
         vowels = {idx:char for idx,char in enumerate(word) if char in 'aeiou'}
-        for idx in vowels:
-            replaced = word[:idx]+replaces[vowels[idx]]+word[idx+1:]
+        for idx,vowel in vowels.items():
+            replaced = word[:idx] + replaces[vowel] + word[idx+1:]
             if index_for.has_key(replaced):
                 stats['ByRepl'] += 1
                 return replaced , embeddings[ index_for[ replaced ] ]
@@ -218,9 +301,6 @@ def update_embeddings(
                 stats['ByClos'] += 1
                 return match[0] , embeddings[ index_for[ match[0] ] ]
         
-#         if size > 1 and size < 20 and not any( map( lambda chr : chr.isdigit() , word ) ):
-#             import pdb; pdb.set_trace()
-        
         stats['IsNull'] += 1
         return None , nullvector 
     
@@ -230,79 +310,86 @@ def update_embeddings(
     total = len(vocabulary)
     
     for idx,word in enumerate(vocabulary):
-        progress("Updating embeddings (%i,%i,%i,%i)" % ( stats['ByWord'],stats['ByRepl'],stats['ByClos'],stats['IsNull'] ),total,idx)
-        if not db.embeddings.find_one({'_id':word}):
-            nearest , vector = get_vectors( word )
+        if verbose: progress("Updating embeddings (%i,%i,%i,%i)" % ( stats['ByWord'],stats['ByRepl'],stats['ByClos'],stats['IsNull'] ),total,idx)
+        if not get_embedding(word):
+            nearest , vector = get_nearest_vector( word )
             result.append({ 
                 '_id'      :word,
                 'embedding':vector.tolist(),
                 'nearestOf':nearest 
             })
         if idx % 500 == 0 and result:
-            db.embeddings.insert_many(result)
+            save_embeddings(result)
             result = []
     
     # Save statistics results
     log("Embeddings integration result. %s" % str(stats),level='info')
-    if verbose:
-        if stats['Total']:
-            for case in stats: print "%-17s : %i (%4.2f%%)" % (case,stats[case],100.0*stats[case]/stats['Total']) 
-            #raw_input("Press enter to continue...")
-        else:
-            print "No embeddings has been processed"    
+    if verbose: 
+        for case in stats: print "%-17s : %i (%4.2f%%)" % ( case,stats[case],100.0*stats[case]/sum(stats.keys()) )     
     
     # Save results in database
-    if result: db.embeddings.insert_many(result)
+    save_embeddings(result)
 
-
-def get_text_embeddings(text, wleft, wright, neg_as=None):    
-    size_embedding = get_size_embedding()
-    
-    def get_entry(text, idx):
-        if  0 <= idx < len(text) :
-            return get_word_embedding( text[idx]['word'] )
-        else :
-            return list(np.zeros( size_embedding ))
-    
-    data,pred = [],[]
-    
-    total = len(text)
-    for idx, word in enumerate(text):
-#         progress("Getting embedding",total,idx,end=False)
-        
-        embeddings = []        
-        for i in range(wleft + wright + 1):
-            embeddings += get_entry( text , idx-wleft+i )
-        
-        embeddings = np.array( embeddings ).flatten()
-        data.append( embeddings )
-        
-        if text[idx].has_key('negated'): # for training
-            prediction = text[idx]['negated']
-            if prediction == True:
-                prediction = 1
-            elif prediction == False:
-                prediction = 0
-            elif neg_as == True:
-                prediction = 1
-            elif neg_as == False:
-                prediction = 0
-            else: # prediction=None and neg_as=None
-                prediction = 2
-            pred.append( prediction )
-            
-    return data, pred
 
 # ----------------------------------------------------------------------------------------------------------------------
 
 
-def get_stat_balanced(source=None):
-    query = {}
-    if source:
-        query.update({ 'source':source })
-    items = db.reviews.find(query)
-    balance = int( round( sum( item['category'] for item in items ) / items.count() ) )
-    return balance
+def _format_ffn(text, wleft, wright, null, neg_as):
+    X,Y = [],[]
+    for idx, token in enumerate(text):       
+        x_curr = [ get_aprox_embedding( token['word'] ) if 0 <= idx < len(text) else null for idx in range(wleft + wright + 1) ]
+        x_curr = np.array( x_curr ).flatten()
+        y_curr = token['negated'] if text[idx]['negated'] is not None else neg_as
+        X.append( x_curr )
+        Y.append( y_curr )
+    return X,Y
+
+
+def _format_lstm(text, win, null, neg_as):
+    x_curr = [ get_aprox_embedding( token['word'] ) for token in text ]
+    y_curr = [ token.get('negated') if token.get('negated',None) is not None else neg_as for token in text ]
+    rest = (win - len(x_curr)) % win 
+    if rest > 0:
+        x_curr.extend( [ null for _ in range(rest) ] )
+        y_curr.extend( [ False for _ in range(rest) ] )
+    X = [ x_curr[i*win : (i+1)*win] for i in range(len(x_curr)/win) ]
+    Y = [ y_curr[i*win : (i+1)*win] for i in range(len(y_curr)/win) ]
+    return X,Y
+
+
+def _format_embeddings(formatter, opinions, **kwargs):
+    verbose  = kwargs.pop('verbose')
+    null_as  = kwargs.pop('null_as')
+    null     = get_null_embedding(null_as)
+    total    = len( opinions )
+    X , Y = [] , []
+    for idx,opinion in enumerate(opinions):
+        if not opinion.has_key('tagged'):
+            raise ValueError('Expected argument \'opinion\' to be tagged with negation scope (id:%s).' % opinion['_id'])
+        if verbose: progress("Loading training data (%i words)"  % len(opinion['text']),total,idx)
+        x_curr, y_curr = formatter( opinion['text'], null=null, **kwargs )
+        X += x_curr
+        Y += y_curr    
+    yield np.array(X)
+    yield np.array(Y)
+
+
+def get_ffn_dataset(opinions, wleft, wright, null_as='.', neg_as=False, verbose=True):
+    '''
+    Given an opinion set and windows left/right returns the correct dataset format for FFN model
+    '''
+    return _format_embeddings( _format_ffn, opinions, wleft=wleft, wright=wright, null_as=null_as, neg_as=neg_as,  verbose=verbose )
+
+
+def get_lstm_dataset(opinions, win, null_as='.', neg_as=False, verbose=True):
+    '''
+    Given an opinion set and windows left/right returns the correct dataset format for LSTM model
+    '''
+    return _format_embeddings( _format_lstm, opinions, win=win, null_as=null_as, neg_as=neg_as,  verbose=verbose )
+
+
+# ----------------------------------------------------------------------------------------------------------------------
+
 
 def _do_correction(opinion,negation):
     negs = {x:negation[x] for x in negation}
@@ -311,12 +398,14 @@ def _do_correction(opinion,negation):
     for idx,item in enumerate(opinion['text']):
         print "%s%s" % (
                 item['word'],
-                "\033[91m/(%s:%s)[%i]\033[0m"%(
+                Fore.MAGENTA+Style.BRIGHT+"(%s:%s)[%i]"+Fore.RESET+Style.RESET_ALL % (
                     'i' if item['negated'] else 'n' , 
                     'i' if negs['text.' + str(idx) + '.negated'] else 'n',
                     idx
                 ) if item['negated'] != negs['text.' + str(idx) + '.negated'] \
-                else "\033[1m/%s\033[0m" % ('i' if item['negated'] else 'n'),
+                else Fore.BLUE+Style.BRIGHT+"/%sm"+Fore.RESET+Style.RESET_ALL % (
+                    'i' if item['negated'] else 'n'
+                ),
             ),
         if item['negated'] != negs['text.' + str(idx) + '.negated']: diff.append(idx)
     print

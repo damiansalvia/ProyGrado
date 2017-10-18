@@ -8,7 +8,6 @@ Module for preprocessing corporea text
 import freeling, os, enchant, re, md5
 from enchant.checker import SpellChecker
 from difflib import get_close_matches
-from pprint import _id
 from collections import defaultdict
 
 from cldas.utils import progress, Log, save
@@ -24,7 +23,7 @@ PWL  = os.path.join( os.path.dirname(__file__) , "files/aspell-es-lat.dic" )
 
 class _SingletonSettings(object):
     '''
-    Singleton class with the required settings
+    Singleton base class with required settings
     '''
     
     _instance = None
@@ -111,7 +110,7 @@ SUBSTITUTIONS = [
     
 class _SpellCorrector(_SingletonSettings):
     '''
-    Makes text correction
+    Class for making text correction
     '''
     
     def __new__(cls, *args, **kwargs):
@@ -245,7 +244,7 @@ class _SpellCorrector(_SingletonSettings):
 
 class _MorfoTokenizer(_SingletonSettings):
     '''
-    Makes text tokenizaion, lemmatization and POS-tagging
+    Class for making text tokenizaion, lemmatization and POS-tagging
     '''
     
     def __new__(cls, *args, **kwargs):
@@ -300,13 +299,14 @@ class Preprocess(_SpellCorrector,_MorfoTokenizer):
         self.source = source
         self._lang   = lang
         self._sents  = defaultdict(list)
+        self._fails  = []
          
         self._run(opinions,verbose)
         
         
     def _run(self, opinions, verbose):
         if not opinions:
-            raise ValueError('Nothing to itemize')
+            return
         
         _ids = []
         total = len( opinions ) ; fails = 0 
@@ -314,13 +314,11 @@ class Preprocess(_SpellCorrector,_MorfoTokenizer):
             
             if verbose: progress("Preprocessing %s (Fails %05.2f%%)" %  ( self.source, 100.0*fails/total ), total, idx )  
                          
-            _id = md5.new(str(opinion['category']) + opinion['text'].encode('ascii', 'ignore')).hexdigest()
+            _id = md5.new( "%s %s" % (str(opinion['category']),opinion['text'].encode('ascii', 'ignore')) ).hexdigest()
             
             if _id in _ids:
                 log("Repeated opinion '%s' (at %s)" % ( opinion['text'].encode('ascii','ignore') , self.source ) )
                 continue
-                
-            _ids.append(_id)
             
             text = opinion['text']
             text = self._correct(text)
@@ -328,17 +326,95 @@ class Preprocess(_SpellCorrector,_MorfoTokenizer):
             
             if not sent:
                 fails += 1
+                self._fails.append( "'%s'\n\n==>'%s'" % ( opinion['text'], text ) )
                 log("Empty analysis for '%s' (at %s)" % ( opinion['text'].encode('ascii','ignore') , self.source ) )
                 continue
+                
+            _ids.append(_id)
+            
+            tags  = opinion.get('tags',None)
+            if tags is None:
+                items = [{
+                    'word'   : token['form'],
+                    'lemma'  : token['lemma'],
+                    'tag'    : token['tag'],
+                } for token in sent ]
+            else: # TO-DO Please improve me !!                
+                try: items = self.__get_items_from_tags(tags,opinion,sent)
+                except Exception as e:
+                    self._fails.append( "'%s'\n\n==>'%s'" % ( ' '.join( wd+"/"+tag for wd,tag in zip(opinion['text'],tags) ), text ) ) 
+                    log("BIO parsing fail for '%s' (at %s)" % ( opinion['text'].encode('ascii','ignore') , self.source ) )
+                    fails += 1 
+                    continue
             
             self._sents[ opinion['category'] ].append({
                 '_id' : _id,
-                'text':[{
-                    'word'  : token['form'],
-                    'lemma' : token['lemma'],
-                    'tag'   : token['tag']
-                } for token in sent ]
+                'text': items
             })
+    
+    
+    def __get_items_from_tags(self,tags,opinion,sent): # TO-DO Please improve me !! 
+                
+            def flat(text):
+                return text.replace(u'\xe1','a').replace(u'\xe9','e').replace(u'\xed','i').replace(u'\xf3','o').replace(u'\xfa','u').replace(u'\xfc','u').replace(u'\xf1','n')
+            
+            bio = [ ( self._correct(wd)[:-1].strip(), tag ) for wd,tag in zip( opinion['text'].split(' '), tags ) ]
+            i = 0 ; j = 0
+            items = [] ; t1 = len(sent) ; t2 = len(bio)
+            while i < t1 and j < t2:
+                if sent[i]['form'] == bio[j][0]: # Are equels
+                    last = "CASE 1"
+                    items.append( ( sent[i], bio[j][1] ) )
+                    i+=1 ; j+=1
+                elif flat(sent[i]['form']) in flat(bio[j][0]): # Is substring of
+                    last = "CASE 4"
+                    while flat(sent[i]['form']) in flat(bio[j][0]):
+                        items.append( ( sent[i], bio[j][1] ) )
+                        i+=1
+                    j+=1
+                elif len(sent[i]['form'])==1 and bio[j][0]==u'':
+                    items.append( ( sent[i], bio[j][1] ) )
+                    i+=1 ; j+=1 
+                elif len(sent[i]['form'])>1 and bio[j][0]==u'':
+                    j+=1 
+                else:
+                    
+                    j1 = j+1
+                    while j1 < t2 and sent[i]['form'] != bio[j1][0]: # Look ahead if are equals
+                        j1+=1 
+                    if j1 < t2:
+                        last = "CASE 5"    
+                        j = j1
+                        continue
+                    
+                    i1 = i+1
+                    while i1 < t1 and sent[i1]['form'] != bio[j][0]: # Look ahead if are equals
+                        i1+=1
+                    if i1 < t1:
+                        last = "CASE 4"
+                        items.append( ( sent[i], bio[j][1] ) )
+                        i = i1 
+                        continue
+                    
+                    i1 = i+1 ; j1 = j+1
+                    while i1 < t1 and j1 < t2 and sent[i1]['form'] != bio[j1][0]: # Look ahead if are equals
+                        i1+=1 ; j1+=1 
+                    if i1 < t1:
+                        last = "CASE 5"    
+                        items.append( ( sent[i], bio[j][1] ) )
+                        i+=1 ; j+=1
+                        continue
+                    
+                    raise Exception()
+                
+            items = [{
+                'word'   : token['form'],
+                'lemma'  : token['lemma'],
+                'tag'    : token['tag'],
+                'negated': False if tag == 'O' else None if tag == 'B-NEG' else True
+            } for token,tag in items ]
+            
+            return items
     
        
     def __repr__(self):
@@ -349,24 +425,39 @@ class Preprocess(_SpellCorrector,_MorfoTokenizer):
         return "%s(%s,%s)" % ( self.__class__.__name__, self.source , self._lang.upper() )        
         
     
-    def categories(self,mapping=None):
-        if mapping is None:
+    def categories(self,pattern=None):
+        if not pattern:
             return self._sents.keys()
-        return [ mapping[category] for category in self._sents.keys() ]
+        return [ category for category in self._sents.keys() if re.match(pattern,category) ]
     
         
     def sents(self,category=None):
         if category is None:
             return sum( self._sents.values() , [] )
+        elif category not in self.categories():
+            raise ValueError('Expected key argument \'category\' to be in categories.')
         else:
             return self._sents[category]
     
     
-    def data(self,mapping=None):
+    def failures(self):
+        return self._fails
+    
+    
+    def data(self,mapping=None,**kwargs):
         def _gen(mapping):
-            for category in self.categories(mapping=mapping):
+            pattern = r"(%s)" % '|'.join(mapping.keys()) if mapping else None
+            for category in self.categories( pattern=pattern ):
                 for sent in self.sents(category=category):
-                    yield { "_id":sent['_id'], 'source':self.source,'text':sent['text'],'category':category } 
+                    item = { 
+                        "_id":sent['_id'], 
+                        'source':self.source,
+                        'text':sent['text'], 
+                        'category':category if mapping is None else mapping.get(category,None) 
+                    } 
+                    if kwargs:
+                        item.update(kwargs)
+                    yield item
         return Iterable( _gen(mapping) )
             
     

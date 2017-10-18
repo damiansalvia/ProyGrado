@@ -7,6 +7,7 @@ Module with a set of models for determining the scope negation
 
 from cldas.utils import progress, save, Log
 from cldas.utils.metrics import precision, recall, fmeasure, mse, bce, binacc
+from cldas.morpho import Preprocess
 
 from keras.models import Sequential,load_model
 from keras.layers import Dense,LSTM
@@ -31,23 +32,27 @@ log = Log("../log")
 
 
 class _NegScopeModel(object):
+    '''
+    Base class of negation scope models.
+    '''
     
-    def __init__(self, null_vec,
+    def __init__(self, dimension,
             layers    = [{'units':750, 'activation': 'relu', 'dropout': 0.2 }],
             metrics   = [binacc, precision, recall, fmeasure, mse, bce],
             loss      = 'binary_crossentropy', 
             optimizer = 'adam',
             verbose   = 2,
         ):
-        self._vec_size = len( null_vec ) 
-        self._layers   = layers
-        self._verbose  = verbose
-        self._metrics  = metrics
-        self._loss     = loss
+        self._dimension = dimension 
+        self._layers    = layers
+        self._metrics   = metrics
+        self._loss      = loss
+        self._optimizer = optimizer
+        self._verbose   = verbose
     
        
     def __repr__(self):
-        return "< %s.%s - dim(%i) >" % (self.__class__.__module__, self.__class__.__name__, self._vec_size)
+        return "< %s.%s - dim(%i) >" % (self.__class__.__module__, self.__class__.__name__, self._dimension)
     
     
     def __str__(self):
@@ -76,7 +81,7 @@ class _NegScopeModel(object):
         
         callbacks = []
         if early_monitor:
-            callbacks.append( EarlyStopping( monitor = early_monitor, min_delta = 0, patience = 2, mode = 'auto', verbose = 0 ) )
+            callbacks.append( EarlyStopping( monitor=early_monitor, min_delta=0, patience=2, mode='auto', verbose=0 ) )
             
         self._model.fit( X, Y, 
             callbacks=callbacks , 
@@ -95,14 +100,17 @@ class _NegScopeModel(object):
     
     def get_scores(self, X, Y, verbose=2):
         scores = self._model.evaluate(X,Y,batch_size=10,verbose=verbose)
-        return zip( self._model.metrics_names , [ round(score*100,1) for score in scores ] )        
+        return zip( self._model.metrics_names , [ round(score*100,1) for score in scores ] )         
 
     
 
 class NegScopeFFN(_NegScopeModel):
+    '''
+    Class of Feed-Forward Network model
+    '''
     
-    def __init__(self, window_left, window_right, **kwargs):
-        super(NegScopeFFN,self).__init__(**kwargs)
+    def __init__(self, window_left, window_right, dimension, **kwargs):
+        super(NegScopeFFN,self).__init__(dimension,**kwargs)
     
         # Model definition     
         self._model = Sequential()
@@ -110,7 +118,7 @@ class NegScopeFFN(_NegScopeModel):
         # Input layer
         layer = self._layers[0]
         config = {
-            'input_dim'  : self._vec_size * (window_left + window_right + 1),
+            'input_dim'  : self._dimension * (window_left + window_right + 1),
             'activation' : layer.get('activation',_DEFAULT_ACTIVATION),
             'units'      : layer.get('units',_DEFAULT_LAYER_SIZE)
         }
@@ -138,9 +146,12 @@ class NegScopeFFN(_NegScopeModel):
     
     
 class NegScopeLSTM(_NegScopeModel):
+    '''
+    Class of Long Short Term Memory model
+    '''
     
-    def __init__(self, window, **kwargs):
-        super(NegScopeLSTM,self).__init__(**kwargs)
+    def __init__(self, window, dimension, **kwargs):
+        super(NegScopeLSTM,self).__init__(dimension,**kwargs)
         
         # Model definition     
         self._model = Sequential()
@@ -148,23 +159,23 @@ class NegScopeLSTM(_NegScopeModel):
         # Input layer
         layer = self._layers[0]
         config = {
-            'input_shape'       : (window, self._vec_size),
+            'input_shape'       : (window, self._dimension),
             'activation'        : layer.get('activation',_DEFAULT_ACTIVATION), 
             'dropout'           : layer.get('dropout', _DEFAULT_DROPOUT) ,  
             'use_bias'          : layer.get('bias',True),
             'recurrent_dropout' : layer.get('recurrent_dropout', 0.0),
-            'return_sequences'  : True
+            'return_sequences'  : len(self._layers[-1]) == 1
         }
-        self._model.add( LSTM( **config ) )
+        self._model.add( LSTM(layer.get('units',_DEFAULT_LAYER_SIZE), **config) )
         
         # Intermediate layers
-        for layer in self._layers[1:]:
+        for idx,layer in enumerate(self._layers[1:]):
             config = {
                     'activation'        : layer.get('activation',_DEFAULT_ACTIVATION), 
                     'dropout'           : layer.get('dropout', _DEFAULT_DROPOUT) ,  
                     'use_bias'          : layer.get('bias',True),
                     'recurrent_dropout' : layer.get('recurrent_dropout', 0.0),
-                    'return_sequences'  : True
+                    'return_sequences'  : len(self._layers[-1])-2 != idx 
             }
             self._model.add( LSTM(layer.get('units',_DEFAULT_LAYER_SIZE), **config) )
         

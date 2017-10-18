@@ -4,139 +4,57 @@ Module with negation utilities
 @author: Nicolás Mechulam, Damián Salvia
 '''
 
-import glob, os, re
+import os
+clean = 'cls' if os.name == 'nt' else 'clear'
+
+from colorama import init, Fore, Style
+init(autoreset=True) 
+
 from cldas.utils import progress, save, title, Log, load
+from cldas.morpho import Preprocess
+
+log = Log("../log") 
 
 
-log = Log("../log")
-  
-      
-def load_neg_from_files(source_dir,verbose=True):
-    sources = glob.glob(source_dir)
-    total = len(sources)
-    for idx,source in enumerate(sources):
-        if verbose: progress("Load negation tags from %s" % source,total,idx)
-        content = load(source)   
-        yield content 
-#         dp.save_negations(content,tagged_as='manually') 
-
-
-def load_corpus_negation(sources='../../corpus/corpus_variado_sfu_neg/*/*.xml',verbose=False,tofile=None):
-    sources = glob.glob(sources)
-    total = len(sources)
-    isneg, tmpisneg = False, None
-    opinions = []
+def interactive_prediction(model,formatter):
+    '''
+    Makes predictions interactively from console input.
+    @param model      : Keras model of a Neural Networ (FFN or LSTM).
+    @param formmatter : Function to format X and Y dataset from input.  
+    '''    
+    os.system(clean)
+    print Fore.YELLOW + Style.BRIGHT + 'New text'
+    print '>', ; text = raw_input()
     
-    for idx,source in enumerate(sources):
-        
-        if verbose: progress("Reading negation (%s)" % source.split('/')[-2],total,idx) 
-        lines = open(source).readlines()
-        tokens = []
-        text = ""
-        for line in lines:
-            content = line.strip()
-            if not isinstance(content,unicode):
-                content = unicode(content,'utf8')            
-            
-            if content.startswith("<?xml"):
-                regex = re.compile("polarity=\"(.*?)\"",re.DOTALL)
-                category = regex.findall(content)[0]
-                category = 20 if category=='negative' else 80
-                continue
-            
-            elif content.startswith("<scope"):
-                isneg = True
-                continue               
-                
-            elif content.startswith("</scope"):
-                isneg = False
-                continue
-            
-            elif content.startswith("<negexp"):
-                tmpisneg = isneg
-                isneg = None
-                continue               
-                
-            elif content.startswith("</negexp"):
-                isneg = tmpisneg
-                tmpisneg = None
-                continue
-            
-            elif content.startswith("<v ") or\
-                content.startswith("<s ") or\
-                content.startswith("<f ") or\
-                content.startswith("<p ") or\
-                content.startswith("<r ") or\
-                content.startswith("<a ") or\
-                content.startswith("<d ") or\
-                content.startswith("<c ") or\
-                content.startswith("<n ") or\
-                content.startswith("<w ") or\
-                content.startswith("<z ") or\
-                content.startswith("<i "):
-                   
-                forms = re.compile("wd=\"(.*?)\"",re.DOTALL).findall(content)
-                lemma = re.compile("lem=\"(.*?)\"",re.DOTALL).findall(content)
-                tag   = re.compile("pos=\"(.*?)\"",re.DOTALL).findall(content)
-                
-                if forms and lemma:
-                    forms = forms[0]
-                    lemma = lemma[0]
-                elif lemma: 
-                    forms = lemma[0]
-                    lemma = lemma[0]
-                else: # is mathsign, only has POS-tag
-                    continue                       
-                
-                if not tag:
-                    tag   = "CS"
-                else:
-                    tag = tag[0]
-                
-                forms = forms.split('_') if not tag.startswith("NP") else forms
-                
-                for form in forms:  
-                    tokens.append({
-                        'form':form,
-                        'lemma':lemma,
-                        'tag':tag.upper(),
-                        'negated': isneg,
-                    })    
-                    
-                    text += " "+form
-            else: # Casos raros como &gt;
-                pass
-                
-        _id = md5.new(str(category) + text.encode('ascii', 'ignore')).hexdigest()
-        
-        if not dp.get_opinion(_id):
-            opinion = {}         
-            opinion['_id']      = _id
-            opinion['category'] = category
-            opinion['idx']      = idx+1
-            opinion['source']   = 'corpus_variado_sfu'
-            opinion['tagged']   = 'manually',
-            opinion['text']     = [{
-                'word'   : token['form'].lower(),
-                'lemma'  : token['lemma'].lower(),
-                'tag'    : token['tag'],
-                'negated': token['negated']
-            } for token in tokens ]
-            opinions.append(opinion)
+    preproc = Preprocess('Test', [{'text':text,'category':None}], verbose=False)
+    data = preproc.data()
     
-    dp.save_opinions(opinions) 
+    X,_ = formatter(data)
+    Y = model.predict(X)
     
-    if tofile: save(opinions,"from_corpus_sfu_negation",tofile)
+    os.system(clean)
+    print Fore.YELLOW + Style.BRIGHT +'Result'
+    print ' '.join(["%s" % (Fore.MAGENTA+Style.BRIGHT+word if neg else Fore.RESET+Style.RESET_ALL+word) for word,neg in \
+            zip([token['text'] for token in data], Y ) ])  
     
-    return len(opinions)
+    raw_input("Continue...")
 
 
-def manual_tagging(sources, tofile=None):
+def manual_tagging(tofile=None):
+    '''
+    Makes predictions interactively from console input.
+    @param model      : Keras model of a Neural Networ (FFN or LSTM).
+    @param formmatter : Function to format X and Y dataset from input.  
+    '''
     
+    try: import cldas.db.crud as dp
+    except: raise Exception('Database nedded.')
+    
+    sources = dp.get_sources()
     sources_size = len( sources )
     
     def DisplayMenu():
-        os.system('clear')
+        os.system(clean)
         title("MENU")
         print "0 . exit"
         for i in range(sources):
@@ -145,7 +63,7 @@ def manual_tagging(sources, tofile=None):
         return 
      
     def DisplayReview(_id,current,total,words,tags):
-        os.system('clear')
+        os.system(clean)
         print "Review [%s]" % _id
         print "<<",
         for i in range(total):
@@ -163,7 +81,7 @@ def manual_tagging(sources, tofile=None):
         return (string[0+i:length+i] for i in range(0, len(string), length))
     
     def ViewSave(result,source):
-        os.system('clear')
+        os.system(clean)
         if not result:
             return
 
@@ -230,7 +148,7 @@ def manual_tagging(sources, tofile=None):
                     idx = 0
                     while True:
                         # Display review
-                        DisplayReview(sample['idx'],idx,total,words,tags)
+                        DisplayReview(sample['_id'],idx,total,words,tags)
                         
                         # Check end condition
                         if idx == total:
@@ -281,9 +199,7 @@ def manual_tagging(sources, tofile=None):
                             
                     # Once the text is tagged, add it to the result
                     tags = map(lambda cat : cat =='i', tags)
-                    result.update({
-                        _id : tags
-                    })
+                    result.update({ _id : tags })
                     
                     # Update
                     left -= 1
@@ -294,7 +210,7 @@ def manual_tagging(sources, tofile=None):
                 
             except Exception as e:
                 content = '\n'.join([ _id+">>"+str(tags) for _id,tags in result.items() ])
-                log("Reason : %s (at %s) [%i] '%s'" % ( str(e) , source , sample['idx'] , content ))
+                log("Reason : %s (at %s) [%i] '%s'" % ( str(e) , source , sample['_id'] , content ))
                 raw_input("Reason: %s\nEnter to continue..." % str(e))
 
 

@@ -83,7 +83,7 @@ def size_manually_tagged_by_cat():
                 'total': { '$sum' : 1 }
                 } 
             },
-            {'$project' : {'total' :'$total', 'category': '$_id','_id':0}}
+            {'$project' : {'count' :'$total', 'category': '$_id','_id':0}}
         ]) )
     except:
         return None
@@ -132,7 +132,7 @@ def size_negative_words():
 
 
 # Count negators -- NO FUNCIONA, NO SE POR QUE 
-def size_negators(negators = NEGATORS ):
+def size_negators(negators = _CUSTOM_NEGATORS_LIST ):
     return list(db.reviews.aggregate([
         {
             '$group' : {
@@ -214,7 +214,7 @@ def get_balance_by_source() :
             'total': { '$sum' : '$category' }
             } 
         },
-        {'$project': {'balance': {'$divide' :['$total','$size'] } } }
+        {'$project': {'count': {'$divide' :['$total','$size'] }, "source":"$_id", "_id":0 } }
     ]) )
 
 
