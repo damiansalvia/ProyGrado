@@ -62,7 +62,8 @@ class _NegScopeModel(object):
         dirpath = dirpath if dirpath [-1] != "/" else dirpath[:-1]
         if not os.path.isdir(dirpath): 
             os.makedirs(dirpath)
-        self._model.save( dirpath+"/model_%s_%s.h5" % (self.__class__.__name__,filename) )
+        filename = filename+'.h5' if not filename.endswith('.h5') else filename
+        self._model.save( dirpath+filename )
        
         
     def load_model(self, source):
