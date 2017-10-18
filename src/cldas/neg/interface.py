@@ -24,7 +24,7 @@ def interactive_prediction(model,formatter, **kwrgs):
     ''' 
     while True:   
         os.system(clean)
-        print Fore.YELLOW + Style.BRIGHT + 'New text'
+        print Fore.YELLOW + Style.BRIGHT + 'NEW TEXT'
         print '>', ; text = raw_input()
         
         preproc = Preprocess( 'Test', [{'text':text,'category':None}], verbose=False )
@@ -34,7 +34,7 @@ def interactive_prediction(model,formatter, **kwrgs):
         Y = model.predict( X )
         
         os.system(clean)
-        print Fore.YELLOW + Style.BRIGHT +'Result'
+        print Fore.YELLOW + Style.BRIGHT +'PREDICTION RESULT'
         print ' '.join(["%s" % (
                     Fore.MAGENTA+Style.BRIGHT+word if neg 
                     else Fore.RESET+Style.RESET_ALL+word 
@@ -55,6 +55,8 @@ def manual_tagging(dp,tofile='./neg/manual'):
     sources = dp.get_sources()
     sources_size = len( sources )
     
+    blank = ' '*5
+    
     def DisplayMenu():
         os.system(clean)
         title("MENU")
@@ -63,20 +65,35 @@ def manual_tagging(dp,tofile='./neg/manual'):
             qty = len( dp.get_tagged( dp.TaggedType.MANUAL , sources[i]) ) 
             print i+1,".","%-30s" % sources[i], "(%i)" % qty
         return 
+    
+    def DisplayHelp():
+        print Fore.CYAN   + Style.BRIGHT + '<intro>', ':', 'Repeat last action.'
+        print Fore.CYAN   + Style.BRIGHT + 'n      ', ':', '(N)ormal or (N)ot-inverted word. Tag \'O\'.'
+        print Fore.CYAN   + Style.BRIGHT + 'e      ', ':', '(E)expresion of negation word.   Tag \'B-NEG\' (atomically).'
+        print Fore.CYAN   + Style.BRIGHT + 'i      ', ':', '(I)nverted word.                 Tag \'B-INV\' or \'I-INV\'.'
+        print Fore.CYAN   + Style.BRIGHT + 'b      ', ':', '(B)ack tagging previous.'
+        print Fore.CYAN   + Style.BRIGHT + 's      ', ':', '(S)skip current tagging.'
+        print Fore.CYAN   + Style.BRIGHT + 'q      ', ':', '(Q)uit tagging and return.'
+        print Fore.CYAN   + Style.BRIGHT + 'a      ', ':', '(A)bort tagging and close.'
+        print Fore.CYAN   + Style.BRIGHT + 'h      ', ':', '(H)elp.'
+        raw_input('Enter to continue...')
+        return
      
     def DisplayReview(_id,current,total,words,tags):
         os.system(clean)
         print "Review [%s]" % _id
         print "<<",
         for i in range(total):
-            if i < current and tags[i] == 'n':
+            if i < current and tags[i].strip() == 'O': # not-inverted
                 print words[i] + Fore.GREEN + Style.BRIGHT + "/"+tags[i] + Style.RESET_ALL,
-            elif i < current:
-                print words[i] + Fore.MAGENTA + Style.BRIGHT +"/"+tags[i] + Style.RESET_ALL,
-            elif i > current:
-                print words[i]+"  ",
-            else:
-                print Back.BLUE + Fore.WHITE +words[i]+Style.RESET_ALL,
+            elif i < current and tags[i] == 'B-NEG': # neg-token
+                print words[i] + Fore.MAGENTA + Style.BRIGHT + "/"+tags[i] + Style.RESET_ALL,
+            elif i < current: # inverted
+                print words[i] + Fore.RED + Style.BRIGHT +"/"+tags[i] + Style.RESET_ALL,
+            elif i > current: # to be completed
+                print words[i]+' '+tags[i],
+            else: # current
+                print Back.BLUE + Fore.WHITE + words[i] + Style.RESET_ALL +' '+tags[i],
         print ">>"
         
     def chunkstring(string, length):
@@ -118,7 +135,8 @@ def manual_tagging(dp,tofile='./neg/manual'):
             source = sources[op-1]
             try:     
                 
-                op = raw_input("\nInsert indexes separated by ',' or <intro> for pick up randomly > ")
+                print '\nIdentifiers separated by \',\' or <intro> for pick up randomly'
+                op = raw_input("> ")
                 
                 if op: # From indexes
                     indexes = list(set(int(i) for i in op.split(',')))
@@ -127,7 +145,8 @@ def manual_tagging(dp,tofile='./neg/manual'):
                     
                 else: # Randomly
                     while not op.isdigit():
-                        op = raw_input("How many? > ")
+                        print 'How many opinions?'
+                        op = raw_input("> ")
                     quantity = int(op)
                     indexes = []
                 
@@ -142,9 +161,9 @@ def manual_tagging(dp,tofile='./neg/manual'):
                     review  = sample['text']
                     
                     # Initialization (keep current words and empty categories)
-                    words = [item['word'].encode('ascii','ignore') for item in review]
-                    total = len(words)
-                    tags  = ['  ' for _ in range(total)]
+                    words = [ item['word'].encode('ascii','ignore') for item in review ]
+                    total = len( words )
+                    tags  = [ blank for _ in range(total) ]
                     
                     # For each word, annotate with (N) or (I) and give the possibility of back by pressing (B)
                     cat = "" ; idx = 0
@@ -159,14 +178,12 @@ def manual_tagging(dp,tofile='./neg/manual'):
                             if op == 'y':
                                 break
                             idx = idx - 1 if idx != 0 else 0
-                            tags[idx] = '  '
+                            tags[idx] = blank
                             continue
                         
                         # Ask for input
-                        tooltip  = "\nTag with N(ormal) or I(nverted). "
-                        tooltip += "Enter A(bort), B(ack) S(kip), Q(uit) or <intro> for "
-                        tooltip += "repeating last action (%s) > " % (cat.upper() if cat else "None")
-                        tag = raw_input(tooltip)
+                        print "\n(H)elp. Last action (%s)" % (cat.upper() if cat else "-")
+                        tag = raw_input("> ")
                         
                         if not tag and not cat: # Prevents parse empty cat
                             raw_input("Input a category first")
@@ -176,20 +193,27 @@ def manual_tagging(dp,tofile='./neg/manual'):
                         
                         # Action from decision
                         cat = cat.lower()
-                        if not cat or cat not in 'nibasq':
+                        if not cat or cat not in ['n','i','b','e','h','a','s','q']:
                             raw_input("Option '%s' is not correct." % cat)
                             continue
-                        if cat == 'q'or cat == 's':
+                        if cat == 'h':
+                            DisplayHelp()
+                            continue
+                        elif cat == 'q'or cat == 's':
                             break
                         elif cat == 'b': # Back
                             idx = idx - 1 if idx != 0 else 0
-                            tags[idx] = '  '
+                            tags[idx] = blank
                         elif cat == 'a':
                             op = raw_input("Are you sure you want to abort (left %i)? [y/n] > " % left)
                             if op.lower() == 'y': raise Exception("Abort")
                         else:
                             # Associate the category
-                            tags[idx] = cat
+                            if cat == 'i' and ( idx == 0 or not tags[idx-1].endswith('INV') ): bio = 'B-INV'
+                            elif cat == 'i': bio = 'I-INV'
+                            elif cat == 'e': bio = 'B-NEG'
+                            else: bio = 'O    '
+                            tags[idx] = bio
                             idx = idx + 1
                     
                     if cat == 'q':
@@ -199,7 +223,7 @@ def manual_tagging(dp,tofile='./neg/manual'):
                         continue
                             
                     # Once the text is tagged, add it to the result
-                    tags = map( lambda cat : cat =='i', tags )
+                    tags = [ None if tag == 'B-NEG' else False if tag =='O' else True for tag in tags ]
                     result.update({ _id:tags })
                     
                     # Update

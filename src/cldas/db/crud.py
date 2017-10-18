@@ -11,7 +11,7 @@ from difflib import get_close_matches
 from colorama import init, Fore, Style
 init(autoreset=True) 
 
-from cldas.utils import progress, save
+from cldas.utils import progress, load
 from cldas.utils.logger import Log, Level 
 from cldas.utils.misc import EnumItems, Iterable
 
@@ -50,12 +50,23 @@ class DataSetType(EnumItems):
         
         
         
-def save_opinions(opinions):
+def save_opinions(opinions, verbose=True):
     '''
     Saves a set of opinions in the database.
     @param opinions: Collection of opinions (check cldas.utils.misc.OpinionType, value 2)
     '''
-    if opinions: db.reviews.insert_many(opinions)
+    if not opinions:
+        return
+    total = len( opinions ) ; tosave = []
+    for idx,opinion in enumerate(opinions):
+        if verbose: progress("Saving opinions", total, idx)
+        if not db.reviews.find_one( opinion['_id'] ):
+            tosave.append( opinion )
+        if tosave and idx % 500 == 0:
+            db.reviews.insert_many( tosave )
+            tosave = []
+    if tosave:
+        db.reviews.insert_many(tosave)
 
 
 def save_negations(negations,tag_as,do_correction=False):
@@ -98,7 +109,7 @@ def save_negations_from_files(sources,verbose=True):
     for idx,source in enumerate(sources):
         if verbose: progress("Load negation tags from %s" % source,total,idx)
         content = load(source)   
-        save_negations(content,tagged_as='manually')
+        save_negations(content,tagged_as=TaggedType.MANUAL)
 
 
 def get_opinion(_id):
