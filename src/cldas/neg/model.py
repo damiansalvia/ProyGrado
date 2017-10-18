@@ -77,7 +77,7 @@ class _NegScopeModel(object):
         })
         
         
-    def fit(self, X, Y, testing_fraction=0.2, early_monitor='val_binary_accuraty', verbose=0):
+    def fit(self, X, Y, testing_fraction=0.2, early_monitor='val_binary_accuracy', verbose=1):
         
         callbacks = []
         if early_monitor:
