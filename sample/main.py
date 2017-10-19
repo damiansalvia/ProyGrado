@@ -190,12 +190,14 @@ path = './neg/models/'
 #      
 #     ffn.save_model(fname, './neg/models')
 #      
-#     negations = {}
-#     for opinion in untagged:
-#         X_pred, _ = dp.get_ffn_dataset( [opinion], wleft , wright )
-#         Y_pred = ffn.predict( X_pred )
-#         Y_pred = Y_pred[0].tolist()
-#         negations[ opinion['_id'] ].append( Y_pred )
+# negations = {}
+# for opinion in untagged:
+#     X_pred, _ = dp.get_ffn_dataset( [opinion], wleft , wright )
+#     Y_pred = ffn.predict( X_pred )
+#     Y_pred = Y_pred[0].tolist()
+#     negations[ opinion['_id'] ].append( Y_pred )
+#     
+# if negations: 
 #     dp.save_negations(negations, TaggedType.AUTOMATIC)    
 
 
@@ -212,13 +214,16 @@ else:
     
     lstm.save_model(fname, './neg/models')
     
-    negations = {}
-    for idx,opinion in enumerate(untagged):
-        X_pred ,_ = dp.get_lstm_dataset( [opinion], win )
-        Y_pred = lstm.predict( X_pred )
-        Y_pred = Y_pred.flatten().tolist()[: len( opinion['text'] ) ] # Only necessary with LSTM
-        negations[ opinion['_id'] ].append( Y_pred )
+negations = {}
+for idx,opinion in enumerate(untagged):
+    X_pred ,_ = dp.get_lstm_dataset( [opinion], win )
+    Y_pred = lstm.predict( X_pred )
+    Y_pred = Y_pred.flatten().tolist()[: len( opinion['text'] ) ] # Only necessary with LSTM
+    negations[ opinion['_id'] ].append( Y_pred )
+    
+if negations:
     dp.save_negations(negations, TaggedType.AUTOMATIC)    
+
 
 elapsed = time.strftime('%H:%M:%S', time.gmtime(time.time()-start_time))
 print "\n","Elapsed:",elapsed,"\n"
