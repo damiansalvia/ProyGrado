@@ -24,14 +24,4 @@ lstm.load_model('../sample/neg/models/model_NegScopeLSTM_w10.h5')
 
 interactive_prediction( lstm , dp.get_lstm_dataset, win=win )
 
-'''
----------------------------------------------
-    Manual tagging of corporea
----------------------------------------------
-'''
-path='./neg/manual'
-
-manual_tagging(dp,tofile=path)
-
-dp.save_negations_from_files(path+'/*')
 

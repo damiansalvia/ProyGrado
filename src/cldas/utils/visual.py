@@ -27,5 +27,5 @@ def progress(prompt, total, current, width=width, end=True):
 
 def title(title,width=width):
     size = width - len(title) + 2
-    size = size / 2 
-    print "*"*size,title.upper(),"*"*size
+    size = size / 2 ; rest = size % 2 
+    print "*"*size,title.upper(),"*"*(size+rest)

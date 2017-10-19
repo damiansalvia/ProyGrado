@@ -83,7 +83,7 @@ def by_bfs(graph, seeds,
     Generates a lexicon from an opinion set and seeds words by Breath First Search model
     '''
     
-    lexicon = { lem:0 for lem in graph.keys() }
+    lexicon = { lem:0 for lem in graph.nodes() }
     
     visited_dir = [] ; visited_inv = []
     
@@ -105,12 +105,12 @@ def by_bfs(graph, seeds,
         
         for ady,edge in graph[lem].items():
             
-            _val = val * edge['p_dir'] 
+            _val = val * edge['dir'] 
             if (lem,ady) not in visited_dir and abs(_val) > threshold: 
                 visited_dir.append( (lem,ady) )
                 queue.append( (ady,_val) )
                 
-            _val = -val * edge['p_inv'] 
+            _val = -val * edge['inv'] 
             if (lem,ady) in visited_inv and abs(_val) > threshold: 
                 visited_inv.append( (lem,ady) )
                 queue.append( (ady,_val) )

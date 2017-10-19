@@ -15,7 +15,7 @@ from cldas.utils.file import save
 from cldas.utils.visual import progress
 
 from cldas.utils.logger import Log, Level
-log = Log('./')
+log = Log('./log')
 
 import cldas.db.crud as dp
 
@@ -309,19 +309,19 @@ indep_lexicons = []
 
 li = by_senti_qtf( pos, neg, lemmas, filter_tags=USEFUL_TAGS, limit=150 )
 save(li, 'by_senti_qtf', './indeplex')
-indep_lexicons.append( li )
+indep_lexicons.append( (li,"qtf") )
 
 li = by_senti_avg( pos, neg, lemmas, filter_tags=USEFUL_TAGS, limit=150 )
 save(li, 'by_senti_avg', './indeplex')
-indep_lexicons.append( li )
+indep_lexicons.append( (li,"avg") )
  
 li = by_senti_pmi( pos, neg, lemmas, filter_tags=USEFUL_TAGS, limit=150 ) 
-save(li, 'by_senti_pmi', './indeplex')
+indep_lexicons.append( (li,"pmi") )
 indep_lexicons.append( li )
 
 li = by_senti_tfidf( pos, neg, lemmas, filter_tags=USEFUL_TAGS, limit=150 )
 save(li, 'li_by_senti_tfidf', './indeplex')
-indep_lexicons.append( li )
+indep_lexicons.append( (li,"tfidf") )
 
 elapsed = time.strftime('%H:%M:%S', time.gmtime(time.time()-start_time))
 print "\n","Elapsed:",elapsed,"\n"
@@ -345,13 +345,13 @@ for corpus in dp.get_sources():
     
     graph = MultiGraph( opinions, corpus, filter_tags=USEFUL_TAGS )
     
-    for li in indep_lexicons:
+    for (li,name) in indep_lexicons:
         
         ld = by_bfs( graph, li, limit=300 )
-        save(ld, 'ld_by_bfs_%s' % corpus, './deplex')
+        save(ld, 'ld_by_bfs_%s_%s' % (name,corpus), './deplex')
         
         ld = by_influence( graph, li, limit=300 )
-        save(ld, 'ld_by_influence_%s' % corpus, './deplex')
+        save(ld, 'ld_by_influence_%s_%s' % (name,corpus), './deplex')
 
 elapsed = time.strftime('%H:%M:%S', time.gmtime(time.time()-start_time))
 print "\n","Elapsed:",elapsed,"\n"
