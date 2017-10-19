@@ -14,8 +14,10 @@ def by_influence(graph, seeds,
         threshold          = 0.005,  
         neutral_resistance = 1,
         filter_neutral     = True,
-        filter_seeds       = True, 
+        filter_seeds       = False, 
+        confidence         = 0,
         limit              = None, 
+        name               = "",
         verbose            = True,
         tofile             = None
     ):
@@ -41,30 +43,37 @@ def by_influence(graph, seeds,
     
     lexicon = {} ; total = len(influences)
     
+    total_influence = total    
     for idx, lemma in enumerate(influences):
         
         if verbose : progress("Building lexicon by influence for %s" % graph.source,total,idx)
         
-        total_influence = sum([ inf[1] for inf in influences[lemma] ]) 
+        influence = sum([ inf[1] for inf in influences[lemma] ]) 
         
         if lemma not in seeds.keys():
-            total_influence += neutral_resistance * 1.0
+            total_influence = influence + neutral_resistance * 1.0
             
-        lexicon[lemma] = sum([ inf[0] * inf[1] for inf in influences[lemma] ]) / total_influence
+        lexicon[lemma] = {
+            "val": sum([ inf[0] * inf[1] for inf in influences[lemma] ]) / total_influence,
+            "inf": influence              
+        }
         
     if filter_neutral:
-        lexicon = dict( filter( lambda item: abs( item[1] ) > 0.3 , lexicon.items() ) )
+        lexicon = dict( filter( lambda item: abs( item[1]['val'] ) > 0.3 , lexicon.items() ) )
          
     if filter_seeds:
         lexicon = dict( filter( lambda item: item[0] not in seeds , lexicon.items() ) ) 
      
     if limit:
-        lexicon = dict( sorted( lexicon.items() , key=lambda item: abs( item[1] ) , reverse=True )[:limit] )
+        lexicon = dict( filter( lambda item: item[1]['inf'] >= confidence , lexicon.items() ) )
+        lexicon = dict( sorted( lexicon.items() , key=lambda item: abs( item[1]['val'] ) , reverse=True )[:limit] )
+        
+    lexicon = { lem:item['val'] for lem,item in lexicon.items() }
     
     if tofile:
         suffix  = "_%s" % graph.source
         suffix += "_top%03i" % limit if limit else ""
-        suffix += "_seeds%03i" % len(seeds)
+        suffix += "_%s%03i" % (name,len(seeds))
         save( lexicon , "deplex_by_influence" + suffix , tofile )
         
     return lexicon
@@ -74,8 +83,9 @@ def by_influence(graph, seeds,
 def by_bfs(graph, seeds,
         threshold       = 0.005,
         filter_neutral  = True,
-        filter_seeds    = True, 
-        limit           = None,
+        filter_seeds    = False, 
+        limit           = None, 
+        name            = "",
         verbose         = True,
         tofile          = None
     ):
@@ -127,7 +137,7 @@ def by_bfs(graph, seeds,
     if tofile:
         suffix  = "_%s" % graph.source
         suffix += "_top%03i" % limit if limit else ""
-        suffix += "_seeds%03i" % len(seeds)
+        suffix += "_%s%03i" % (name,len(seeds))
         save( lexicon , "deplex_by_bfs" + suffix , tofile )
         
     return lexicon
