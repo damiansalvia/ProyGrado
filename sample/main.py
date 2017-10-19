@@ -9,9 +9,10 @@ sys.path.append('../src')
 
 import time, os
 
+from cldas.utils import USEFUL_TAGS
 from cldas.utils.misc import Iterable
 from cldas.utils.file import save
-from cldas.utils import USEFUL_TAGS
+from cldas.utils.visual import progress
 
 from cldas.utils.logger import Log, Level
 log = Log('./')
@@ -190,15 +191,18 @@ path = './neg/models/'
 #      
 #     ffn.save_model(fname, './neg/models')
 #      
-# negations = {}
+# negations = {} ; total = len( untagged )
 # for opinion in untagged:
+#     progress("Predicting on new data",total,idx)
 #     X_pred, _ = dp.get_ffn_dataset( [opinion], wleft , wright )
 #     Y_pred = ffn.predict( X_pred )
 #     Y_pred = Y_pred[0].tolist()
-#     negations[ opinion['_id'] ].append( Y_pred )
-#     
+#     negations[ opinion['_id'] ] = Y_pred  
+#     if idx % 500 == 0: # Optimization
+#         dp.save_negations(negations, dp.TaggedType.AUTOMATIC)
+#         negations = {}
 # if negations: 
-#     dp.save_negations(negations, TaggedType.AUTOMATIC)    
+#     dp.save_negations(negations, dp.TaggedType.AUTOMATIC)    
 
 
 ####### LSTM Recurrent Neural Network ########
@@ -214,15 +218,18 @@ else:
     
     lstm.save_model(fname, './neg/models')
     
-negations = {}
+negations = {} ; total = len( untagged )
 for idx,opinion in enumerate(untagged):
-    X_pred ,_ = dp.get_lstm_dataset( [opinion], win )
+    progress("Predicting on new data",total,idx)
+    X_pred ,_ = dp.get_lstm_dataset( [opinion], win , verbose=False)
     Y_pred = lstm.predict( X_pred )
     Y_pred = Y_pred.flatten().tolist()[: len( opinion['text'] ) ] # Only necessary with LSTM
-    negations[ opinion['_id'] ].append( Y_pred )
-    
+    negations[ opinion['_id'] ] = Y_pred 
+    if idx % 500 == 0: # Optimization
+        dp.save_negations(negations, dp.TaggedType.AUTOMATIC)
+        negations = {}   
 if negations:
-    dp.save_negations(negations, TaggedType.AUTOMATIC)    
+    dp.save_negations(negations, dp.TaggedType.AUTOMATIC)    
 
 
 elapsed = time.strftime('%H:%M:%S', time.gmtime(time.time()-start_time))
@@ -251,9 +258,10 @@ def table_print(fs):
                 val = r.pop('count')
                 key = r.keys()[0]
                 key = "   %s: %s" % (key,r[key])
-                print '%-38s | %s' % ( key, val)
+                print '%-38s | %s' % ( key, val if type(val) == int else round(a,4))
         else:
             print '%-38s | %s' % ( fname, res)
+    print 
                 
 stats = []
 stats.append( size_vocabulary             )

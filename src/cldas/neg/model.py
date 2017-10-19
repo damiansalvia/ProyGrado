@@ -15,6 +15,7 @@ from keras.callbacks import EarlyStopping
 
 import os
 import numpy as np
+from cldas.utils.visual import title
 
 
 _DEFAULT_LAYER_SIZE = 750
@@ -48,6 +49,8 @@ class _NegScopeModel(object):
         self._loss      = loss
         self._optimizer = optimizer
         self._verbose   = verbose
+        
+        print title("%s (%i)" % (self.__class__.__name__, self._dimension), width=61)
     
        
     def __repr__(self):
