@@ -157,14 +157,14 @@ class MultiGraph(object):
                     br = '\n' + tab,
                     node = node, 
                     edge = edge, 
-                    val = weights['p_dir'] * 1.0
+                    val = weights['dir'] * 1.0
                 )    
                 gml_edges += '{br}edge [{br}{t}source {node}{br}{t}target {edge}{br}{t}label inverse{br}{t}weight {val} {br}]'.format(
                     t = tab,
                     br = '\n' + tab,
                     node = node, 
                     edge = edge, 
-                    val = weights['p_inv'] * 1.0
+                    val = weights['inv'] * 1.0
                 )
                 
         gml = 'graph [' + gml_nodes + gml_edges + '\n]'
