@@ -19,6 +19,11 @@ log = Log('./log')
 
 import cldas.db.crud as dp
 
+def end_time(start_time):
+    elapsed = time.strftime('%H:%M:%S', time.gmtime(time.time()-start_time))
+    print "\n","Elapsed:",elapsed,"\n"
+    log( "Indeplex stage - Elapsed: %s" % elapsed , level=Level.DEBUG)
+
 
 
 '''
@@ -88,9 +93,7 @@ if not dp.get_opinions(source='corpus_cine'):
     mapping = { '1': 0, '2': 25, '3': 50, '4': 75, '5': 100 }
     corporea.append( ( reader, mapping) )
  
-elapsed = time.strftime('%H:%M:%S', time.gmtime(time.time()-start_time))
-print "\n","Elapsed:",elapsed,"\n"
-log( "Retrieval stage - Elapsed: %s" % elapsed , level=Level.DEBUG)
+end_time(start_time)
  
  
  
@@ -112,9 +115,7 @@ for (reader,mapping) in corporea:
      
     dp.save_opinions( preproc.data() )
  
-elapsed = time.strftime('%H:%M:%S', time.gmtime(time.time()-start_time))
-print "\n","Elapsed:",elapsed,"\n"
-log( "Preprocessing stage - Elapsed: %s" % elapsed , level=Level.DEBUG)
+end_time(start_time)
 
 
 
@@ -141,9 +142,7 @@ if not dp.get_opinions(source='corpus_variado_sfu_neg'):
     
     dp.save_opinions( preproc.data( tagged=dp.TaggedType.MANUAL ) )
    
-elapsed = time.strftime('%H:%M:%S', time.gmtime(time.time()-start_time))
-print "\n","Elapsed:",elapsed,"\n"
-log( "Adding negations - Elapsed: %s" % elapsed , level=Level.DEBUG)
+end_time(start_time)
 
 
 
@@ -232,9 +231,7 @@ if negations:
     dp.save_negations(negations, dp.TaggedType.AUTOMATIC)    
 
 
-elapsed = time.strftime('%H:%M:%S', time.gmtime(time.time()-start_time))
-print "\n","Elapsed:",elapsed,"\n"
-log( "Negation stage - LSTM - Elapsed: %s" % elapsed , level=Level.DEBUG)
+end_time(start_time)
 
 
 
@@ -307,25 +304,19 @@ lemmas = dp.get_lemmas()
 
 indep_lexicons = []
 
-li = by_senti_qtf( pos, neg, lemmas, filter_tags=USEFUL_TAGS, limit=150 )
-save(li, 'by_senti_qtf', './indeplex')
+li = by_senti_qtf( pos, neg, lemmas, filter_tags=USEFUL_TAGS, limit=150, tofile='./indeplex' )
 indep_lexicons.append( (li,"qtf") )
 
-li = by_senti_avg( pos, neg, lemmas, filter_tags=USEFUL_TAGS, limit=150 )
-save(li, 'by_senti_avg', './indeplex')
+li = by_senti_avg( pos, neg, lemmas, filter_tags=USEFUL_TAGS, limit=150, tofile='./indeplex' )
 indep_lexicons.append( (li,"avg") )
  
-li = by_senti_pmi( pos, neg, lemmas, filter_tags=USEFUL_TAGS, limit=150 ) 
+li = by_senti_pmi( pos, neg, lemmas, filter_tags=USEFUL_TAGS, limit=150, tofile='./indeplex' )
 indep_lexicons.append( (li,"pmi") )
-indep_lexicons.append( li )
 
-li = by_senti_tfidf( pos, neg, lemmas, filter_tags=USEFUL_TAGS, limit=150 )
-save(li, 'li_by_senti_tfidf', './indeplex')
+li = by_senti_tfidf( pos, neg, lemmas, filter_tags=USEFUL_TAGS, limit=150, tofile='./indeplex' )
 indep_lexicons.append( (li,"tfidf") )
 
-elapsed = time.strftime('%H:%M:%S', time.gmtime(time.time()-start_time))
-print "\n","Elapsed:",elapsed,"\n"
-log( "Indeplex stage - Elapsed: %s" % elapsed , level=Level.DEBUG)
+end_time(start_time)
 
 
 
@@ -347,12 +338,8 @@ for corpus in dp.get_sources():
     
     for (li,name) in indep_lexicons:
         
-        ld = by_bfs( graph, li, limit=300 )
-        save(ld, 'ld_by_bfs_%s_%s' % (name,corpus), './deplex')
+        ld = by_bfs( graph, li, limit=300, tofile='./deplex' )
         
-        ld = by_influence( graph, li, limit=300 )
-        save(ld, 'ld_by_influence_%s_%s' % (name,corpus), './deplex')
+        ld = by_influence( graph, li, limit=300, tofile='./deplex' )
 
-elapsed = time.strftime('%H:%M:%S', time.gmtime(time.time()-start_time))
-print "\n","Elapsed:",elapsed,"\n"
-log( "Deplex stage - Elapsed: %s" % elapsed , level=Level.DEBUG)
+end_time(start_time)
