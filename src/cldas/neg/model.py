@@ -26,7 +26,7 @@ np.random.seed(666)
 os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
 
 
-log = Log("../log")
+log = Log("./log")
 
 
 
