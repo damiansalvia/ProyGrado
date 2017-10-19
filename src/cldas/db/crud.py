@@ -212,6 +212,7 @@ def get_untagged(limit=None,seed=None):
         random.seed( seed )  
         rand = int( random.random() * db.reviews.find({}).count() ) 
         result = result.skip( rand ).limit( limit )
+    result = result.batch_size(10)
     return Iterable( result )
 
 
@@ -261,7 +262,7 @@ def get_aprox_embedding(word):
     return result
 
 
-def update_embeddings(femb='../../embeddings/emb39-word2vec.npy', ftok='../../embeddings/emb39-word2vec.txt', verbose=True):
+def update_embeddings(femb='../embeddings/emb39-word2vec.npy', ftok='../embeddings/emb39-word2vec.txt', verbose=True):
     '''
     Reads embeddings and saves only if the word is in the current vocabulary.
     @param femb   : Embedding file (.npy).
@@ -322,7 +323,7 @@ def update_embeddings(femb='../../embeddings/emb39-word2vec.npy', ftok='../../em
     total = len(vocabulary)
     
     for idx,word in enumerate(vocabulary):
-        if verbose: progress("Updating embeddings (%i,%i,%i,%i)" % ( stats['ByWord'],stats['ByRepl'],stats['ByClos'],stats['IsNull'] ),total,idx)
+        if verbose: progress("Updating embeddings [W:%*i|R:%*i|C:%*i|N:%*i]" % ( 6,stats['ByWord'],6,stats['ByRepl'],6,stats['ByClos'],6,stats['IsNull'] ),total,idx)
         if not get_embedding(word):
             nearest , vector = get_nearest_vector( word )
             result.append({ 
@@ -337,7 +338,7 @@ def update_embeddings(femb='../../embeddings/emb39-word2vec.npy', ftok='../../em
     # Save statistics results
     log("Embeddings integration result. %s" % str(stats),level=Level.INFO)
     if verbose: 
-        for case in stats: print "%-17s : %i (%4.2f%%)" % ( case,stats[case],100.0*stats[case]/sum(stats.values()) )     
+        for case in stats: print "%-17s : %*i (%4.2f%%)" % ( case,6,stats[case],100.0*stats[case]/sum(stats.values()) )     
     
     # Save results in database
     save_embeddings(result)
@@ -365,6 +366,7 @@ def _format_lstm(text, win, null, neg_as, is_train):
         y_curr.extend( [ False for _ in range(rest) ] )
     X = [ x_curr[i*win : (i+1)*win] for i in range(len(x_curr)/win) ]
     Y = [ y_curr[i*win : (i+1)*win] for i in range(len(y_curr)/win) ]
+    #if not is_train: Y = Y[:len(text)]
     return X,Y
 
 
@@ -376,7 +378,8 @@ def _format_embeddings(formatter, opinions, **kwargs):
     X , Y = [] , []
     for idx,opinion in enumerate(opinions):
         is_train = opinion.has_key('tagged') and opinion['tagged'] == TaggedType.MANUAL
-        if verbose: progress("Loading training data (%i words)"  % len(opinion['text']),total,idx)
+        msg = "training" if is_train else "predicting"
+        if verbose: progress("Loading %s data (%*i words)"  % ( msg, 4, len(opinion['text']) ), total ,idx)
         x_curr, y_curr = formatter( opinion['text'], null=null, is_train=is_train, **kwargs )
         X += x_curr
         Y += y_curr if is_train else []    

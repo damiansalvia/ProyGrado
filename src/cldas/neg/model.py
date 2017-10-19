@@ -95,9 +95,8 @@ class _NegScopeModel(object):
     
     def predict(self,X):
         Y = self._model.predict( X )
-        Y = np.array(Y).flatten()
-        Y = [ round(y) == 1 for y in Y.tolist() ] 
-        return Y if len(Y) > 1 else Y[0]
+        Y = np.array(Y).round() == 1 
+        return Y
     
     
     def get_scores(self, X, Y, verbose=2):

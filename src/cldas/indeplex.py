@@ -102,7 +102,7 @@ def _get_structures(pos_op, neg_op, strategy, filter_tags=None, lemmas=None, ver
     total = len( opinions )
     
     for jth,opinion in enumerate(opinions):
-        if verbose : progress("Building lexicon by %s (%i words)" % (strategy , len(opinion['text']) ), total, jth)
+        if verbose : progress("Building lexicon by %s (%*i words)" % (strategy , 4, len(opinion['text']) ), total, jth)
         
         cat = opinion['category']
         

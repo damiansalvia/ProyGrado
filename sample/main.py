@@ -7,7 +7,7 @@ Example of a complete execution
 import sys
 sys.path.append('../src')
 
-import time
+import time, os
 
 from cldas.utils.misc import Iterable
 from cldas.utils.file import save
@@ -153,7 +153,8 @@ log( "Adding negations - Elapsed: %s" % elapsed , level=Level.DEBUG)
 '''
 start_time = time.time()
 
-dp.update_embeddings(femb='../embeddings/emb39-word2vec.npy', ftok='../embeddings/emb39-word2vec.txt')
+if not dp.get_embedding('.'):
+    dp.update_embeddings(femb='../embeddings/emb39-word2vec.npy', ftok='../embeddings/emb39-word2vec.txt')
 
 elapsed = time.strftime('%H:%M:%S', time.gmtime(time.time()-start_time))
 print "\n","Elapsed:",elapsed,"\n"
@@ -174,19 +175,50 @@ tagged   = dp.get_tagged(dp.TaggedType.MANUAL)
 untagged = dp.get_untagged()
 vec_size = len( dp.get_null_embedding() )
 
-wleft, wright = 2, 2
-ffn = NegScopeFFN( wleft, wright, vec_size )
-X_train, Y_train = dp.get_ffn_dataset( tagged, wleft, wright )
-ffn.fit( X_train, Y_train )
-X_pred, _ = dp.get_ffn_dataset( untagged, wleft , wright )
-ffn.predict( X_pred )
+path = './neg/models/'
 
+######### Feed-Forward Neural Network ######### 
+# wleft, wright = 2, 2
+# ffn = NegScopeFFN( wleft, wright, vec_size )
+#  
+# fname = "model_NegScopeFFNl%i_r%i" % (wleft,wright)
+# if os.path.exists(path+fname):
+#     lstm.load_model(path+fname)
+# else:
+#     X_train, Y_train = dp.get_ffn_dataset( tagged, wleft, wright )
+#     ffn.fit( X_train, Y_train )
+#      
+#     ffn.save_model(fname, './neg/models')
+#      
+#     negations = {}
+#     for opinion in untagged:
+#         X_pred, _ = dp.get_ffn_dataset( [opinion], wleft , wright )
+#         Y_pred = ffn.predict( X_pred )
+#         Y_pred = Y_pred[0].tolist()
+#         negations[ opinion['_id'] ].append( Y_pred )
+#     dp.save_negations(negations, TaggedType.AUTOMATIC)    
+
+
+####### LSTM Recurrent Neural Network ########
 win = 10
 lstm = NegScopeLSTM( win, vec_size )
-X_train, Y_train = dp.get_lstm_dataset( tagged, win )
-lstm.fit( X_train, Y_train )
-X_pred ,_ = dp.get_lstm_dataset( untagged, win )
-lstm.predict( X_pred )
+
+fname = "model_NegScopeLSTM_w%i.h5" % win
+if os.path.exists(path+fname):
+    lstm.load_model(path+fname)
+else:
+    X_train, Y_train = dp.get_lstm_dataset( tagged, win )
+    lstm.fit( X_train, Y_train )
+    
+    lstm.save_model(fname, './neg/models')
+    
+    negations = {}
+    for idx,opinion in enumerate(untagged):
+        X_pred ,_ = dp.get_lstm_dataset( [opinion], win )
+        Y_pred = lstm.predict( X_pred )
+        Y_pred = Y_pred.flatten().tolist()[: len( opinion['text'] ) ] # Only necessary with LSTM
+        negations[ opinion['_id'] ].append( Y_pred )
+    dp.save_negations(negations, TaggedType.AUTOMATIC)    
 
 elapsed = time.strftime('%H:%M:%S', time.gmtime(time.time()-start_time))
 print "\n","Elapsed:",elapsed,"\n"
