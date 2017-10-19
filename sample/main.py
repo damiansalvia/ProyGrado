@@ -258,7 +258,7 @@ def table_print(fs):
                 val = r.pop('count')
                 key = r.keys()[0]
                 key = "   %s: %s" % (key,r[key])
-                print '%-38s | %s' % ( key, val if type(val) == int else round(a,4))
+                print '%-38s | %s' % ( key, val if type(val) == int else round(val,4) )
         else:
             print '%-38s | %s' % ( fname, res)
     print 
@@ -267,7 +267,6 @@ stats = []
 stats.append( size_vocabulary             )
 stats.append( size_vocabulary_by_word     )
 stats.append( size_vocabulary_by_lemma    )
-stats.append( size_manually_tagged        )
 stats.append( size_corporea               )
 stats.append( size_corporea_by_source     )
 stats.append( size_reviews_category       )
@@ -277,14 +276,17 @@ stats.append( size_null_match             )
 stats.append( size_exact_match            )
 stats.append( size_manually_tagged        )
 stats.append( size_manually_tagged_by_cat )
-stats.append( size_negative_words         )
+stats.append( size_nagated_words          )
 stats.append( size_negators               )
-stats.append( size_neutral_reviews        )
-stats.append( size_neutral_words          )
 stats.append( size_positive_reviews       ) 
 stats.append( size_positive_words         )
+stats.append( size_neutral_reviews        )
+stats.append( size_neutral_words          )
+stats.append( size_negative_words         )
+stats.append( size_negative_reviews       )
 stats.append( get_balance                 )
 stats.append( get_balance_by_source       )
+
 
 table_print(stats)
 
