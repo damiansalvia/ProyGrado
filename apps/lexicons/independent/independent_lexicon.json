@@ -1,0 +1,122 @@
+{
+    "delicioso": {
+        "pol": "POS+", 
+        "rank": 5.1055853654045942
+    }, 
+    "acojedor": {
+        "pol": "POS+", 
+        "rank": 5.8358420030213596
+    }, 
+    "durisimo": {
+        "pol": "NEG+", 
+        "rank": -5.4426074551894557
+    }, 
+    "buenísimo": {
+        "pol": "POS+", 
+        "rank": 6.0467387855249193
+    }, 
+    "malisima": {
+        "pol": "NEG+", 
+        "rank": -5.1951699044064972
+    }, 
+    "incomible": {
+        "pol": "NEG+", 
+        "rank": -6.1162621922422966
+    }, 
+    "altamente": {
+        "pol": "POS+", 
+        "rank": 5.0809545008673922
+    }, 
+    "recomiento": {
+        "pol": "POS+", 
+        "rank": 5.0809545008578914
+    }, 
+    "riquisimos": {
+        "pol": "POS+", 
+        "rank": 5.0582344243660415
+    }, 
+    "inaceptable": {
+        "pol": "NEG+", 
+        "rank": -5.2044477179947295
+    }, 
+    "exelente": {
+        "pol": "POS+", 
+        "rank": 5.4469751799379651
+    }, 
+    "armonioso": {
+        "pol": "POS+", 
+        "rank": 5.6045164569149044
+    }, 
+    "riquísimo": {
+        "pol": "POS+", 
+        "rank": 5.2314540037220691
+    }, 
+    "exquisito": {
+        "pol": "POS+", 
+        "rank": 5.3930683059280113
+    }, 
+    "felicitación": {
+        "pol": "POS+", 
+        "rank": 5.8197223376669758
+    }, 
+    "remy": {
+        "pol": "POS+", 
+        "rank": 5.1253486202163447
+    }, 
+    "estafa": {
+        "pol": "NEG+", 
+        "rank": -5.2409735940197129
+    }, 
+    "insipida": {
+        "pol": "NEG+", 
+        "rank": -5.0889705005748143
+    }, 
+    "gomoso": {
+        "pol": "NEG+", 
+        "rank": -5.7519355132970267
+    }, 
+    "riquisima": {
+        "pol": "POS+", 
+        "rank": 5.1186070423464107
+    }, 
+    "desabridos": {
+        "pol": "NEG+", 
+        "rank": -5.6194852172735104
+    }, 
+    "dropbox": {
+        "pol": "POS+", 
+        "rank": 5.8358420030213596
+    }, 
+    "imperdible": {
+        "pol": "POS+", 
+        "rank": 6.4579239593119988
+    }, 
+    "fetas": {
+        "pol": "NEG+", 
+        "rank": -6.3113629219111056
+    }, 
+    "primerísimo": {
+        "pol": "POS+", 
+        "rank": 5.8883094229154951
+    }, 
+    "adictivo": {
+        "pol": "POS+", 
+        "rank": 5.1908721929451493
+    }, 
+    "áltamente": {
+        "pol": "POS+", 
+        "rank": 5.0809545008578914
+    }, 
+    "desatento": {
+        "pol": "NEG+", 
+        "rank": -5.2940849304792712
+    }, 
+    "desganar": {
+        "pol": "NEG+", 
+        "rank": -5.5040079998534868
+    }, 
+    "desabrida": {
+        "pol": "NEG+", 
+        "rank": -6.6605124855334665
+    }
+}
