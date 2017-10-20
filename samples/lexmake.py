@@ -35,6 +35,7 @@ def display_options(name, options, files=[]):
     
     return op
 
+wdcloud = raw_input("Generate word cloud? [y/n] > ") == 'y'
 
 '''
 ---------------------------------------------
@@ -61,7 +62,7 @@ limit = len(options)
 if i > limit:
     li = load( files[i-limit] )
 else:
-    li = options[i]( pos, neg, lemmas, filter_tags=USEFUL_TAGS, limit=150, tofile='./indeplex' )
+    li = options[i]( pos, neg, lemmas, filter_tags=USEFUL_TAGS, limit=150, tofile='./indeplex', wdcloud=wdcloud )
 
 
 '''
@@ -82,7 +83,7 @@ os.system(clean)
 
 options = [ by_bfs, by_influence ]
 i = display_options("Dependent Lexicon",options)
-ld = options[i]( graph, li, limit=300, tofile='./deplex' )
+ld = options[i]( graph, li, limit=300, tofile='./deplex', wdcloud=wdcloud )
 
 
 
