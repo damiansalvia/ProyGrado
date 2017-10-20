@@ -307,11 +307,11 @@ indep_lexicons = []
 li = by_senti_qtf( pos, neg, lemmas, filter_tags=USEFUL_TAGS, limit=150, tofile='./indeplex', wdcloud=True )
 indep_lexicons.append( (li,"qtf") )
   
-li = by_senti_avg( pos, neg, lemmas, filter_tags=USEFUL_TAGS, limit=150, tofile='./indeplex', wdcloud=True )
-indep_lexicons.append( (li,"avg") )
-   
-li = by_senti_pmi( pos, neg, lemmas, filter_tags=USEFUL_TAGS, limit=150, tofile='./indeplex', wdcloud=True )
-indep_lexicons.append( (li,"pmi") )
+# li = by_senti_avg( pos, neg, lemmas, filter_tags=USEFUL_TAGS, limit=150, tofile='./indeplex', wdcloud=True )
+# indep_lexicons.append( (li,"avg") )
+#    
+# li = by_senti_pmi( pos, neg, lemmas, filter_tags=USEFUL_TAGS, limit=150, tofile='./indeplex', wdcloud=True )
+# indep_lexicons.append( (li,"pmi") )
 
 li = by_senti_tfidf( pos, neg, lemmas, filter_tags=USEFUL_TAGS, limit=150, tofile='./indeplex', wdcloud=True )
 indep_lexicons.append( (li,"tfidf") )
@@ -338,8 +338,8 @@ for corpus in dp.get_sources():
     
     for (li,name) in indep_lexicons:
         
-        ld = by_bfs( graph, li, name=name, limit=300, tofile='./deplex' , wdcloud=True )
+        ld = by_bfs( graph, li, seed_name=name, filter_neutral=False, limit=300, tofile='./deplex' , wdcloud=True )
         
-        ld = by_influence( graph, li, name=name, limit=300, confidence=1, tofile='./deplex', wdcloud=True )
+        ld = by_influence( graph, li, seed_name=name, filter_neutral=False, limit=300, confidence=1, tofile='./deplex', wdcloud=True )
 
 end_time(start_time)
