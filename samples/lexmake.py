@@ -20,6 +20,8 @@ from cldas.utils import load, title, USEFUL_TAGS
 
 def display_options(name, options, files=[]):
     
+    files = [ file for file in files if file.endswith('json')]
+    
     title(name,30)
     
     for i in range( len(options) ):
@@ -29,7 +31,7 @@ def display_options(name, options, files=[]):
         print j+i+1,".",files[j]
         
     op = ''
-    while not op.isdigit() or int(op) > len( options+files ):
+    while not op.isdigit() or int(op) > len(options) + len(files):
         op = raw_input('> ')
     op = int(op)
     
