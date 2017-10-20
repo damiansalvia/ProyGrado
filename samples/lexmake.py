@@ -20,8 +20,6 @@ from cldas.utils import load, title, USEFUL_TAGS
 
 def display_options(name, options, files=[]):
     
-    files = [ file for file in files if file.endswith('json')]
-    
     title(name,30)
     
     for i in range( len(options) ):
@@ -56,7 +54,7 @@ lemmas = dp.get_lemmas()
 os.system(clean)
 
 options = [ by_senti_tfidf, by_senti_qtf, by_senti_avg, by_senti_pmi ]
-files   = glob.glob("./indeplex/*")
+files = [ file for file in glob.glob("./indeplex/*") if file.endswith('json')]
 i = display_options( "Independent Lexicon", options, files)
 
 limit = len(options)
