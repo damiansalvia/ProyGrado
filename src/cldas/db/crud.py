@@ -337,8 +337,10 @@ def update_embeddings(femb='../embeddings/emb39-word2vec.npy', ftok='../embeddin
     
     # Save statistics results
     log("Embeddings integration result. %s" % str(stats),level=Level.INFO)
-    if verbose: 
-        for case in stats: print "%-17s : %*i (%4.2f%%)" % ( case,6,stats[case],100.0*stats[case]/sum(stats.values()) )     
+    if verbose:
+        total = sum(stats.values())
+        if total == 0: total = 1 
+        for case in stats: print "%-17s : %*i (%4.2f%%)" % ( case, 6, stats[case], 100.0*stats[case]/total )     
     
     # Save results in database
     save_embeddings(result)
