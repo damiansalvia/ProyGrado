@@ -8,11 +8,28 @@ import numpy as np
 from cldas.utils import progress, save, save_word_cloud
 from collections import defaultdict
     
+    
+def _postprocess(method, lemmas, ld, limit, tofile):
+    lexicon = { lemmas[idx]:round(val,3) for idx,val in enumerate(ld) }
+    
+    if limit:
+        lexicon = dict( sorted(lexicon.items(), key=lambda elem : abs(elem[1]), reverse=True)[:limit] )
+    
+    if tofile:
+        name = "_top%i" % limit if limit else "" 
+        name = method + name
+        save( lexicon , name , tofile )
+        save_word_cloud( lexicon, name, tofile )    
+    
+    return lexicon
+
+
 
 def _valid_tag(tag, tagset):
     for prefix in tagset:
         if tag.startswith(prefix): return True
     return False    
+
     
     
 def _TF(Xctd, Xt):
@@ -24,6 +41,7 @@ def _TF(Xctd, Xt):
     return num/den
 
 
+
 def _IDF(Xt, X, eps=1e-3):
     '''
     Calculates Inverse Document Frequency from presence vector and document quantity 
@@ -33,11 +51,13 @@ def _IDF(Xt, X, eps=1e-3):
     return np.log2( num/den )
 
 
+
 def _TFIDF(Xctd, Xt, X, eps=1e-3):
     '''
     Calculates Term Frequency Inverse Document Frequency from frequency vector, presence vector and document quantity 
     '''
     return _TF(Xctd, Xt) * _IDF(Xt, X, eps)
+
 
 
 def _P(Xctd, Xt, X, eps=1e-3):
@@ -46,12 +66,14 @@ def _P(Xctd, Xt, X, eps=1e-3):
     return num/den
 
 
+
 def _PC(Pctd, Pt, P, Nctd, Nt, N, eps=1e-3):
     Ptf = _TF(Pctd, Pt)
     Ntf = _TF(Nctd, Nt)
     num = Ptf * Ntf + eps
     den = np.dot(P, N) + eps
     return num/den
+
 
 
 def _PMI(Xctd, Xt, X, Tctd, Tt, T, eps=1e-3):
@@ -63,6 +85,7 @@ def _PMI(Xctd, Xt, X, Tctd, Tt, T, eps=1e-3):
     return np.log2( num/den )   
 
 
+
 def _AVG(Xctd, Xt, X, eps=1e-3):
     '''
     Calculates Average from frequency vector, presence vector and document quantity 
@@ -70,6 +93,7 @@ def _AVG(Xctd, Xt, X, eps=1e-3):
     num = _TF( Xctd , Xt ) + eps
     den = X + eps
     return num/den 
+
 
 
 def _LD(ds_num, ds_den, eps=1e-3):
@@ -82,6 +106,7 @@ def _LD(ds_num, ds_den, eps=1e-3):
     ld[ np.isnan( ld ) ] = 0.0
     ld[ np.isinf( ld ) ] = np.nanmin( ld[ld != -np.inf] )
     return ld  
+
 
 
 def _get_structures(pos_op, neg_op, strategy, filter_tags=None, lemmas=None, verbose=True):
@@ -173,16 +198,7 @@ def by_senti_qtf(pos_op, neg_op, lemmas=None, filter_tags=None, limit=None, eps=
     
     ld = _LD(ds_pos, ds_neg, eps)
     
-    lexicon = { lemmas[idx]:round(val,3) for idx,val in enumerate(ld) }
-    
-    if limit:
-        lexicon = dict( sorted(lexicon.items(), key=lambda elem : abs(elem[1]), reverse=True)[:limit] )
-    
-    if tofile:
-        name = "_top%i" % limit if limit else "" 
-        name = "indeplex_by_senti_qtf" + name
-        save( lexicon , name , tofile )
-        save_word_cloud( lexicon, name, tofile )
+    lexicon = _postprocess("indeplex_by_senti_qtf",lemmas, ld, limit, tofile)
     
     return lexicon   
 
@@ -209,16 +225,7 @@ def by_senti_tfidf(pos_op, neg_op, lemmas=None, filter_tags=None, limit=None, ep
     
     ld = _LD(ds_pos, ds_neg, eps)
     
-    lexicon = { lemmas[idx]:round(val,3) for idx,val in enumerate(ld) }
-    
-    if limit:
-        lexicon = dict( sorted(lexicon.items(), key=lambda elem : abs(elem[1]), reverse=True)[:limit] )
-        
-    if tofile:
-        name = "_top%i" % limit if limit else "" 
-        name = "indeplex_by_senti_tfidf" + name
-        save( lexicon , name , tofile )
-        if wdcloud: save_word_cloud( lexicon, name, tofile )
+    lexicon = _postprocess("indeplex_by_senti_tfidf",lemmas, ld, limit, tofile)
     
     return lexicon 
 
@@ -254,16 +261,7 @@ def by_senti_pmi(pos_op, neg_op, lemmas=None, filter_tags=None, limit=None, eps=
     
     ld = _LD(ds_num, ds_den, eps)
     
-    lexicon = { lemmas[idx]:round(val,3) for idx,val in enumerate(ld) }
-    
-    if limit:
-        lexicon = dict( sorted(lexicon.items(), key=lambda elem : abs(elem[1]), reverse=True)[:limit] )
-    
-    if tofile:
-        name = "_top%i" % limit if limit else "" 
-        name = "indeplex_by_senti_pmi" + name
-        save( lexicon , name , tofile )
-        if wdcloud: save_word_cloud( lexicon, name, tofile )
+    lexicon = _postprocess("indeplex_by_senti_pmi",lemmas, ld, limit, tofile)
     
     return lexicon
 
@@ -290,15 +288,6 @@ def by_senti_avg(pos_op, neg_op, lemmas=None, filter_tags=None, limit=None, eps=
     
     ld = _LD(ds_pos, ds_neg, eps)
     
-    lexicon = { lemmas[idx]:round(val,3) for idx,val in enumerate(ld) }
-    
-    if limit:
-        lexicon = dict( sorted(lexicon.items(), key=lambda elem : abs(elem[1]), reverse=True)[:limit] )
-    
-    if tofile:
-        name = "_top%i" % limit if limit else "" 
-        name = "indeplex_by_senti_avg" + name
-        save( lexicon , name , tofile )
-        if wdcloud: save_word_cloud( lexicon, name, tofile )
+    lexicon = _postprocess("indeplex_by_senti_avg",lemmas, ld, limit, tofile)
     
     return lexicon 

@@ -10,10 +10,35 @@ from cldas.utils.graph import MultiGraph, _search_influences
 from collections import defaultdict
 
 
+def _postprocess(lexicon, graph, method, neu_treshold, filter_seeds, seeds, seed_name, limit, confidence, tofile):
+    if neu_treshold:
+        lexicon = dict( filter( lambda item: abs( item[1]['val'] ) > neu_treshold , lexicon.items() ) )
+         
+    if filter_seeds:
+        lexicon = dict( filter( lambda item: item[0] not in seeds , lexicon.items() ) ) 
+     
+    if limit:
+        lexicon = dict( filter( lambda item: item[1]['inf'] >= confidence , lexicon.items() ) )
+        lexicon = dict( sorted( lexicon.items() , key=lambda item: abs( item[1]['val'] ) , reverse=True )[:limit] )
+        
+    lexicon = { lem:{'val':round(item['val'],5),'inf':item['inf']} for lem,item in lexicon.items() }
+    
+    if tofile:
+        name  = "_%s" % graph.source
+        name += "_top%03i" % limit if limit else ""
+        name += "_%s%03i" % (seed_name,len(seeds))
+        name = method + name
+        save( lexicon , name , tofile )
+        save_word_cloud( lexicon, name, tofile, neu_treshold=neu_treshold )
+    
+    return lexicon
+
+
+
 def by_influence(graph, seeds, 
         threshold          = 0.005,  
         neutral_resistance = 1,
-        filter_neutral     = True,
+        neu_treshold       = 0.0,
         filter_seeds       = False, 
         confidence         = 0,
         limit              = None, 
@@ -26,16 +51,15 @@ def by_influence(graph, seeds,
     Generates a lexicon from an opinion set and seeds words by Influence Search like model.
     @param graph                : A non-empty MultiGraph instance.
     @param seeds                : A set of words seeds with its valencies.
-    @param threshold            : 
+    @param threshold            : Minimum admitted influence for sparcing between nodes.
     @param neutral_resistance   : Adds neutral adyacency nodes. 
-    @param filter_neutrals      : Output without neutrals.
+    @param neu_treshold         : Treshold where valency is considered neutral.
     @param filter_seeds         : Output without seeds.
-    @param confidence:          : Minimum influence admitted in output 
+    @param confidence:          : Minimum influence admitted in output. 
     @param limit                : Limit output.
     @param seed_name            : Mechanism of how seeds are been made.
     @param verbose              : Verbose output.
     @param tofile               : Directory where lexicon and wordcloud will be saved. 
-    @param wdcloud              : Generate a word cloud image. Argument tofile required.
     '''
     
     if not isinstance(graph, MultiGraph):
@@ -74,25 +98,7 @@ def by_influence(graph, seeds,
             "inf": influence              
         }
         
-    if filter_neutral:
-        lexicon = dict( filter( lambda item: abs( item[1]['val'] ) > 0.1 , lexicon.items() ) )
-         
-    if filter_seeds:
-        lexicon = dict( filter( lambda item: item[0] not in seeds , lexicon.items() ) ) 
-     
-    if limit:
-        lexicon = dict( filter( lambda item: item[1]['inf'] >= confidence , lexicon.items() ) )
-        lexicon = dict( sorted( lexicon.items() , key=lambda item: abs( item[1]['val'] ) , reverse=True )[:limit] )
-        
-    lexicon = { lem:round(item['val'],5) for lem,item in lexicon.items() }
-    
-    if tofile:
-        name  = "_%s" % graph.source
-        name += "_top%03i" % limit if limit else ""
-        name += "_%s%03i" % (seed_name,len(seeds))
-        name = "deplex_by_influence" + name
-        save( lexicon , name , tofile )
-        if wdcloud: save_word_cloud( lexicon, name, tofile )
+    lexicon = _postprocess(lexicon, graph, "deplex_by_influence", neu_treshold, filter_seeds, seeds, seed_name, limit, confidence, tofile)
         
     return lexicon
 
@@ -100,29 +106,29 @@ def by_influence(graph, seeds,
 
 def by_bfs(graph, seeds,
         threshold       = 0.005,
-        filter_neutral  = True,
-        filter_seeds    = False, 
+        neu_treshold    = 0.0,
+        filter_seeds    = False,
+        confidence      = 1, 
         limit           = None, 
         seed_name       = "",
         verbose         = True,
         tofile          = None,
-        wdcloud         = False,
     ):
     '''
     Generates a lexicon from an opinion set and seeds words by Breath First Search model
     @param graph                : A non-empty MultiGraph instance.
     @param seeds                : A set of words seeds with its polarity.
-    @param threshold            : When stop sparsing valencies. 
-    @param filter_neutrals      : Output without neutrals.
+    @param threshold            : When stop sparsing valencies.
+    @param neu_treshold         : Treshold where valency is considered neutral.
     @param filter_seeds         : Output without seeds. 
+    @param confidence:          : Minimum frequency nodes admitted in output.
     @param limit                : Limit output.
     @param seed_name            : Mechanism of how seeds are been made.
     @param verbose              : Verbose output.
     @param tofile               : Directory where lexicon and wordcloud will be saved.
-    @param wdcloud              : Generate a word cloud image. Argument tofile required.
     '''
     
-    lexicon = { lem:0 for lem in graph.nodes() }
+    lexicon = { lem:{'val':0,'inf':0} for lem in graph.nodes() }
     
     visited_dir = [] ; visited_inv = []
     
@@ -140,7 +146,8 @@ def by_bfs(graph, seeds,
         if lem not in graph or abs(val) < threshold:
             continue
         
-        lexicon[lem] += val
+        lexicon[lem]['val'] += val
+        lexicon[lem]['inf'] += 1
         
         for ady,edge in graph[lem].items():
             
@@ -154,24 +161,7 @@ def by_bfs(graph, seeds,
                 visited_inv.append( (lem,ady) )
                 queue.append( (ady,_val) )
     
-    if filter_neutral:
-        lexicon = dict( filter( lambda item: abs( item[1] ) > 0.1 , lexicon.items() ) )
-        
-    if filter_seeds:
-        lexicon = dict( filter( lambda item: item[0] not in seeds , lexicon.items() ) ) 
-    
-    if limit:
-        lexicon = dict( sorted( lexicon.items() , key=lambda item: abs( item[1] ) , reverse=True )[:limit] )
-    
-    lexicon = { lem:round(val,5) for lem,val in lexicon.items() }
-    
-    if tofile:
-        name  = "_%s" % graph.source
-        name += "_top%03i" % limit if limit else ""
-        name += "_%s%03i" % (seed_name,len(seeds))
-        name = "deplex_by_bfs" + name
-        save( lexicon , name , tofile )
-        if wdcloud: save_word_cloud( lexicon, name, tofile )
+    lexicon = _postprocess(lexicon, graph, "deplex_by_bfs", neu_treshold, filter_seeds, seeds, seed_name, limit, confidence, tofile)
         
     return lexicon
 

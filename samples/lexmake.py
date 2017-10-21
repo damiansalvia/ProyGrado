@@ -29,7 +29,7 @@ def display_options(name, options, files=[]):
         print j+i+1,".",files[j]
         
     op = ''
-    while not op.isdigit() or int(op) > len(options) + len(files):
+    while not op.isdigit() or int(op) >= len(options) + len(files):
         op = raw_input('> ')
     op = int(op)
     
@@ -47,44 +47,46 @@ neg = dp.get_opinions( cat_cond={"$lt":50} )
 lemmas = dp.get_lemmas()
 
 
-'''
----------------------------------------------
-      Independent Lexicon generation
----------------------------------------------
-'''
-os.system(clean)
 
-options = [ by_senti_tfidf, by_senti_qtf, by_senti_avg, by_senti_pmi ]
-files = [ file for file in glob.glob("./indeplex/*") if file.endswith('json')]
-i = display_options( "Independent Lexicon", options, files)
+while True:
+    '''
+    ---------------------------------------------
+          Independent Lexicon generation
+    ---------------------------------------------
+    '''
+    os.system(clean)
+    
+    options = [ by_senti_tfidf, by_senti_qtf, by_senti_avg, by_senti_pmi ]
+    files = [ file for file in glob.glob("./indeplex/*") if file.endswith('json')]
+    i = display_options( "Independent Lexicon", options, files)
+    
+    limit = len(options)
+    if i > limit:
+        li = load( files[i-limit] )
+    else:
+        li = options[i]( pos, neg, lemmas, filter_tags=USEFUL_TAGS, limit=150, tofile='./indeplex', wdcloud=wdcloud )
+    
+    
+    '''
+    ---------------------------------------------
+          Dependent Lexicon generation
+    ---------------------------------------------
+    '''
+    os.system(clean)
+    
+    corporea = dp.get_sources()
+    i = display_options("Sources",corporea)
+    corpus   = corporea[i]
+    opinions = dp.get_opinions( source=corpus )
+    graph = MultiGraph( opinions, corpus, filter_tags=USEFUL_TAGS )
+    
+    
+    os.system(clean)
+    
+    options = [ by_bfs, by_influence ]
+    i = display_options("Dependent Lexicon",options)
+    ld = options[i]( graph, li, neu_treshold=0.2, limit=300, tofile='./deplex', wdcloud=wdcloud )
 
-limit = len(options)
-if i > limit:
-    li = load( files[i-limit] )
-else:
-    li = options[i]( pos, neg, lemmas, filter_tags=USEFUL_TAGS, limit=150, tofile='./indeplex', wdcloud=wdcloud )
-
-
-'''
----------------------------------------------
-      Dependent Lexicon generation
----------------------------------------------
-'''
-os.system(clean)
-
-corporea = dp.get_sources()
-i = display_options("Sources",corporea)
-corpus   = corporea[i]
-opinions = dp.get_opinions( source=corpus )
-graph = MultiGraph( opinions, corpus, filter_tags=USEFUL_TAGS )
-
-
-os.system(clean)
-
-options = [ by_bfs, by_influence ]
-i = display_options("Dependent Lexicon",options)
-ld = options[i]( graph, li, limit=300, tofile='./deplex', wdcloud=wdcloud )
-
-
+    if raw_input("Exit? [y/n] > ") == 'y': break
 
 
