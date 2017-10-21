@@ -73,6 +73,7 @@ RUN pip install -U pillow
 RUN pip install -U h5py
 RUN pip install -U keras
 RUN pip install -U pydot
+RUN pip install -U colorama
 
 RUN python -c 'import nltk; nltk.download("wordnet")'
 RUN python -c 'import nltk; nltk.download("punkt")'

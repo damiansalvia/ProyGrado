@@ -6,4 +6,5 @@ Docker/FreeLing-4.0
 *.pydevproject
 /corpus/
 /embeddings/
+/genlex/
 /apps/independent_system/outputs/

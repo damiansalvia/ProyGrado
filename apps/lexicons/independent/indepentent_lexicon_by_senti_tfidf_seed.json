@@ -1,0 +1,602 @@
+{
+    "indignación": {
+        "pol": "NEG+", 
+        "rank": -2.2
+    }, 
+    "onda": {
+        "pol": "NEG+", 
+        "rank": -1.936
+    }, 
+    "carrie": {
+        "pol": "POS+", 
+        "rank": 3.692
+    }, 
+    "ender": {
+        "pol": "NEG+", 
+        "rank": -2.593
+    }, 
+    "fuente": {
+        "pol": "POS+", 
+        "rank": 2.765
+    }, 
+    "separar": {
+        "pol": "POS+", 
+        "rank": 2.878
+    }, 
+    ".....": {
+        "pol": "POS+", 
+        "rank": 2.901
+    }, 
+    "clave": {
+        "pol": "POS+", 
+        "rank": 2.915
+    }, 
+    "gallo": {
+        "pol": "NEG+", 
+        "rank": -2.483
+    }, 
+    "novicio": {
+        "pol": "NEG+", 
+        "rank": -2.147
+    }, 
+    "prince": {
+        "pol": "POS+", 
+        "rank": 3.004
+    }, 
+    "21": {
+        "pol": "POS+", 
+        "rank": 3.004
+    }, 
+    "suave": {
+        "pol": "POS+", 
+        "rank": 2.819
+    }, 
+    "corgan": {
+        "pol": "POS+", 
+        "rank": 3.451
+    }, 
+    "vendedor": {
+        "pol": "NEG+", 
+        "rank": -2.559
+    }, 
+    "wall-e": {
+        "pol": "POS+", 
+        "rank": 2.641
+    }, 
+    "@": {
+        "pol": "POS+", 
+        "rank": 2.641
+    }, 
+    "podia": {
+        "pol": "NEG+", 
+        "rank": -2.147
+    }, 
+    "soltar": {
+        "pol": "NEG+", 
+        "rank": -2.615
+    }, 
+    "auto": {
+        "pol": "POS+", 
+        "rank": 2.706
+    }, 
+    "horror": {
+        "pol": "NEG+", 
+        "rank": -2.147
+    }, 
+    "blackjack": {
+        "pol": "POS+", 
+        "rank": 3.577
+    }, 
+    "caracteristicas": {
+        "pol": "POS+", 
+        "rank": 3.041
+    }, 
+    "como_no": {
+        "pol": "POS+", 
+        "rank": 2.979
+    }, 
+    "plasto": {
+        "pol": "NEG+", 
+        "rank": -2.073
+    }, 
+    "ridículo": {
+        "pol": "NEG+", 
+        "rank": -2.864
+    }, 
+    "tontería": {
+        "pol": "NEG+", 
+        "rank": -2.2
+    }, 
+    "comodo": {
+        "pol": "POS+", 
+        "rank": 2.777
+    }, 
+    "lamentable": {
+        "pol": "NEG+", 
+        "rank": -2.147
+    }, 
+    "bomba": {
+        "pol": "NEG+", 
+        "rank": -1.978
+    }, 
+    "religión": {
+        "pol": "POS+", 
+        "rank": 2.917
+    }, 
+    "o_bien": {
+        "pol": "POS+", 
+        "rank": 2.752
+    }, 
+    "ocultar": {
+        "pol": "POS+", 
+        "rank": 2.713
+    }, 
+    "seldom": {
+        "pol": "POS+", 
+        "rank": 3.692
+    }, 
+    "tryp": {
+        "pol": "NEG+", 
+        "rank": -2.174
+    }, 
+    "dictadura": {
+        "pol": "NEG+", 
+        "rank": -2.147
+    }, 
+    "navarro": {
+        "pol": "NEG+", 
+        "rank": -3.008
+    }, 
+    "a_modo_de": {
+        "pol": "NEG+", 
+        "rank": -2.559
+    }, 
+    "mhz": {
+        "pol": "POS+", 
+        "rank": 3.263
+    }, 
+    "pegadizo": {
+        "pol": "POS+", 
+        "rank": 2.819
+    }, 
+    "aeg": {
+        "pol": "NEG+", 
+        "rank": -2.559
+    }, 
+    "martin": {
+        "pol": "POS+", 
+        "rank": 3.314
+    }, 
+    "operativo": {
+        "pol": "POS+", 
+        "rank": 2.7
+    }, 
+    "alpiste": {
+        "pol": "NEG+", 
+        "rank": -2.324
+    }, 
+    "eh": {
+        "pol": "NEG+", 
+        "rank": -2.174
+    }, 
+    "alrededor_de": {
+        "pol": "POS+", 
+        "rank": 2.667
+    }, 
+    "portalada": {
+        "pol": "NEG+", 
+        "rank": -1.936
+    }, 
+    "soso": {
+        "pol": "NEG+", 
+        "rank": -2.232
+    }, 
+    "democracia": {
+        "pol": "NEG+", 
+        "rank": -3.099
+    }, 
+    "ultimamente": {
+        "pol": "NEG+", 
+        "rank": -2.2
+    }, 
+    "culpable": {
+        "pol": "POS+", 
+        "rank": 2.765
+    }, 
+    "cristina": {
+        "pol": "POS+", 
+        "rank": 3.078
+    }, 
+    "bloquear": {
+        "pol": "NEG+", 
+        "rank": -2.147
+    }, 
+    "electronica": {
+        "pol": "NEG+", 
+        "rank": -2.33
+    }, 
+    "facil": {
+        "pol": "POS+", 
+        "rank": 2.878
+    }, 
+    "****": {
+        "pol": "NEG+", 
+        "rank": -2.008
+    }, 
+    "desplazamiento": {
+        "pol": "NEG+", 
+        "rank": -2.422
+    }, 
+    "linguini": {
+        "pol": "POS+", 
+        "rank": 2.992
+    }, 
+    "tokio_hotel": {
+        "pol": "NEG+", 
+        "rank": -2.008
+    }, 
+    "destino": {
+        "pol": "POS+", 
+        "rank": 2.765
+    }, 
+    "pirata": {
+        "pol": "POS+", 
+        "rank": 2.797
+    }, 
+    "desgracia": {
+        "pol": "NEG+", 
+        "rank": -2.324
+    }, 
+    "ajuste": {
+        "pol": "NEG+", 
+        "rank": -3.572
+    }, 
+    "fumador": {
+        "pol": "NEG+", 
+        "rank": -2.008
+    }, 
+    "publicidad": {
+        "pol": "NEG+", 
+        "rank": -2.181
+    }, 
+    "power": {
+        "pol": "POS+", 
+        "rank": 3.004
+    }, 
+    "renunciar": {
+        "pol": "NEG+", 
+        "rank": -2.147
+    }, 
+    "variar": {
+        "pol": "POS+", 
+        "rank": 3.053
+    }, 
+    "pata": {
+        "pol": "NEG+", 
+        "rank": -2.324
+    }, 
+    "callandico_uy": {
+        "pol": "NEG+", 
+        "rank": -2.147
+    }, 
+    "mundial": {
+        "pol": "POS+", 
+        "rank": 2.706
+    }, 
+    "asumir": {
+        "pol": "NEG+", 
+        "rank": -2.147
+    }, 
+    "el_camino_de_los_ingleses": {
+        "pol": "NEG+", 
+        "rank": -2.593
+    }, 
+    "vacar": {
+        "pol": "NEG+", 
+        "rank": -2.087
+    }, 
+    "casino": {
+        "pol": "POS+", 
+        "rank": 3.641
+    }, 
+    "mac": {
+        "pol": "POS+", 
+        "rank": 2.669
+    }, 
+    "ministro": {
+        "pol": "NEG+", 
+        "rank": -2.71
+    }, 
+    "escenario": {
+        "pol": "POS+", 
+        "rank": 2.819
+    }, 
+    "cathy": {
+        "pol": "POS+", 
+        "rank": 3.899
+    }, 
+    "proyecto": {
+        "pol": "POS+", 
+        "rank": 2.812
+    }, 
+    "encajar": {
+        "pol": "POS+", 
+        "rank": 2.844
+    }, 
+    "trabajador": {
+        "pol": "NEG+", 
+        "rank": -2.609
+    }, 
+    "centímetro": {
+        "pol": "POS+", 
+        "rank": 3.456
+    }, 
+    "celeste": {
+        "pol": "POS+", 
+        "rank": 3.414
+    }, 
+    "identidad": {
+        "pol": "NEG+", 
+        "rank": -2.261
+    }, 
+    "megapixel": {
+        "pol": "POS+", 
+        "rank": 2.765
+    }, 
+    "posguerra": {
+        "pol": "POS+", 
+        "rank": 2.799
+    }, 
+    "vena": {
+        "pol": "NEG+", 
+        "rank": -1.94
+    }, 
+    "colgar": {
+        "pol": "NEG+", 
+        "rank": -2.356
+    }, 
+    "carácter": {
+        "pol": "POS+", 
+        "rank": 2.706
+    }, 
+    "gobernar": {
+        "pol": "NEG+", 
+        "rank": -2.37
+    }, 
+    "auricular": {
+        "pol": "POS+", 
+        "rank": 2.915
+    }, 
+    "mobil": {
+        "pol": "POS+", 
+        "rank": 3.314
+    }, 
+    "trump": {
+        "pol": "NEG+", 
+        "rank": -2.476
+    }, 
+    "barco": {
+        "pol": "POS+", 
+        "rank": 2.903
+    }, 
+    "plantar": {
+        "pol": "NEG+", 
+        "rank": -1.998
+    }, 
+    "*": {
+        "pol": "NEG+", 
+        "rank": -2.114
+    }, 
+    "bonus_track": {
+        "pol": "NEG+", 
+        "rank": -2.008
+    }, 
+    "elegante": {
+        "pol": "POS+", 
+        "rank": 3.202
+    }, 
+    "inteligencia": {
+        "pol": "NEG+", 
+        "rank": -1.998
+    }, 
+    "daddy_yankee": {
+        "pol": "POS+", 
+        "rank": 2.799
+    }, 
+    "jane": {
+        "pol": "POS+", 
+        "rank": 3.441
+    }, 
+    "museo": {
+        "pol": "POS+", 
+        "rank": 2.657
+    }, 
+    "por_favor": {
+        "pol": "NEG+", 
+        "rank": -2.147
+    }, 
+    "prever": {
+        "pol": "NEG+", 
+        "rank": -1.998
+    }, 
+    "industria": {
+        "pol": "NEG+", 
+        "rank": -2.483
+    }, 
+    "atencion": {
+        "pol": "NEG+", 
+        "rank": -2.261
+    }, 
+    "imac": {
+        "pol": "POS+", 
+        "rank": 3.162
+    }, 
+    "encarnar": {
+        "pol": "NEG+", 
+        "rank": -2.073
+    }, 
+    "receta": {
+        "pol": "NEG+", 
+        "rank": -2.073
+    }, 
+    "remy": {
+        "pol": "POS+", 
+        "rank": 3.899
+    }, 
+    "tren": {
+        "pol": "POS+", 
+        "rank": 2.641
+    }, 
+    "garantizar": {
+        "pol": "NEG+", 
+        "rank": -2.261
+    }, 
+    "mierda": {
+        "pol": "NEG+", 
+        "rank": -2.839
+    }, 
+    "madame_bovary": {
+        "pol": "POS+", 
+        "rank": 3.004
+    }, 
+    "ciego": {
+        "pol": "NEG+", 
+        "rank": -1.936
+    }, 
+    "r": {
+        "pol": "NEG+", 
+        "rank": -1.998
+    }, 
+    "infumable": {
+        "pol": "NEG+", 
+        "rank": -2.37
+    }, 
+    "and": {
+        "pol": "POS+", 
+        "rank": 3.078
+    }, 
+    "ana": {
+        "pol": "POS+", 
+        "rank": 2.992
+    }, 
+    "mágico": {
+        "pol": "NEG+", 
+        "rank": -1.996
+    }, 
+    "hardware": {
+        "pol": "POS+", 
+        "rank": 3.055
+    }, 
+    "kevin": {
+        "pol": "POS+", 
+        "rank": 4.358
+    }, 
+    "bodrio": {
+        "pol": "NEG+", 
+        "rank": -2.2
+    }, 
+    "peligro": {
+        "pol": "NEG+", 
+        "rank": -2.517
+    }, 
+    "castillo": {
+        "pol": "POS+", 
+        "rank": 2.621
+    }, 
+    "elpaistv": {
+        "pol": "NEG+", 
+        "rank": -1.936
+    }, 
+    "=": {
+        "pol": "POS+", 
+        "rank": 4.273
+    }, 
+    "springfield": {
+        "pol": "POS+", 
+        "rank": 3.162
+    }, 
+    "tess": {
+        "pol": "POS+", 
+        "rank": 2.849
+    }, 
+    "reunión": {
+        "pol": "POS+", 
+        "rank": 2.596
+    }, 
+    "contraste": {
+        "pol": "POS+", 
+        "rank": 2.667
+    }, 
+    "manía": {
+        "pol": "NEG+", 
+        "rank": -2.37
+    }, 
+    "doler": {
+        "pol": "NEG+", 
+        "rank": -1.955
+    }, 
+    "fa": {
+        "pol": "NEG+", 
+        "rank": -3.319
+    }, 
+    "75": {
+        "pol": "POS+", 
+        "rank": 2.812
+    }, 
+    "kim": {
+        "pol": "POS+", 
+        "rank": 3.451
+    }, 
+    "permanecer": {
+        "pol": "POS+", 
+        "rank": 2.657
+    }, 
+    "borrar": {
+        "pol": "NEG+", 
+        "rank": -1.998
+    }, 
+    "the": {
+        "pol": "POS+", 
+        "rank": 3.981
+    }, 
+    "las": {
+        "pol": "POS+", 
+        "rank": 3.309
+    }, 
+    "al_igual_que": {
+        "pol": "POS+", 
+        "rank": 3.003
+    }, 
+    "gusteau": {
+        "pol": "POS+", 
+        "rank": 3.577
+    }, 
+    "sanmartiniano": {
+        "pol": "NEG+", 
+        "rank": -2.324
+    }, 
+    "mark": {
+        "pol": "POS+", 
+        "rank": 2.641
+    }, 
+    "incapaz": {
+        "pol": "NEG+", 
+        "rank": -2.147
+    }, 
+    "inseguridad": {
+        "pol": "NEG+", 
+        "rank": -3.427
+    }, 
+    "fallar": {
+        "pol": "NEG+", 
+        "rank": -2.263
+    }, 
+    "6230": {
+        "pol": "NEG+", 
+        "rank": -2.008
+    }, 
+    "jack": {
+        "pol": "POS+", 
+        "rank": 3.004
+    }
+}
