@@ -38,59 +38,120 @@ from cldas.retrieval import CorpusReader
 corporea = []
  
 if not dp.get_opinions(source='corpus_apps_android'): 
-    reader = CorpusReader( '../corpus/corpus_apps_android', '*/*.json', op_pattern='\"(.*?)\"[,(?:\\r\\n)]', path_pattern='(neg|pos)/', decoding='unicode-escape' )
+    reader = CorpusReader( '../corpus/corpus_apps_android', '*/*.json', 
+        op_pattern   = '\"(.*?)\"[,(?:\\r\\n)]', 
+        path_pattern = '(neg|pos)/', 
+        decoding     = 'unicode-escape' 
+    )
     print "Classes:", reader.categories()
     print "Opinions:", len( reader.opinions() )
     mapping = {'neg': 20, 'pos': 80 }
-    corporea.append( ( reader, mapping) )
- 
-if not dp.get_opinions(source='corpus_tweets'):  
-    reader  = CorpusReader( '../corpus/corpus_tweets', '*.tsv', op_pattern='\d\t\d\t(.*?)\t.*?\n', file_pattern='(\d\t\d)\t.*?\n', start_from=1 )
-    print "Classes:", reader.categories()
-    print "Opinions:", len( reader.opinions() )
-    mapping = { '3\t1': 10,  '3\t2': 20, '2\t4': 90, '2\t2': 70, '2\t3': 60, '4\t2': 30, '2\t1': 80, '5\t1': 40, '1\t5': 50, '1\t4': 30, '4\t1': 50, '1\t1': 40, '1\t3': 60, '1\t2': 70 }
-    corporea.append( ( reader, mapping) )
- 
-if not dp.get_opinions(source='corpus_tweets_2'):  
-    reader = CorpusReader( '../corpus/corpus_tweets_2', '*.csv', op_pattern='\"(.*?)\",', file_pattern='(N|P|NEU|NONE)(?:\\s|$)', start_from=1 )
-    print "Classes:", reader.categories()
-    print "Opinions:", len( reader.opinions() )
-    mapping = { 'N':0, 'NEU' :50, 'NONE':50, 'P':100 }
-    corporea.append( ( reader, mapping) )
+    corporea.append( ( reader, mapping) )    
   
-if not dp.get_opinions(source='corpus_prensa_uy'): 
-    reader = CorpusReader( '../corpus/corpus_prensa_uy', 'train.csv', op_pattern='/(.*(?!TRUE|FALSE)),[^ ]/g', file_pattern=',(Neg|Neu|Pos)\n' )
+if not dp.get_opinions(source='corpus_cine'):
+    reader = CorpusReader( '../corpus/corpus_cine', '*.xml', 
+        op_pattern   = '<body>(.*?)</body>', 
+        file_pattern = 'rank=\"([1-5])\"', 
+        decoding     = 'cp1252' 
+    )
     print "Classes:", reader.categories()
     print "Opinions:", len( reader.opinions() )
-    mapping = { 'Neg': 0, 'Neu': 50, 'Pos': 100 }
+    mapping = { '1': 0, '2': 25, '3': 50, '4': 75, '5': 100 }
     corporea.append( ( reader, mapping) )
      
 if not dp.get_opinions(source='corpus_emotiblog'):  
-    reader = CorpusReader( '../corpus/corpus_emotiblog', '*.xml', op_pattern='/<phrase.*?polarity=\".*?\".*?>(.*?)<\/phrase>/g', file_pattern='/<phrase.*?polarity=\"(.*?)\".*?>.*?<\/phrase>/g', decoding='cp1252')
+    reader = CorpusReader( '../corpus/corpus_emotiblog', '*.xml', 
+        op_pattern   = '/<phrase.*?polarity=\".*?\".*?>(.*?)<\/phrase>/g', 
+        file_pattern = '/<phrase.*?polarity=\"(.*?)\".*?>.*?<\/phrase>/g', 
+        decoding     = 'cp1252'
+    )
     print "Classes:", reader.categories()
     print "Opinions:", len( reader.opinions() )
     mapping = { 'negative': 0, '': 50, 'positive': 100 }
     corporea.append( ( reader, mapping) )
  
 if not dp.get_opinions(source='corpus_hoteles'): 
-    reader = CorpusReader( '../corpus/corpus_hoteles', '*.xml', op_pattern='<coah:review>(.*?)</coah:review>', file_pattern='<coah:rank>([1-5])<\/coah:rank>' )
+    reader = CorpusReader( '../corpus/corpus_hoteles', '*.xml', 
+        op_pattern   = '<coah:review>(.*?)</coah:review>', 
+        file_pattern = '<coah:rank>([1-5])<\/coah:rank>' 
+    )
     print "Classes:", reader.categories()
     print "Opinions:", len( reader.opinions() )
     mapping = { '1': 0, '2': 25, '3': 50, '4': 75, '5': 100 }
     corporea.append( ( reader, mapping) )
+ 
+if not dp.get_opinions(source='corpus_hoteles_2'): 
+    reader = CorpusReader( '../corpus/corpus_hoteles_2', '*.csv', 
+        op_pattern   = '\d+;[1-5]\s.*?;.*?;.*?;(.*?);', 
+        file_pattern = '\d+;([1-5])\s.*?;.*?;.*?;.*?;' 
+    )
+    print "Classes:", reader.categories()
+    print "Opinions:", len( reader.opinions() )
+    mapping = { '1': 0, '2': 25, '3': 50, '4': 75, '5': 100 }
+    corporea.append( ( reader, mapping) )
+    
+if not dp.get_opinions(source='corpus_medicina'): 
+    reader = CorpusReader( '../corpus/corpus_medicina', '*.csv', 
+        op_pattern   = '.*?;(.*?;.*?);\d{2}\s.*?\d{4};[1-5];', 
+        file_pattern = '.*?;.*?;.*?;\d{2}\s.*?\d{4};([1-5]);',
+        start_from   = 1
+    )
+    print "Classes:", reader.categories()
+    print "Opinions:", len( reader.opinions() )
+    mapping = {'1': 0, '2': 25, '3': 50, '4': 75, '5': 100 }
+    corporea.append( ( reader, mapping) )
+    
+if not dp.get_opinions(source='corpus_medicina_2'): 
+    reader = CorpusReader( '../corpus/corpus_medicina_2', '*.xml', 
+        op_pattern   = '/<text>(.*?)<\/text>\s*<Opinions>\s*<Opinion .* polarity="(?:positive|negative)".*?\/>\s*<\/Opinions>/g', 
+        file_pattern = '/<text>.*?<\/text>\s*<Opinions>\s*<Opinion .* polarity="(positive|negative)".*?\/>\s*<\/Opinions>/g',
+    )
+    print "Classes:", reader.categories()
+    print "Opinions:", len( reader.opinions() )
+    mapping = {'negative': 20, 'positive': 80 }
+    corporea.append( ( reader, mapping) )
+  
+if not dp.get_opinions(source='corpus_prensa_uy'): 
+    reader = CorpusReader( '../corpus/corpus_prensa_uy', 'train.csv', 
+        op_pattern   = '/(.*(?!TRUE|FALSE)),[^ ]/g', 
+        file_pattern = ',(Neg|Neu|Pos)\n' 
+    )
+    print "Classes:", reader.categories()
+    print "Opinions:", len( reader.opinions() )
+    mapping = { 'Neg': 0, 'Neu': 50, 'Pos': 100 }
+    corporea.append( ( reader, mapping) )
      
 if not dp.get_opinions(source='corpus_restaurantes'): 
-    reader = CorpusReader( '../corpus/corpus_restaurantes', '*/*.json', op_pattern='\"(.*?)\"[,\\n]', path_pattern='(neg|pos)/', decoding='unicode-escape' )
+    reader = CorpusReader( '../corpus/corpus_restaurantes', '*/*.json', 
+        op_pattern   = '\"(.*?)\"[,\\n]', 
+        path_pattern = '(neg|pos)/', 
+        decoding     = 'unicode-escape' 
+    )
     print "Classes:", reader.categories()
     print "Opinions:", len( reader.opinions() )
     mapping = {'neg': 20, 'pos': 80 }
     corporea.append( ( reader, mapping) )
-  
-if not dp.get_opinions(source='corpus_cine'):
-    reader = CorpusReader( '../corpus/corpus_cine', '*.xml', op_pattern='<body>(.*?)</body>', file_pattern='rank=\"([1-5])\"', decoding='cp1252' )
+ 
+if not dp.get_opinions(source='corpus_tweets'):  
+    reader  = CorpusReader( '../corpus/corpus_tweets', '*.tsv', 
+        op_pattern   = '\d\t\d\t(.*?)\t.*?\n', 
+        file_pattern = '(\d\t\d)\t.*?\n', 
+        start_from =1 
+    )
     print "Classes:", reader.categories()
     print "Opinions:", len( reader.opinions() )
-    mapping = { '1': 0, '2': 25, '3': 50, '4': 75, '5': 100 }
+    mapping = { '3\t1': 10,  '3\t2': 20, '2\t4': 90, '2\t2': 70, '2\t3': 60, '4\t2': 30, '2\t1': 80, '5\t1': 40, '1\t5': 50, '1\t4': 30, '4\t1': 50, '1\t1': 40, '1\t3': 60, '1\t2': 70 }
+    corporea.append( ( reader, mapping) )
+ 
+if not dp.get_opinions(source='corpus_tweets_2'):  
+    reader = CorpusReader( '../corpus/corpus_tweets_2', '*.csv', 
+        op_pattern   = '\"(.*?)\",', 
+        file_pattern = '(N|P|NEU|NONE)(?:\\s|$)', 
+        start_from   = 1 
+    )
+    print "Classes:", reader.categories()
+    print "Opinions:", len( reader.opinions() )
+    mapping = { 'N':0, 'NEU' :50, 'NONE':50, 'P':100 }
     corporea.append( ( reader, mapping) )
   
 end_time(start_time)
