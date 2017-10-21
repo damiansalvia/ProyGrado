@@ -10,14 +10,15 @@ from cldas.utils.graph import MultiGraph, _search_influences
 from collections import defaultdict
 
 
-def _postprocess(lexicon, graph, method, neu_treshold, filter_seeds, seeds, seed_name, limit, confidence, tofile):
-    if neu_treshold:
+def _postprocess(lexicon, graph, method, neu_treshold, filter_seeds, seeds, seed_name, limit, confidence, tofile, wc_neu):
+    if neu_treshold is not None:
+        wc_neu = neu_treshold
         lexicon = dict( filter( lambda item: abs( item[1]['val'] ) > neu_treshold , lexicon.items() ) )
          
-    if filter_seeds:
+    if filter_seeds is True:
         lexicon = dict( filter( lambda item: item[0] not in seeds , lexicon.items() ) ) 
      
-    if limit:
+    if limit is not None:
         lexicon = dict( filter( lambda item: item[1]['inf'] >= confidence , lexicon.items() ) )
         lexicon = dict( sorted( lexicon.items() , key=lambda item: abs( item[1]['val'] ) , reverse=True )[:limit] )
         
@@ -29,7 +30,7 @@ def _postprocess(lexicon, graph, method, neu_treshold, filter_seeds, seeds, seed
         name += "_%s%03i" % (seed_name,len(seeds))
         name = method + name
         save( lexicon , name , tofile )
-        save_word_cloud( lexicon, name, tofile, neu_treshold=neu_treshold )
+        save_word_cloud( lexicon, name, tofile, neu_treshold=wc_neu )
     
     return lexicon
 
@@ -38,14 +39,14 @@ def _postprocess(lexicon, graph, method, neu_treshold, filter_seeds, seeds, seed
 def by_influence(graph, seeds, 
         threshold          = 0.005,  
         neutral_resistance = 1,
-        neu_treshold       = 0.0,
+        neu_treshold       = None,
         filter_seeds       = False, 
         confidence         = 0,
         limit              = None, 
         seed_name          = "",
         verbose            = True,
         tofile             = None,
-        wdcloud            = False
+        wc_neu             = None
     ):
     '''
     Generates a lexicon from an opinion set and seeds words by Influence Search like model.
@@ -60,6 +61,7 @@ def by_influence(graph, seeds,
     @param seed_name            : Mechanism of how seeds are been made.
     @param verbose              : Verbose output.
     @param tofile               : Directory where lexicon and wordcloud will be saved. 
+    @param wc_neu               : Threshold consider for wordcloud when neu_treshold is None. 
     '''
     
     if not isinstance(graph, MultiGraph):
@@ -98,7 +100,7 @@ def by_influence(graph, seeds,
             "inf": influence              
         }
         
-    lexicon = _postprocess(lexicon, graph, "deplex_by_influence", neu_treshold, filter_seeds, seeds, seed_name, limit, confidence, tofile)
+    lexicon = _postprocess(lexicon, graph, "deplex_by_influence", neu_treshold, filter_seeds, seeds, seed_name, limit, confidence, tofile, wc_neu)
         
     return lexicon
 
@@ -106,13 +108,14 @@ def by_influence(graph, seeds,
 
 def by_bfs(graph, seeds,
         threshold       = 0.005,
-        neu_treshold    = 0.0,
+        neu_treshold    = None,
         filter_seeds    = False,
         confidence      = 1, 
         limit           = None, 
         seed_name       = "",
         verbose         = True,
         tofile          = None,
+        wc_neu          = 0.0
     ):
     '''
     Generates a lexicon from an opinion set and seeds words by Breath First Search model
@@ -126,6 +129,7 @@ def by_bfs(graph, seeds,
     @param seed_name            : Mechanism of how seeds are been made.
     @param verbose              : Verbose output.
     @param tofile               : Directory where lexicon and wordcloud will be saved.
+    @param wc_neu               : Threshold consider for wordcloud when neu_treshold is None.
     '''
     
     lexicon = { lem:{'val':0,'inf':0} for lem in graph.nodes() }
@@ -161,7 +165,7 @@ def by_bfs(graph, seeds,
                 visited_inv.append( (lem,ady) )
                 queue.append( (ady,_val) )
     
-    lexicon = _postprocess(lexicon, graph, "deplex_by_bfs", neu_treshold, filter_seeds, seeds, seed_name, limit, confidence, tofile)
+    lexicon = _postprocess(lexicon, graph, "deplex_by_bfs", neu_treshold, filter_seeds, seeds, seed_name, limit, confidence, tofile, wc_neu)
         
     return lexicon
 

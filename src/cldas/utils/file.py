@@ -72,7 +72,7 @@ def _neg_color(word=None, font_size=None, position=None,  orientation=None, font
     l = int(100.0 * float(random_state.randint(60, 120)) / 255.0)
     return "hsl({}, {}%, {}%)".format(h, s, l)  
     
-def save_word_cloud(lexicon,name,path,neu_treshold=0):
+def save_word_cloud(lexicon,name,path,neu_treshold=0.0):
     
     if not lexicon:
         print "Nothing to be saved" 
