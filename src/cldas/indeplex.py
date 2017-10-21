@@ -177,7 +177,7 @@ def _get_structures(pos_op, neg_op, strategy, filter_tags=None, lemmas=None, ver
     
     
     
-def by_senti_qtf(pos_op, neg_op, lemmas=None, filter_tags=None, limit=None, eps=1e-3, verbose=True, tofile=None, wdcloud=False):
+def by_senti_qtf(pos_op, neg_op, lemmas=None, filter_tags=None, limit=None, eps=1e-3, verbose=True, tofile=None):
     '''
     Generates a lexicon from positive and negative opinion sets by Logaritmic Diferential of QTF
     @param pos_op     : Set of positive opinions.
@@ -204,7 +204,7 @@ def by_senti_qtf(pos_op, neg_op, lemmas=None, filter_tags=None, limit=None, eps=
 
 
 
-def by_senti_tfidf(pos_op, neg_op, lemmas=None, filter_tags=None, limit=None, eps=1e-3, verbose=True, tofile=None, wdcloud=False):
+def by_senti_tfidf(pos_op, neg_op, lemmas=None, filter_tags=None, limit=None, eps=1e-3, verbose=True, tofile=None):
     '''
     Generates a lexicon from positive and negative opinion sets by Logaritmic Diferential of TFIDF
     @param pos_op     : Set of positive opinions.
@@ -231,7 +231,7 @@ def by_senti_tfidf(pos_op, neg_op, lemmas=None, filter_tags=None, limit=None, ep
 
 
 
-def by_senti_pmi(pos_op, neg_op, lemmas=None, filter_tags=None, limit=None, eps=1e-3, verbose=True, tofile=None, wdcloud=False):
+def by_senti_pmi(pos_op, neg_op, lemmas=None, filter_tags=None, limit=None, eps=1e-3, verbose=True, tofile=None):
     '''
     Generates a lexicon from positive and negative opinion sets by Logaritmic Diferential of PMI
     @param pos_op     : Set of positive opinions.
@@ -267,7 +267,7 @@ def by_senti_pmi(pos_op, neg_op, lemmas=None, filter_tags=None, limit=None, eps=
 
 
 
-def by_senti_avg(pos_op, neg_op, lemmas=None, filter_tags=None, limit=None, eps=1e-3, verbose=True, tofile=None, wdcloud=False):
+def by_senti_avg(pos_op, neg_op, lemmas=None, filter_tags=None, limit=None, eps=1e-3, verbose=True, tofile=None):
     '''
     Generates a lexicon from positive and negative opinion sets by Logaritmic Diferential of AVG
     @param pos_op     : Set of positive opinions.

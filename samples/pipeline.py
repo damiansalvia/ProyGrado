@@ -369,14 +369,14 @@ filepath = "./indeplex/indeplex_by_senti_qtf_top150.json"
 if os.path.exists(filepath):
     li = load(filepath)    
 else:
-    li = by_senti_qtf( pos, neg, lemmas, filter_tags=USEFUL_TAGS, limit=150, tofile='./indeplex', wdcloud=True )
+    li = by_senti_qtf( pos, neg, lemmas, filter_tags=USEFUL_TAGS, limit=150, tofile='./indeplex' )
 indep_lexicons.append( (li,"qtf") )
 
 filepath = "./indeplex/indeplex_by_senti_tfidf_top150.json"
 if os.path.exists(filepath):
     li = load(filepath)
 else:
-    li = by_senti_tfidf( pos, neg, lemmas, filter_tags=USEFUL_TAGS, limit=150, tofile='./indeplex', wdcloud=True )
+    li = by_senti_tfidf( pos, neg, lemmas, filter_tags=USEFUL_TAGS, limit=150, tofile='./indeplex' )
 indep_lexicons.append( (li,"tfidf") )
 end_time(start_time)
 
@@ -400,8 +400,8 @@ for corpus in dp.get_sources():
     
     for (li,name) in indep_lexicons:
         
-        ld = by_bfs( graph, li, seed_name=name, neu_treshold=0.1, limit=300, tofile='./deplex')
+        ld = by_bfs( graph, li, seed_name=name, filter_seeds=False, limit=300, confidence=3, tofile='./deplex', wc_neu=0.1)
         
-        ld = by_influence( graph, li, seed_name=name, neu_treshold=0.25, limit=300, confidence=1, tofile='./deplex')
+        ld = by_influence( graph, li, seed_name=name, filter_seeds=False, limit=300, confidence=1, tofile='./deplex', wc_neu=0.2)
 
 end_time(start_time)

@@ -63,7 +63,7 @@ while True:
     if i > limit:
         li = load( files[i-limit] )
     else:
-        li = options[i]( pos, neg, lemmas, filter_tags=USEFUL_TAGS, limit=150, tofile='./indeplex', wdcloud=wdcloud )
+        li = options[i]( pos, neg, lemmas, filter_tags=USEFUL_TAGS, limit=150, tofile='./indeplex' )
     
     
     '''
@@ -84,7 +84,7 @@ while True:
     
     options = [ by_bfs, by_influence ]
     i = display_options("Dependent Lexicon",options)
-    ld = options[i]( graph, li, neu_treshold=0.2, limit=300, tofile='./deplex')
+    ld = options[i]( graph, li, limit=300, tofile='./deplex', wc_neu=0.2)
 
     if raw_input("Exit? [y/n] > ") == 'y': break
 
