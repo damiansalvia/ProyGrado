@@ -46,7 +46,7 @@ def by_influence(graph, seeds,
         seed_name          = "",
         verbose            = True,
         tofile             = None,
-        wc_neu             = None
+        wc_neu             = 0.0
     ):
     '''
     Generates a lexicon from an opinion set and seeds words by Influence Search like model.
