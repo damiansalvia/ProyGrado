@@ -180,7 +180,7 @@ def by_senti_qtf(pos_op, neg_op, lemmas=None, filter_tags=None, limit=None, eps=
     
     if tofile:
         name = "_top%i" % limit if limit else "" 
-        name = "indeplex_by_senti_tfidf" + name
+        name = "indeplex_by_senti_qtf" + name
         save( lexicon , name , tofile )
         save_word_cloud( lexicon, name, tofile )
     
@@ -216,7 +216,7 @@ def by_senti_tfidf(pos_op, neg_op, lemmas=None, filter_tags=None, limit=None, ep
         
     if tofile:
         name = "_top%i" % limit if limit else "" 
-        name = "indeplex_by_senti_qtf" + name
+        name = "indeplex_by_senti_tfidf" + name
         save( lexicon , name , tofile )
         if wdcloud: save_word_cloud( lexicon, name, tofile )
     

@@ -11,7 +11,7 @@ import time, os
 
 from cldas.utils import USEFUL_TAGS
 from cldas.utils.misc import Iterable
-from cldas.utils.file import save
+from cldas.utils.file import save, load
 from cldas.utils.visual import progress
 
 from cldas.utils.logger import Log, Level
@@ -213,8 +213,8 @@ end_time(start_time)
 ---------------------------------------------
 '''
 start_time = time.time()
- 
-if not dp.get_embedding('.'):
+
+if not dp.get_embedding('.') or corporea:  
     dp.update_embeddings(femb='../embeddings/emb39-word2vec.npy', ftok='../embeddings/emb39-word2vec.txt')
  
 elapsed = time.strftime('%H:%M:%S', time.gmtime(time.time()-start_time))
@@ -344,8 +344,8 @@ stats.append( size_negative_words         )
 stats.append( size_negative_reviews       )
 stats.append( get_balance                 )
 stats.append( get_balance_by_source       )
- 
- 
+  
+  
 table_print(stats)
  
  
@@ -365,18 +365,19 @@ lemmas = dp.get_lemmas()
 
 indep_lexicons = []
 
-li = by_senti_qtf( pos, neg, lemmas, filter_tags=USEFUL_TAGS, limit=150, tofile='./indeplex', wdcloud=True )
+filepath = "./indeplex/indeplex_by_senti_qtf_top150.json"
+if os.path.exists(filepath):
+    li = load(filepath)    
+else:
+    li = by_senti_qtf( pos, neg, lemmas, filter_tags=USEFUL_TAGS, limit=150, tofile='./indeplex', wdcloud=True )
 indep_lexicons.append( (li,"qtf") )
-  
-# li = by_senti_avg( pos, neg, lemmas, filter_tags=USEFUL_TAGS, limit=150, tofile='./indeplex', wdcloud=True )
-# indep_lexicons.append( (li,"avg") )
-#    
-# li = by_senti_pmi( pos, neg, lemmas, filter_tags=USEFUL_TAGS, limit=150, tofile='./indeplex', wdcloud=True )
-# indep_lexicons.append( (li,"pmi") )
 
-li = by_senti_tfidf( pos, neg, lemmas, filter_tags=USEFUL_TAGS, limit=150, tofile='./indeplex', wdcloud=True )
+filepath = "./indeplex/indeplex_by_senti_tfidf_top150.json"
+if os.path.exists(filepath):
+    li = load(filepath)
+else:
+    li = by_senti_tfidf( pos, neg, lemmas, filter_tags=USEFUL_TAGS, limit=150, tofile='./indeplex', wdcloud=True )
 indep_lexicons.append( (li,"tfidf") )
-
 end_time(start_time)
 
 

@@ -55,19 +55,19 @@ def load(abspath):
  
 
 def _pos_color(word=None, font_size=None, position=None,  orientation=None, font_path=None, random_state=None):
-    h = int(360.0 * 136.0 / 255.0)
+    h = 120
     s = int(100.0 * 255.0 / 255.0)
     l = int(100.0 * float(random_state.randint(60, 120)) / 255.0)
     return "hsl({}, {}%, {}%)".format(h, s, l)  
 
 def _neu_color(word=None, font_size=None, position=None,  orientation=None, font_path=None, random_state=None):
-    h = int(360.0 * 217.0 / 255.0)
+    h = 220
     s = int(100.0 * 255.0 / 255.0)
     l = int(100.0 * float(random_state.randint(60, 120)) / 255.0)
     return "hsl({}, {}%, {}%)".format(h, s, l)  
 
 def _neg_color(word=None, font_size=None, position=None,  orientation=None, font_path=None, random_state=None):
-    h = int(360.0 * 11.0 / 255.0)
+    h = 20
     s = int(100.0 * 255.0 / 255.0)
     l = int(100.0 * float(random_state.randint(60, 120)) / 255.0)
     return "hsl({}, {}%, {}%)".format(h, s, l)  
@@ -85,9 +85,9 @@ def save_word_cloud(data,name,path):
     path = "%s/%s.png" % (path,name)  
     
     tot = len(data) * 1.0
-    pos = dict([ (lem,val) for lem,val in data.items() if val >  0 ])
-    neu = dict([ (lem,val) for lem,val in data.items() if val == 0 ])
-    neg = dict([ (lem,val) for lem,val in data.items() if val <  0 ])
+    pos = dict([ (lem,val) for lem,val in data.items() if val >  0.1 ])
+    neu = dict([ (lem,val) for lem,val in data.items() if -0.1 <= val <= 0.1 ])
+    neg = dict([ (lem,val) for lem,val in data.items() if val <  -0.1 ])
     
     qty   = sum(1 for x in [pos,neu,neg] if x)
     width = 600
