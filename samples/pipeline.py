@@ -400,8 +400,8 @@ for corpus in dp.get_sources():
     
     for (li,name) in indep_lexicons:
         
-        ld = by_bfs( graph, li, seed_name=name, neu_treshold=0.1, limit=300, tofile='./deplex' , wdcloud=True )
+        ld = by_bfs( graph, li, seed_name=name, neu_treshold=0.1, limit=300, tofile='./deplex')
         
-        ld = by_influence( graph, li, seed_name=name, neu_treshold=0.25, limit=300, confidence=1, tofile='./deplex', wdcloud=True )
+        ld = by_influence( graph, li, seed_name=name, neu_treshold=0.25, limit=300, confidence=1, tofile='./deplex')
 
 end_time(start_time)

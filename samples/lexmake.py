@@ -35,7 +35,6 @@ def display_options(name, options, files=[]):
     
     return op
 
-wdcloud = raw_input("Generate word cloud? [y/n] > ") == 'y'
 
 '''
 ---------------------------------------------
@@ -85,7 +84,7 @@ while True:
     
     options = [ by_bfs, by_influence ]
     i = display_options("Dependent Lexicon",options)
-    ld = options[i]( graph, li, neu_treshold=0.2, limit=300, tofile='./deplex', wdcloud=wdcloud )
+    ld = options[i]( graph, li, neu_treshold=0.2, limit=300, tofile='./deplex')
 
     if raw_input("Exit? [y/n] > ") == 'y': break
 
