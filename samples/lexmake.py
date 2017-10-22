@@ -55,15 +55,15 @@ while True:
     '''
     os.system(clean)
     
-    options = [ by_senti_tfidf, by_senti_qtf, by_senti_avg, by_senti_pmi ]
+    indeplex = [ by_senti_tfidf, by_senti_qtf, by_senti_avg, by_senti_pmi ]
     files = [ file for file in glob.glob("./indeplex/*") if file.endswith('json')]
-    i = display_options( "Independent Lexicon", options, files)
+    i = display_options( "Independent Lexicon", indeplex, files)
     
-    limit = len(options)
+    limit = len(indeplex)
     if i > limit:
         li = load( files[i-limit] )
     else:
-        li = options[i]( pos, neg, lemmas, filter_tags=USEFUL_TAGS, limit=150, tofile='./indeplex' )
+        li = indeplex[i]( pos, neg, lemmas, filter_tags=USEFUL_TAGS, limit=150, tofile='./indeplex' )
     
     
     '''
@@ -74,17 +74,17 @@ while True:
     os.system(clean)
     
     corporea = dp.get_sources()
-    i = display_options("Sources",corporea)
-    corpus   = corporea[i]
+    j = display_options("Sources",corporea)
+    corpus   = corporea[j]
     opinions = dp.get_opinions( source=corpus )
     graph = MultiGraph( opinions, corpus, filter_tags=USEFUL_TAGS )
     
     
     os.system(clean)
     
-    options = [ by_bfs, by_influence ]
-    i = display_options("Dependent Lexicon",options)
-    ld = options[i]( graph, li, limit=300, tofile='./deplex', wc_neu=0.2)
+    deplex = [ by_bfs, by_influence ]
+    k = display_options("Dependent Lexicon",deplex)
+    ld = deplex[k]( graph, li, seed_name=indeplex[i].__name__,limit=300, tofile='./deplex', wc_neu=0.2)
 
     if raw_input("Exit? [y/n] > ") == 'y': break
 
