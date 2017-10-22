@@ -11,6 +11,9 @@ from collections import defaultdict
 
 
 def _postprocess(lexicon, graph, method, neu_treshold, filter_seeds, seeds, seed_name, limit, confidence, tofile, wc_neu):
+    
+    lexicon = dict( filter( lambda item: item[0] in graph.nodes() , lexicon.items() ) ) 
+    
     if neu_treshold is not None:
         wc_neu = neu_treshold
         lexicon = dict( filter( lambda item: abs( item[1]['val'] ) > neu_treshold , lexicon.items() ) )
