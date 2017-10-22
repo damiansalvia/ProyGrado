@@ -78,7 +78,7 @@ def save_word_cloud(lexicon,name,path,neu_treshold=0.0):
         print "Nothing to be saved" 
         return  
     
-    lexicon = {word:item['val'] for word,item in lexicon.items()}
+    lexicon = { word:item['val'] if type(item)==dict else item for word,item in lexicon.items() }
     
     print "Saving...",
     
