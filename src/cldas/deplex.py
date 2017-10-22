@@ -97,7 +97,7 @@ def by_influence(graph, seeds,
             
         lexicon[lemma] = {
             "val": sum([ inf[0] * inf[1] for inf in influences[lemma] ]) / total_influence,
-            "inf": influence              
+            "inf": round(influence,2)              
         }
         
     lexicon = _postprocess(lexicon, graph, "deplex_by_influence", neu_treshold, filter_seeds, seeds, seed_name, limit, confidence, tofile, wc_neu)
