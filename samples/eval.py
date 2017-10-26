@@ -75,7 +75,6 @@ for idx,opinion in enumerate(untagged):
     Y_pred = Y_pred.flatten().tolist()[: len( opinion['text'] ) ] # Only necessary with LSTM
     negations[ opinion['_id'] ] = Y_pred 
 
-
 evaluate(general_lexicon,testing_corpus)
 
 

@@ -6,7 +6,7 @@ Module for for generating a context dependent lexicon corpus and seeds
 '''
 
 from collections import defaultdict
-from cldas.utils import progress, save
+from cldas.utils import progress, save, RGBGradiant
 
 
 def _valid_tag(tag, tagset):
@@ -141,37 +141,52 @@ class MultiGraph(object):
         return connected_components
     
         
-    def to_gml(self,lexicon,tofile='./'):        
-        tab = ' '*4 ; gml_nodes = '' ; gml_edges = ''        
-        for node, edges in self._graph.items():            
-            gml_nodes += '{br}node [{br}{t}id {node}{br}{t}value {val}{br}]'.format(
-                t = tab,
-                br = '\n' + tab,
-                node = node, 
-                val = lexicon[node] * 1.0
-            )
-            
-            for edge, weights in edges.items():    
-                gml_edges += '{br}edge [{br}{t}source {node}{br}{t}target {edge}{br}{t}label direct{br}{t}weight {val} {br}]'.format(
-                    t = tab,
-                    br = '\n' + tab,
-                    node = node, 
-                    edge = edge, 
-                    val = weights['dir'] * 1.0
-                )    
-                gml_edges += '{br}edge [{br}{t}source {node}{br}{t}target {edge}{br}{t}label inverse{br}{t}weight {val} {br}]'.format(
-                    t = tab,
-                    br = '\n' + tab,
-                    node = node, 
-                    edge = edge, 
-                    val = weights['inv'] * 1.0
-                )
+    def to_vis(self,lexicon, 
+        max_positive= 2.0, 
+        max_negative= -2.0, 
+        rgb_pos= (0, 255, 0), 
+        rgb_neg= (255, 0, 0), 
+        rgb_neu= (151, 151, 151), 
+        tofile='./'
+        ):
+
+        lexicon_nodes = lexicon.keys()
+
+        colorer = RGBGradiant( max_positive, max_negative, rgb_pos, rgb_neg, rgb_neu)
+        vis_nodes = [] ; vis_edges = []    
+        for node, edges in self._graph.items():
+            if node in lexicon_nodes:
+                vis_nodes.append({
+                    'id': node,
+                    'label': node,
+                    'value': lexicon.get(node,{}).get('inf',0.001) * 1.0,
+                    'color': 'rgb(%d,%d,%d)'  % colorer(lexicon.get(node,{}).get('val',0) * 1.0)
+                })
+
+                for edge, weights in edges.items():  
+                    if edge in lexicon_nodes:   
+                        vis_edges.append({
+                            'from': node,
+                            'to': edge,
+                            'value': weights['dir'] * 1.0,
+                            'color':  {"color": "green"},
+                            'arrows': "to",
+                        })
+                        vis_edges.append({
+                            'from': node,
+                            'to': edge,
+                            'value': weights['inv'] * 1.0,
+                            'color':  {"color": "red"},
+                            'arrows': "to",
+                        })
                 
-        gml = 'graph [' + gml_nodes + gml_edges + '\n]'
+        vis_graph = {"nodes": vis_nodes, "edges":vis_edges}        
+        if tofile:
+            name  = "_%s" % self.source
+            name = "graph_vis" + name
+            save( vis_graph , name , tofile )
         
-        save(gml,'graph_%s.gml' % self.source,tofile)
-        
-        return gml
+        return vis_graph
     
     
 

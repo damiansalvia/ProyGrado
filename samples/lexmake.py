@@ -86,5 +86,10 @@ i = display_options("Dependent Lexicon",options)
 ld = options[i]( graph, li, limit=300, tofile='./deplex', wdcloud=wdcloud )
 
 
+'''
+---------------------------------------------
+       Create json graph for visjs
+---------------------------------------------
+'''
 
-
+vis_graph = { 'nodes':[], 'edges':[]}

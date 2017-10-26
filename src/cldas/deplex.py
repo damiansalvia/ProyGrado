@@ -84,8 +84,6 @@ def by_influence(graph, seeds,
         lexicon = dict( filter( lambda item: item[1]['inf'] >= confidence , lexicon.items() ) )
         lexicon = dict( sorted( lexicon.items() , key=lambda item: abs( item[1]['val'] ) , reverse=True )[:limit] )
         
-    lexicon = { lem:round(item['val'],3) for lem,item in lexicon.items() }
-    
     if tofile:
         name  = "_%s" % graph.source
         name += "_top%03i" % limit if limit else ""
