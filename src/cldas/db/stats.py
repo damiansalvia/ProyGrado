@@ -25,7 +25,7 @@ def size_corporea_by_source():
     return list( db.reviews.aggregate([
         {"$group"   : { "_id":"$source", "count":{ "$sum":1 } }},
         {"$project" : {"_id":0, "source":"$_id", "count":1}}
-    ]) )
+    ]) )    
 
 
 # Vocabulary sizes
@@ -47,6 +47,14 @@ def size_embeddings():
     return db.embeddings.find(
         {}
     ).count()
+
+
+# Average text per source
+def avg_tokens_by_source():
+    return list( db.reviews.aggregate([
+        {"$group"   : { "_id":"$source", "count":{ "$avg":{"$size":"$text"} } }},
+        {"$project" : {"_id":0, "source":"$_id", "count":1}}
+    ]) )
 
 
 # Reviews per category

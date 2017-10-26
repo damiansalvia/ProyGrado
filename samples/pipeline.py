@@ -327,6 +327,7 @@ stats.append( size_vocabulary_by_word     )
 stats.append( size_vocabulary_by_lemma    )
 stats.append( size_corporea               )
 stats.append( size_corporea_by_source     )
+stats.append( avg_tokens_by_source        )
 stats.append( size_reviews_category       )
 stats.append( size_embeddings             ) 
 stats.append( size_near_match             )
@@ -365,12 +366,12 @@ lemmas = dp.get_lemmas()
 
 indep_lexicons = []
 
-filepath = "./indeplex/indeplex_by_senti_qtf_top150.json"
-if os.path.exists(filepath):
-    li = load(filepath)    
-else:
-    li = by_senti_qtf( pos, neg, lemmas, filter_tags=USEFUL_TAGS, limit=150, tofile='./indeplex' )
-indep_lexicons.append( (li,"qtf") )
+# filepath = "./indeplex/indeplex_by_senti_qtf_top150.json"
+# if os.path.exists(filepath):
+#     li = load(filepath)    
+# else:
+#     li = by_senti_qtf( pos, neg, lemmas, filter_tags=USEFUL_TAGS, limit=150, tofile='./indeplex' )
+# indep_lexicons.append( (li,"qtf") )
 
 filepath = "./indeplex/indeplex_by_senti_tfidf_top150.json"
 if os.path.exists(filepath):
@@ -400,7 +401,7 @@ for corpus in dp.get_sources():
     
     for (li,name) in indep_lexicons:
         
-        ld = by_bfs( graph, li, seed_name=name, filter_seeds=False, limit=300, confidence=3, tofile='./deplex')
+#         ld = by_bfs( graph, li, seed_name=name, filter_seeds=False, limit=300, confidence=3, tofile='./deplex')
         
         ld = by_influence( graph, li, seed_name=name, filter_seeds=False, limit=300, confidence=1, tofile='./deplex')
 
