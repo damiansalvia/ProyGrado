@@ -56,7 +56,7 @@ class CorpusReader(object):
         def get_flags(pattern):
             if pattern is None:
                 return None, 0
-            tmp = re.sub(r"/(.*?)/g","\\1",pattern) # Check if DOTALL is required and clean it from pattern
+            tmp = re.sub(r"^/(.*?)/g$","\\1",pattern) # Check if DOTALL is required and clean it from pattern
             flags = re.DOTALL if tmp == pattern else 0
             pattern = tmp
             return pattern, flags 

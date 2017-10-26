@@ -100,7 +100,7 @@ def size_nagated_words():
                             '$filter' : {
                                 'input' : "$text",
                                 'as' : "word",
-                                'cond' : "$$word.neg"
+                                'cond' : { "$eq":["$$word.negated",None] }
                             }
                         } 
                     }
