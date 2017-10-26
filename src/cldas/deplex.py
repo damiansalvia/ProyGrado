@@ -102,24 +102,6 @@ def by_influence(graph, seeds,
             "val": sum([ inf[0] * inf[1] for inf in influences[lemma] ]) / total_influence,
             "inf": round(influence,2)              
         }
-        
-    if filter_neutral:
-        lexicon = dict( filter( lambda item: abs( item[1]['val'] ) > 0.3 , lexicon.items() ) )
-         
-    if filter_seeds:
-        lexicon = dict( filter( lambda item: item[0] not in seeds , lexicon.items() ) ) 
-     
-    if limit:
-        lexicon = dict( filter( lambda item: item[1]['inf'] >= confidence , lexicon.items() ) )
-        lexicon = dict( sorted( lexicon.items() , key=lambda item: abs( item[1]['val'] ) , reverse=True )[:limit] )
-        
-    if tofile:
-        name  = "_%s" % graph.source
-        name += "_top%03i" % limit if limit else ""
-        name += "_%s%03i" % (seed_name,len(seeds))
-        name = "deplex_by_influence" + name
-        save( lexicon , name , tofile )
-        if wdcloud: save_word_cloud( lexicon, name, tofile )
 
     lexicon = _postprocess(lexicon, graph, "deplex_by_influence", neu_treshold, filter_seeds, seeds, seed_name, limit, confidence, tofile, wc_neu)
         

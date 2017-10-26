@@ -5,8 +5,10 @@ Module for for generating a context dependent lexicon corpus and seeds
 @author: Nicolás Mechulam, Damián Salvia
 '''
 
+import os, re
+
 from collections import defaultdict
-from cldas.utils import progress, save, RGBGradiant
+from cldas.utils import progress, save, save_graph, RGBGradiant
 
 
 def _valid_tag(tag, tagset):
@@ -141,50 +143,67 @@ class MultiGraph(object):
         return connected_components
     
         
-    def to_vis(self,lexicon, 
-        max_positive= 2.0, 
-        max_negative= -2.0, 
-        rgb_pos= (0, 255, 0), 
-        rgb_neg= (255, 0, 0), 
-        rgb_neu= (151, 151, 151), 
-        tofile='./'
+    def to_vis(self, lexicon, 
+            max_positive = 2.0, 
+            max_negative = -2.0, 
+            rgb_pos      = (0, 255, 0), 
+            rgb_neg      = (255, 0, 0), 
+            rgb_neu      = (151, 151, 151), 
+            tofile       = None
         ):
 
-        lexicon_nodes = lexicon.keys()
-
+        lemmas  = lexicon.keys()              
         colorer = RGBGradiant( max_positive, max_negative, rgb_pos, rgb_neg, rgb_neu)
+        
         vis_nodes = [] ; vis_edges = []    
         for node, edges in self._graph.items():
-            if node in lexicon_nodes:
+            
+            if node in lemmas:
+                
+                inf = lexicon.get(node,{}).get('inf',0.001)
+                val = lexicon.get(node,{}).get('val',0)
                 vis_nodes.append({
                     'id': node,
                     'label': node,
-                    'value': lexicon.get(node,{}).get('inf',0.001) * 1.0,
-                    'color': 'rgb(%d,%d,%d)'  % colorer(lexicon.get(node,{}).get('val',0) * 1.0)
+                    'value':  inf * 1.0,
+                    'title' : u'Word: \'{word}\'<br>\
+                                Valence: {val:1.05f}<br>\
+                                Influence: {inf:1.02f}<br>\
+                                Adyacents: {ady}'.format(word=node,val=val,inf=inf,ady=len(edges)),
+                    'color': 'rgb(%d,%d,%d)'  % colorer( val * 1.0 )
                 })
 
-                for edge, weights in edges.items():  
-                    if edge in lexicon_nodes:   
-                        vis_edges.append({
-                            'from': node,
-                            'to': edge,
-                            'value': weights['dir'] * 1.0,
-                            'color':  {"color": "green"},
-                            'arrows': "to",
-                        })
-                        vis_edges.append({
-                            'from': node,
-                            'to': edge,
-                            'value': weights['inv'] * 1.0,
-                            'color':  {"color": "red"},
-                            'arrows': "to",
-                        })
+                for ady, weights in edges.items():
+                      
+                    if ady in lemmas:
+                        
+                        weight = round(weights['dir'],4)
+                        if weight > 0:   
+                            vis_edges.append({
+                                'from'  : node,
+                                'to'    : ady,
+                                'value' : weight * 1.0,
+                                'color' :{ "color":"green" },
+                                'arrows': "to",
+                            })
+                        
+                        weight = round(weights['inv'],4) 
+                        if weight > 0:   
+                            vis_edges.append({
+                                'from'  : node,
+                                'to'    : ady,
+                                'value' : weight * 1.0,
+                                'color' :{ "color":"red" },
+                                'arrows': "to",
+                            })
+                    
+        vis_graph = {"nodes": vis_nodes, "edges":vis_edges}
                 
-        vis_graph = {"nodes": vis_nodes, "edges":vis_edges}        
         if tofile:
             name  = "_%s" % self.source
-            name = "graph_vis" + name
+            name = "graph" + name
             save( vis_graph , name , tofile )
+            save_graph( self.source, vis_nodes, vis_edges, name, tofile )
         
         return vis_graph
     

@@ -56,14 +56,16 @@ while True:
     os.system(clean)
     
     indeplex = [ by_senti_tfidf, by_senti_qtf, by_senti_avg, by_senti_pmi ]
-    files = [ file for file in glob.glob("./indeplex/*") if file.endswith('json')]
+    files = [ file for file in glob.glob("./indeplex/*") if file.endswith('json') ]
     i = display_options( "Independent Lexicon", indeplex, files)
     
     limit = len(indeplex)
-    if i > limit:
+    if i > limit-1:
         li = load( files[i-limit] )
+        seed_name = files[i-limit].split('/')[-1].split('_')[3]
     else:
         li = indeplex[i]( pos, neg, lemmas, filter_tags=USEFUL_TAGS, limit=150, tofile='./indeplex' )
+        seed_name = indeplex[i].__name__
     
     
     '''
@@ -84,8 +86,11 @@ while True:
     
     deplex = [ by_bfs, by_influence ]
     k = display_options("Dependent Lexicon",deplex)
-    ld = deplex[k]( graph, li, seed_name=indeplex[i].__name__,limit=300, tofile='./deplex', wc_neu=0.2)
+    ld = deplex[k]( graph, li, seed_name=seed_name, limit=300, tofile='./deplex', wc_neu=0.2)
+    
+    
+    graph.to_vis(ld, tofile='./graphs')
+    
 
     if raw_input("Exit? [y/n] > ") == 'y': break
-
-vis_graph = { 'nodes':[], 'edges':[]}
+    

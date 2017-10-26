@@ -11,7 +11,10 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from wordcloud import WordCloud, ImageColorGenerator
 from time import gmtime, strftime
-import os, io, json
+import os, io, json, re
+
+PATH  = os.path.join( os.path.abspath( os.path.dirname(__file__) ) , "../files/visjs" )
+TEMP  = os.path.join( os.path.dirname(__file__) , "../files/graph_template.html" )
 
 
 
@@ -126,4 +129,30 @@ def save_word_cloud(lexicon,name,path,neu_treshold=0.0):
     fig.subplots_adjust(wspace=0, hspace=0)    
     fig.savefig(path, facecolor='k', bbox_inches='tight', dpi=1200, figsize=(20,20), transparent=True, frameon=False, pad_inches=0)
     print "\rWord cloud saved at",path        
+    
+    
+    
+def save_graph(source, nodes, edges, name, path):
+    
+    nodes = json.dumps(nodes,indent=4,ensure_ascii=False)
+    edges = json.dumps(edges,indent=4,ensure_ascii=False)
+    
+    path = path.replace("\\", "/")
+    path = path if path[-1] != "/" else path[:-1]
+    path = "%s/%s.html" % (path,name)
+    
+    with  open( TEMP, 'r' ) as fp:
+        vis = fp.read()
+        
+    vis = re.sub( '#path#'  , PATH   , vis )
+    vis = re.sub( '#source#', source , vis )
+    vis = re.sub( '#nodes#' , nodes  , vis )
+    vis = re.sub( '#edges#' , edges  , vis )
+    
+    with io.open( path, "w", encoding='utf8' ) as fp: 
+        if not isinstance(vis, unicode):
+            vis = unicode(vis,'utf8')
+        fp.write(vis)
+    print "\rGraph saved at",path
+    
     
