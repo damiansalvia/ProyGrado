@@ -19,27 +19,51 @@
                         shape: 'box',
                         scaling: {
                             label:{
-                                min:10,
-                                max:100
+                                min:100,
+                                max:1000
                             }
+                        }
+                    },
+                    edges:{
+                        color:{
+                            highlight:'rgb(0, 0, 255)'
                         }
                     },
                     interaction: { 
                         hideEdgesOnDrag: true, 
-                        tooltipDelay: 200
+                        tooltipDelay: 100
                     },
+                    //physics: {
+                    //    enabled: false
+                    //},
                     physics: {
-                        enabled: false
-                        // barnesHut: {
-                        //     gravitationalConstant: -80000,
-                        //     springConstant: 0.001,
-                        //     springLength: 200
-                        // },
-                        // stabilization: false
+                        barnesHut: {
+                            gravitationalConstant: -80000,
+                            springConstant: 0.001,
+                            springLength: 200
+                        },
+                        stabilization: false
                     },
-                    // layout:{
-                    //     improvedLayout: false
+                    // physics: {
+                    //     forceAtlas2Based: {
+                    //         gravitationalConstant: -26,
+                    //         centralGravity: 0.005,
+                    //         springLength: 230,
+                    //         springConstant: 0.18
+                    //     },
+                    //     maxVelocity: 146,
+                    //     solver: 'forceAtlas2Based',
+                    //     timestep: 0.35,
+                    //     stabilization: {
+                    //         enabled:true,
+                    //         iterations:2000,
+                    //         updateInterval:25
+                    //     }
                     // }
+                    layout:{
+                        improvedLayout: false,
+                        randomSeed: 34
+                    }
                 };
                 var network = new vis.Network(container, data, options);
             }

@@ -8,8 +8,10 @@ Module for command-line visualization
 import os
 
 
+
 tmp = os.popen('stty size', 'r').read().split()
 width = int(tmp[1])-15 if tmp else 100
+
 
 
 def progress(prompt, total, current, width=width, end=True):
@@ -25,10 +27,13 @@ def progress(prompt, total, current, width=width, end=True):
     if current==total and end: print
 
 
+
 def title(title,width=width):
     size = width - len(title) + 2
     size = size / 2 ; rest = size % 2 
     print "*"*size,title.upper(),"*"*(size+rest)
+
+
 
 class RGBGradiant:
     def __init__(self, max_positive, max_negative, rgb_pos, rgb_neg, rgb_neu):

@@ -8,7 +8,9 @@ Module for for generating a context dependent lexicon corpus and seeds
 import os, re
 
 from collections import defaultdict
-from cldas.utils import progress, save, save_graph, RGBGradiant
+from cldas.utils import progress, save, save_graph
+from cldas.utils.visual import RGBGradiant
+from cldas.utils.misc import Iterable
 
 
 def _valid_tag(tag, tagset):
@@ -31,7 +33,7 @@ class MultiGraph(object):
     
     def _create_graph(self,opinions,filter_tags,max_weight,context_win,verbose):
         
-        graph = defaultdict(lambda : defaultdict(lambda: {'dir': 0, 'inv':0}))
+        graph = defaultdict( lambda : defaultdict( lambda: defaultdict(int) ) )
         
         total = len( opinions )
              
@@ -107,14 +109,24 @@ class MultiGraph(object):
         return self._graph.keys()
     
     
-    def adyacents(self, word, direction=None):
+    def adjacents(self, word, direction=None):
         if not self.has(word):
             return []
         if not direction:
-            return self._graph[word].keys()
+            return Iterable( self._graph[word].keys() )
         if direction not in ['dir','inv']:
             raise ValueError('Expected keyword argument \'direction\' to be dir(ected) or inv(erted).')
-        return [ wd for wd,pt in self._graph[word].items() if pt[direction] != 0 ] 
+        return Iterable( wd for wd,pt in self._graph[word].items() if pt[direction] != 0 ) 
+    
+    
+    def incidents(self, word, direction=None):
+        if not self.has(word):
+            return []
+        if not direction:
+            return Iterable( wd for wd,adys in self._graph.items() if word in adys )
+        if direction not in ['dir','inv']:
+            raise ValueError('Expected keyword argument \'direction\' to be dir(ected) or inv(erted).')
+        return Iterable( wd for wd,adys in self._graph.items() if word in adys and adys['word'].has_key(direction) )
     
     
     def remove(self, word):
@@ -142,7 +154,7 @@ class MultiGraph(object):
             connected_components.append(component)
         return connected_components
     
-        
+    
     def to_vis(self, lexicon, 
             max_positive = 2.0, 
             max_negative = -2.0, 
@@ -166,6 +178,7 @@ class MultiGraph(object):
                     'id': node,
                     'label': node,
                     'value':  inf * 1.0,
+                    'group' : abs( int(val * 100) ),
                     'title' : u'Word: \'{word}\'<br>\
                                 Valence: {val:1.05f}<br>\
                                 Influence: {inf:1.02f}<br>\
@@ -176,26 +189,22 @@ class MultiGraph(object):
                 for ady, weights in edges.items():
                       
                     if ady in lemmas:
+                          
+                        vis_edges.append({
+                            'from'  : node,
+                            'to'    : ady,
+                            'value' : weights['dir'] * 1.0,
+                            'color' :{ "color":"green" },
+                            'arrows': "to",
+                        })
                         
-                        weight = round(weights['dir'],4)
-                        if weight > 0:   
-                            vis_edges.append({
-                                'from'  : node,
-                                'to'    : ady,
-                                'value' : weight * 1.0,
-                                'color' :{ "color":"green" },
-                                'arrows': "to",
-                            })
-                        
-                        weight = round(weights['inv'],4) 
-                        if weight > 0:   
-                            vis_edges.append({
-                                'from'  : node,
-                                'to'    : ady,
-                                'value' : weight * 1.0,
-                                'color' :{ "color":"red" },
-                                'arrows': "to",
-                            })
+                        vis_edges.append({
+                            'from'  : node,
+                            'to'    : ady,
+                            'value' : weights['inv'] * 1.0,
+                            'color' :{ "color":"red" },
+                            'arrows': "to",
+                        })
                     
         vis_graph = {"nodes": vis_nodes, "edges":vis_edges}
                 
@@ -204,8 +213,6 @@ class MultiGraph(object):
             name = "graph" + name
             save( vis_graph , name , tofile )
             save_graph( self.source, vis_nodes, vis_edges, name, tofile )
-        
-        return vis_graph
     
     
 

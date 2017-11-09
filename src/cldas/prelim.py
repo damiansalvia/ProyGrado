@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 '''
-Module for preprocessing corporea text
+Module for preliminar preprocess of corporea text
 
 @author: Nicolás Mechulam, Damián Salvia
 '''
@@ -70,19 +70,17 @@ class _SingletonSettings(object):
 
 SUBSTITUTIONS = [
     # Eliminate contractions
-    (u"(\w)'(\w)",u"\\1\\2"),
-    (u"q'",u"q"),
+    (u"(\w)'(\w)",u"\\1\\2"), (u"q'",u"q"),
     # Replace quotes variants by double quotes
-    (u"`",u"\""),(u"´",u"\""),(u"\'",u"\""),
-    (u"[\u201c\u201d]",u"\""),
+    (u"[`´'\u201c\u201d]",u"\""),
     (u'\u2026',u'...'),   
     # Replace multiple periods by one
     (u"(\.\s*)+",u"."),
     # Replace emojis by a special tag
-    (u":\)",u" emoji_feliz "),(u"\(:",u" emoji_feliz "),(u"\sxD\s",u" emoji_feliz "),
-    (u":\(",u" emoji_triste "),(u"\):",u" emoji_triste "),
+    (u"<?[:;=8xX][-‑o\']?[\)\]3dDoOpP\*\}]|[\(\[cC\{][-‑o\*\']?[:;=8]>?",u"FELIZ"),
+    (u">?[:;=][-‑o\']?[\(\[cC\{\\\/\|@_]|[\)\]dD\}\\\/\|@_][-‑o\']?[:;=8xX]<?",u"TRISTE"),
     # Remove URIs with scheme http or https
-    (u"(https?:\/\/\S+)",u""),
+    (u"(https?:\/\/\S+)",u"LINK"),
     # Remove repetitive characters (except (ll)egar, pe(rr)o and a(cc)ion ) <-- will be corrected by aspell
     (u"([^lrc])\\1+",u"\\1"),
     # Separate alphabetical character from non-alphabetical character by a blank space
