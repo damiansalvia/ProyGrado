@@ -103,18 +103,27 @@ if not dp.get_opinions(source='corpus_medicina'):
     
 if not dp.get_opinions(source='corpus_medicina_2'): 
     reader = CorpusReader( '../corpus/corpus_medicina_2', '*.xml', 
-        op_pattern   = '/<text>(.*?)<\/text>\s*<Opinions>\s*<Opinion .* polarity="(?:positive|negative)".*?\/>\s*<\/Opinions>/g', 
-        file_pattern = '/<text>.*?<\/text>\s*<Opinions>\s*<Opinion .* polarity="(positive|negative)".*?\/>\s*<\/Opinions>/g',
+        op_pattern   = '/<text>(.*?)<\/text>\s*<Opinions>\s*<Opinion .* polarity="(?:positive|negative|neutral)".*?\/>\s*<\/Opinions>/g', 
+        file_pattern = '/<text>.*?<\/text>\s*<Opinions>\s*<Opinion .* polarity="(positive|negative|neutral)".*?\/>\s*<\/Opinions>/g',
     )
     print "Classes:", reader.categories()
     print "Opinions:", len( reader.opinions() )
     mapping = {'negative': 20, 'positive': 80 }
     corporea.append( ( reader, mapping) )
   
-if not dp.get_opinions(source='corpus_prensa_uy'): 
+if not dp.get_opinions(source='corpus_prensa_uy'):
+    reader = CorpusReader( '../corpus/corpus_prensa_uy', 'test.csv', 
+        op_pattern   = '(.*?),(?:Pos|Neg|Neu),.*?,.*?,.*?(?:\n|$)', 
+        file_pattern = '.*?,(Pos|Neg|Neu),.*?,.*?,.*?(?:\n|$)' 
+    )
+    print "Classes:", reader.categories()
+    print "Opinions:", len( reader.opinions() )
+    mapping = { 'Neg': 0, 'Neu': 50, 'Pos': 100 }
+    corporea.append( ( reader, mapping) )
+     
     reader = CorpusReader( '../corpus/corpus_prensa_uy', 'train.csv', 
-        op_pattern   = '/(.*(?!TRUE|FALSE)),[^ ]/g', 
-        file_pattern = ',(Neg|Neu|Pos)\n' 
+        op_pattern   = '(.*?),(?:TRUE|FALSE),(?:Pos|Neg|Neu)(?:\n|$)', 
+        file_pattern = '.*?,(?:TRUE|FALSE),(Pos|Neg|Neu)(?:\n|$)' 
     )
     print "Classes:", reader.categories()
     print "Opinions:", len( reader.opinions() )
