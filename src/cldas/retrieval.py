@@ -110,7 +110,6 @@ class CorpusReader(object):
                 category = re.findall(pattern, filename)
             
             content = open(filename,'r').read().decode(self._decoding,'replace').encode('utf8')
-            content = '\n'.join( [ line for line in content.split('\n') ][ self._start_from: ] )
             
             revs = re.findall(self._op_pattern, content, self._op_flags)
             
@@ -158,10 +157,14 @@ class CorpusReader(object):
             else:
                 cats = re.findall(self._file_pattern, content, self._file_flags)
                 
-            if not revs and not ( len(revs) == len(cats) ):
+            if not revs:
                 log("Nothing match in %s" % filename, level=Level.WARN)
             
-            for i in range( len(revs) ):
+            if len(revs) != len(cats):
+                log("Difference match in %s : %i opinions : %i categories" % (filename,len(revs),len(cats)), level=Level.WARN)
+                raise Exception("Difference match in %s : %i opinions : %i categories" % (filename,len(revs),len(cats)))
+            
+            for i in range( len(revs) )[ self._start_from: ]:
                 self._add( revs[i] , cats[i] )
             del revs ; del cats
                             
