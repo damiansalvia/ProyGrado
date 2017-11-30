@@ -193,7 +193,7 @@ class CorpusReader(object):
         if category is None:
             return sum( self._c2o.values() , [] )
         elif category not in self.categories():
-            raise ValueError('Expected key argument \'category\' to be in categories.')
+            return 0
         return self._c2o[category]
         
     
