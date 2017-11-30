@@ -45,7 +45,7 @@ if not dp.get_opinions(source='AARD'):
     )
     print "Classes:", reader.categories()
     print "Opinions:", len( reader.opinions() )
-    mapping = {'neg': 20, 'pos': 80 }
+    mapping = {'neg':33, 'pos':66 }
     corporea.append( ( reader, mapping ) )    
   
 if not dp.get_opinions(source='MC'):
@@ -56,7 +56,7 @@ if not dp.get_opinions(source='MC'):
     )
     print "Classes:", reader.categories()
     print "Opinions:", len( reader.opinions() )
-    mapping = { '1': 0, '2': 25, '3': 50, '4': 75, '5': 100 }
+    mapping = { '1':17, '2':34, '3':50, '4':67, '5':84 }
     corporea.append( ( reader, mapping ) )
      
 if not dp.get_opinions(source='EB'):  
@@ -67,7 +67,7 @@ if not dp.get_opinions(source='EB'):
     )
     print "Classes:", reader.categories()
     print "Opinions:", len( reader.opinions() )
-    mapping = { 'negative': 0, '': 50, 'positive': 100 }
+    mapping = { 'negative':25, '': 50, 'positive':75 }
     corporea.append( ( reader, mapping ) )
  
 if not dp.get_opinions(source='COAH'): 
@@ -77,7 +77,7 @@ if not dp.get_opinions(source='COAH'):
     )
     print "Classes:", reader.categories()
     print "Opinions:", len( reader.opinions() )
-    mapping = { '1': 0, '2': 25, '3': 50, '4': 75, '5': 100 }
+    mapping = { '1':17, '2':24, '3':50, '4':67, '5':86 }
     corporea.append( ( reader, mapping ) )
  
 if not dp.get_opinions(source='COAR'): 
@@ -87,18 +87,17 @@ if not dp.get_opinions(source='COAR'):
     )
     print "Classes:", reader.categories()
     print "Opinions:", len( reader.opinions() )
-    mapping = { '1': 0, '2': 25, '3': 50, '4': 75, '5': 100 }
+    mapping = { '1':17, '2':24, '3':50, '4':67, '5':86 }
     corporea.append( ( reader, mapping ) )
     
 if not dp.get_opinions(source='COPOS'): 
     reader = CorpusReader( '../corpus/COPOS', '*.csv', 
         op_pattern   = '.*?;(.*?;.*?);\d{2}\s.*?\d{4};[0-5];', 
         file_pattern = '.*?;.*?;.*?;\d{2}\s.*?\d{4};([0-5]);',
-        start_from   = 1
     )
     print "Classes:", reader.categories()
     print "Opinions:", len( reader.opinions() )
-    mapping = {'0': 50, '1': 0, '2': 25, '3': 50, '4': 75, '5': 100 }
+    mapping = { '0':50, '1':17, '2':24, '3':50, '4':67, '5':86 }
     corporea.append( ( reader, mapping ) )
     
 if not dp.get_opinions(source='DOS'): 
@@ -108,7 +107,7 @@ if not dp.get_opinions(source='DOS'):
     )
     print "Classes:", reader.categories()
     print "Opinions:", len( reader.opinions() )
-    mapping = {'negative': 20, 'positive': 80 }
+    mapping = {'negative':33, 'positive':66 }
     corporea.append( ( reader, mapping ) )
   
 if not dp.get_opinions(source='UTPren'):
@@ -118,7 +117,7 @@ if not dp.get_opinions(source='UTPren'):
     )
     print "Classes:", reader.categories()
     print "Opinions:", len( reader.opinions() )
-    mapping = { 'Neg': 0, 'Neu': 50, 'Pos': 100 }
+    mapping = { 'Neg':25, 'Neu':50, 'Pos':75 }
     corporea.append( ( reader, mapping ) )
      
     reader = CorpusReader( '../corpus/UTPren', 'train.csv', 
@@ -127,7 +126,7 @@ if not dp.get_opinions(source='UTPren'):
     )
     print "Classes:", reader.categories()
     print "Opinions:", len( reader.opinions() )
-    mapping = { 'Neg': 0, 'Neu': 50, 'Pos': 100 }
+    mapping = { 'Neg':25, 'Neu':50, 'Pos':75 }
     corporea.append( ( reader, mapping ) )
      
 if not dp.get_opinions(source='RRD'): 
@@ -138,7 +137,7 @@ if not dp.get_opinions(source='RRD'):
     )
     print "Classes:", reader.categories()
     print "Opinions:", len( reader.opinions() )
-    mapping = {'neg': 20, 'pos': 80 }
+    mapping = {'neg':33, 'pos':66 }
     corporea.append( ( reader, mapping ) )
  
 if not dp.get_opinions(source='ST'):  
@@ -148,12 +147,12 @@ if not dp.get_opinions(source='ST'):
     )
     print "Classes:", reader.categories()
     print "Opinions:", len( reader.opinions() )
-    mapping = {  # diff:val :: -4:0,-3:20,-2:30,-1:40,0:50,1:70,2:80,3:90,4:100
-        '1\t5':0,   '1\t4':20, '1\t1':50, '1\t3':30, '1\t2':40,
-        '2\t4':30,  '2\t5':20, '2\t2':50, '2\t3':40, '2\t1':70,  
-        '3\t3':50,  '3\t2':70, '3\t1':80, '3\t5':30, '3\t4':40,
-        '5\t1':100, '5\t3':80, '5\t2':90, '5\t5':50, '5\t4':70, 
-        '4\t4':50,  '4\t5':40, '4\t1':90, '4\t2':80, '4\t3':70 
+    mapping = {  # diff:val :: -4:10,-3:20,-2:30,-1:40,0:50,1:60,2:70,3:80,4:90
+        '1\t1':50, '1\t2':40, '1\t3':30, '1\t4':20, '1\t5':10,
+        '2\t1':60, '2\t2':50, '2\t3':40, '2\t4':30, '2\t5':20,   
+        '3\t1':70, '3\t2':60, '3\t3':50, '3\t4':40, '3\t5':30,       
+        '4\t1':80, '4\t2':70, '4\t3':60, '4\t4':50, '4\t5':40,    
+        '5\t1':90, '5\t2':80, '5\t3':70, '5\t4':60, '5\t5':50,  
     }
     corporea.append( ( reader, mapping ) )
  
@@ -164,7 +163,7 @@ if not dp.get_opinions(source='UTRep'):
     )
     print "Classes:", reader.categories()
     print "Opinions:", len( reader.opinions() )
-    mapping = { 'N':0, 'NEU' :50, 'NONE':50, 'P':100 }
+    mapping = { 'N':25, 'NEU':50, 'NONE':50, 'P':75 }
     corporea.append( ( reader, mapping ) )
   
 end_time(start_time)
@@ -212,7 +211,7 @@ if not dp.get_opinions(source='SFU-NEG'):
     )
     print "Classes:", reader.categories()
     print "Opinions:", len( reader.opinions() )
-    mapping = { 'negative':20, 'positive':80 }
+    mapping = { 'negative':33, 'positive':66 }
      
     source  = reader.source
     data    = reader.data( mapping=mapping )
