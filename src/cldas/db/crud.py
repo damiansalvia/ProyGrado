@@ -120,13 +120,16 @@ def get_opinion(_id):
     return db.reviews.find_one( {'_id':_id } ) 
 
 
-def get_opinions(cat_cond=None,source=None):
+def get_opinions(ids=None, cat_cond=None,source=None):
     '''
     Gets a set of opinions.
+    @param ids: Filter by ids. 
     @param category: Filter by category condition. 
     @param source: Filter by source.  
     '''
     query = {}
+    if ids:
+        query.update({'_id': {'$in': ids} })
     if cat_cond:
         query.update({ 'category' : cat_cond })
     if source:
@@ -183,7 +186,7 @@ def get_sample(quantity, source, identifiers=None):
     else:
         result = db.reviews.aggregate([ 
             { '$match' : { "source" : source, "tagged" :{ "$exists" : False } } },
-            { '$sample': { 'size' : quantity } } 
+            { '$sample': { 'size' : quantity } }
         ]) 
     return Iterable( result )
 
@@ -214,6 +217,27 @@ def get_untagged(limit=None,seed=None):
         result = result.skip( rand ).limit( limit )
     result = result.batch_size(10)
     return Iterable( result )
+
+
+def split_sample(ids=None, fraction=0.2):
+    query = []
+    slice_1, slice_2 = [],[]
+    if ids:
+        query.append({"$match": {"_id": {"$in": ids } } })
+    query.append({
+        "$group":{
+            "_id": "$source",
+            "ids": { "$push": "$_id" }
+        }
+    })
+    ids = db.reviews.aggregate(query)
+    for e in ids:
+        id_list = e.get('ids')
+        frac = int(len(id_list) * fraction)
+        slice_1.extend(id_list[:frac])
+        slice_2.extend(id_list[frac:])
+
+    return slice_1, slice_2
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -445,3 +469,6 @@ def _do_correction(opinion,negation):
         else:
             diff.append(idx)
     return negs
+
+def save_result(result):
+    if result: db.results.insert(result)
