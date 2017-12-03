@@ -1,5 +1,5 @@
 Docker/FreeLing-4.0
-*.pyc
+*.pyc*.log
 *.rej
 *.bat
 *.project
@@ -8,3 +8,4 @@ Docker/FreeLing-4.0
 /embeddings/
 /genlex/
 /apps/independent_system/outputs/
+/samples/*/*
