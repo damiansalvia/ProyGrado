@@ -194,7 +194,7 @@ def valid_tag(tag, list):
 def generate_graph(reviews, source, prefix_tag_list  = None, max_weight = 1, graph_context_window = 1):
     ''' Generates the weighted bidirectional multigraph corresponding to reviews
     '''
-    graph = defaultdict(lambda : defaultdict(lambda: {'p_dir': 0, 'p_inv':0}))
+    graph = defaultdict(lambda : defaultdict(lambda: defaultdict(lambda: int)))
     # graph = defaultdict(lambda:{ 'p_dir':0 , 'p_inv':0 })
     total = reviews.count()  
     for idx,review in enumerate( reviews ):
