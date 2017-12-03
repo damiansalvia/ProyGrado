@@ -1328,3 +1328,7 @@ DEBUG : 2017-10-21 16:55:08 at end_time > Indeplex stage - Elapsed: 00:15:26
 INFO : 2017-10-21 17:30:10 at update_embeddings > Embeddings integration result. {'ByWord': 71316, 'ByRepl': 26, 'ByClos': 6045, 'IsNull': 2831} 
 
 DEBUG : 2017-10-21 17:30:10 at <module> > Adding embeddings- Elapsed: 00:35:02 
+
+INFO : 2017-12-01 01:57:02 at fit > [('loss', 12.0), ('binary_accuracy', 96.1), ('precision', 71.8), ('recall', 56.9), ('fmeasure', 60.7), ('mean_squared_error', 3.1), ('binary_crossentropy', 84.3)] 
+
+INFO : 2017-12-01 13:44:08 at fit > [('loss', 10.2), ('binary_accuracy', 96.9), ('precision', 71.3), ('recall', 66.7), ('fmeasure', 67.0), ('mean_squared_error', 2.5), ('binary_crossentropy', 87.2)] 

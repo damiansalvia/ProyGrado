@@ -13,6 +13,7 @@ from cldas.utils import USEFUL_TAGS
 from cldas.utils.misc import Iterable
 from cldas.utils.file import save, load
 from cldas.utils.visual import progress
+from cldas.evaluator import evaluate
 
 from cldas.utils.logger import Log, Level
 log = Log('./log')
@@ -367,19 +368,26 @@ stats.append( get_balance_by_source       )
   
 table_print(stats)
  
- 
- 
 '''
 ---------------------------------------------
-      Independent Lexicon stage
+                Split Corpus
+---------------------------------------------
+'''
+
+independe_ids, dependent_ids = dp.split_sample(fraction=0.2)
+eval_ids, dependent_ids = dp.split_sample(ids=dependent_ids, fraction=0.1)
+
+'''
+---------------------------------------------
+          Independent Lexicon stage
 ---------------------------------------------
 '''
 start_time = time.time()
 
 from cldas.indeplex import by_senti_tfidf, by_senti_avg, by_senti_qtf, by_senti_pmi
 
-pos = dp.get_opinions( cat_cond={"$gt":50} )
-neg = dp.get_opinions( cat_cond={"$lt":50} )
+pos = dp.get_opinions(ids=independe_ids, cat_cond={"$gt":50} )
+neg = dp.get_opinions(ids=independe_ids, cat_cond={"$lt":50} )
 lemmas = dp.get_lemmas()
 
 indep_lexicons = []
@@ -411,16 +419,42 @@ start_time = time.time()
 from cldas.deplex import by_influence, by_bfs
 from cldas.utils.graph import MultiGraph
 
+dependent_lexicons = []
 for corpus in dp.get_sources():
     
-    opinions = dp.get_opinions( source=corpus )
+    opinions = dp.get_opinions(ids=dependent_ids, source=corpus )
     
     graph = MultiGraph( opinions, corpus, filter_tags=USEFUL_TAGS )
     
     for (li,name) in indep_lexicons:
         
 #         ld = by_bfs( graph, li, seed_name=name, filter_seeds=False, limit=300, confidence=3, tofile='./deplex')
-        
-        ld = by_influence( graph, li, seed_name=name, filter_seeds=False, limit=300, confidence=1, tofile='./deplex')
+        dependent_lexicons.append({
+            'propagation': 'influence',
+            'lexicon'    : by_influence( graph, li, seed_name=name, filter_seeds=False, limit=300, confidence=1, tofile='./deplex'),
+            'source'     : corpus,
+            'li'         :name,
+        })
+
+end_time(start_time)
+
+
+'''
+---------------------------------------------
+              Evaluation stage              
+---------------------------------------------
+'''
+start_time = time.time()
+
+for dep in dependent_lexicons:
+    testing_corpus = dp.get_opinions(ids=eval_ids, source=dep.get('source'))
+    score = evaluate(dep.get('lexicon'), testing_corpus)
+    result = {
+        'type'   : 'depnedent',
+        'li'     : dep.get('li'),
+        'source' : dep.get('source'),
+        'score'  : score
+    }
+    dp.save_result(result)
 
 end_time(start_time)
