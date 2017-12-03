@@ -77,7 +77,7 @@ if not dp.get_opinions(source='COAH'):
     )
     print "Classes:", reader.categories()
     print "Opinions:", len( reader.opinions() )
-    mapping = { '1':17, '2':24, '3':50, '4':67, '5':86 }
+    mapping = { '1':17, '2':34, '3':50, '4':67, '5':86 }
     corporea.append( ( reader, mapping ) )
  
 if not dp.get_opinions(source='COAR'): 
@@ -87,7 +87,7 @@ if not dp.get_opinions(source='COAR'):
     )
     print "Classes:", reader.categories()
     print "Opinions:", len( reader.opinions() )
-    mapping = { '1':17, '2':24, '3':50, '4':67, '5':86 }
+    mapping = { '1':17, '2':34, '3':50, '4':67, '5':86 }
     corporea.append( ( reader, mapping ) )
     
 if not dp.get_opinions(source='COPOS'): 
@@ -97,7 +97,7 @@ if not dp.get_opinions(source='COPOS'):
     )
     print "Classes:", reader.categories()
     print "Opinions:", len( reader.opinions() )
-    mapping = { '0':50, '1':17, '2':24, '3':50, '4':67, '5':86 }
+    mapping = { '0':50, '1':17, '2':34, '3':50, '4':67, '5':86 }
     corporea.append( ( reader, mapping ) )
     
 if not dp.get_opinions(source='DOS'): 
