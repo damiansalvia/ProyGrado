@@ -8,9 +8,10 @@ class Classifier:
 
     def __call__(self, review):
         sentiment = 0
-        for w in review['text']:
-            inv = -1 if w['neggated'] else 1
-            sentiment += self.lexicon.get(w['lemma'],0) * inv 
+        for token in review['text']:
+            inv = -1 if token['negated'] else 1
+            val = self.lexicon.get( token['lemma'], {} ).get('val',0)
+            sentiment += val * inv 
 
         if sentiment > 0.3:
             return 1
@@ -29,6 +30,7 @@ def get_polarity(review):
         return 0
     else:
         return -1
+
 
 
 def get_precision(y_true, y_pred, val):
@@ -56,6 +58,8 @@ def get_accuracy(y_true, y_pred):
     else:
         return 0
 
+
+
 def evaluate(lexicon, reviews):
     classifier = Classifier(lexicon)
     y_true = [ get_polarity(x) for x in reviews]
@@ -72,7 +76,7 @@ def evaluate(lexicon, reviews):
         map(lambda x : x == 1, y_true),
         map(lambda x : x == 1, y_pred)
     )
-    result['positive_fmesure'] = metrics.fmesure(
+    result['positive_fmesure'] = metrics.fmeasure(
         map(lambda x : x == 1, y_true),
         map(lambda x : x == 1, y_pred)
     )
@@ -86,7 +90,7 @@ def evaluate(lexicon, reviews):
         map(lambda x : x == 0, y_true),
         map(lambda x : x == 0, y_pred)
     )
-    result['neutral_fmesure'] = metrics.fmesure(
+    result['neutral_fmesure'] = metrics.fmeasure(
         map(lambda x : x == 0, y_true),
         map(lambda x : x == 0, y_pred)
     )
@@ -100,7 +104,7 @@ def evaluate(lexicon, reviews):
         map(lambda x : x == -1, y_true),
         map(lambda x : x == -1, y_pred)
     )
-    result['negative_fmesure'] = metrics.fmesure(
+    result['negative_fmesure'] = metrics.fmeasure(
         map(lambda x : x == -1, y_true),
         map(lambda x : x == -1, y_pred)
     )
@@ -115,3 +119,4 @@ def evaluate(lexicon, reviews):
         (result['positive_fmesure'] + result['neutral_fmesure'] + result['negative_fmesure']) / 3
 
     return result
+

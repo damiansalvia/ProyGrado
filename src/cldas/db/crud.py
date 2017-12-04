@@ -470,5 +470,10 @@ def _do_correction(opinion,negation):
             diff.append(idx)
     return negs
 
-def save_result(result):
-    if result: db.results.insert(result)
+
+# ----------------------------------------------------------------------------------------------------------------------
+
+
+def save_evaluation(result):
+    if result: db.evaluation.insert(result)
+

@@ -8,10 +8,10 @@ Module for preliminar preprocess of corporea text
 import freeling, os, enchant, re, md5
 from enchant.checker import SpellChecker
 from difflib import get_close_matches
-from collections import defaultdict
+from collections import defaultdict, Counter
 
 from cldas.utils import progress, save
-from cldas.utils.misc import Iterable
+from cldas.utils.misc import Iterable, Levinstein
 from cldas.utils.logger import Log, Level
 
 log = Log("./log")
@@ -55,6 +55,7 @@ class _SingletonSettings(object):
         op.ProbabilityFile  = data+lang+"/probabilitats.dat" 
         
         self.Checker      = SpellChecker( custom_dict )
+        self.Vocabulary   = Levinstein()
         self.Tokenizer    = freeling.tokenizer( data+lang+"/tokenizer.dat" )
         self.Splitter     = freeling.splitter( data+lang+"/splitter.dat" )
         self.Morfo        = freeling.maco( op )
@@ -114,10 +115,6 @@ class _SpellCorrector(_SingletonSettings):
     
     def __new__(cls, *args, **kwargs):
         return super(_SpellCorrector, cls).__new__(cls, *args, **kwargs)
-    
-    
-    def _no_accent(self,text):
-        return text.replace(u'á',u'a').replace(u'é',u'e').replace(u'í',u'i').replace(u'ó',u'o').replace(u'ú',u'u').replace(u'ü',u'u')
     
     
     def _clean_unbalanced(self,text):
@@ -212,30 +209,50 @@ class _SpellCorrector(_SingletonSettings):
                 for word in word.split('_'):
                     if token.found_in_dict() and (word not in ack): 
                         nouns.append( word )
-                           
-        words = text.split(' ')
-        for i in range( len( words ) ):
-            word = words[i]
-            if not word: 
-                continue
-            if (word in ack) or self.Checker.check( word ):
-                word = word.lower()
+        
+        self.Checker.set_text( text )
+        for err in self.Checker:
+            word = err.word
+            cand = self.Vocabulary.correction( word )
+            sugg = self.Checker.suggest( word )
+            alts = get_close_matches( word, sugg, 5, 0.90 )
+            if word in nouns:
+                corr = word
+            elif alts and not re.search('[\s-]',alts[0]) and len(alts) <= 2:
+                corr = alts[0].lower()
+            elif sugg and ( re.search('[\xe1\xe9\xed\xf3\xfa\xfc]',sugg[0].lower()) or len(sugg)<=5 ):
+                corr = sugg[0].lower()
+            elif word in ack:
+                corr = word.lower()
             else:
-                word_na = self._no_accent( word )
-                sugg = { self._no_accent(s):s for s in self.Checker.suggest( word_na ) if ('-' not in s) }
-                alts = get_close_matches( word_na , sugg.keys() , 5 , 0.75   )
-                if   alts : corr = sugg[ alts[0] ].lower()
-                elif sugg : corr = sugg.keys()[0].lower() if (word not in nouns) else word
-                else : 
-                    self.Checker.set_text( word )
-                    for err in self.Checker:
-                        corr = self.Checker.suggest( err.word ) 
-                        err.replace( corr[0] if corr else err.word )
-                    word = self.Checker.get_text()
-                    corr = word.lower() if (word not in nouns) else word
-                word = corr
-            words[i] = word
-        text = ' '.join(words)
+                corr = cand
+            import pdb;pdb.set_trace()
+            err.replace( corr )
+        text = self.Checker.get_text()
+                           
+#         words = text.split(' ')
+#         for i in range( len( words ) ):
+#             word = words[i]
+#             if not word: 
+#                 continue
+#             if (word in ack) or self.Checker.check( word ):
+#                 word = word.lower()
+#             else:
+#                 word_na = self._no_accent( word )
+#                 sugg = { self._no_accent(s):s for s in self.Checker.suggest( word_na ) if ('-' not in s) }
+#                 alts = get_close_matches( word_na , sugg.keys() , 5 , 0.75   )
+#                 if   alts : corr = sugg[ alts[0] ].lower()
+#                 elif sugg : corr = sugg.keys()[0].lower() if (word not in nouns) else word
+#                 else : 
+#                     self.Checker.set_text( word )
+#                     for err in self.Checker:
+#                         corr = self.Checker.suggest( err.word ) 
+#                         err.replace( corr[0] if corr else err.word )
+#                     word = self.Checker.get_text()
+#                     corr = word.lower() if (word not in nouns) else word
+#                 word = corr
+#             words[i] = word
+#         text = ' '.join(words)
             
         return text
 
@@ -306,6 +323,9 @@ class Preprocess(_SpellCorrector,_MorfoTokenizer):
     def _run(self, opinions, verbose):
         if not opinions:
             return
+        
+        vocabulary = Counter( word for opinion in opinions for word in re.findall(r'\w+',opinion['text'].lower()) )
+        self.Vocabulary.set_vocabulary(vocabulary)
         
         _ids = []
         total = len( opinions ) ; fails = 0 

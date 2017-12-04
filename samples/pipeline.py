@@ -374,8 +374,8 @@ table_print(stats)
 ---------------------------------------------
 '''
 
-independe_ids, dependent_ids = dp.split_sample(fraction=0.2)
-eval_ids, dependent_ids = dp.split_sample(ids=dependent_ids, fraction=0.1)
+independe_ids , dependent_ids = dp.split_sample(fraction=0.2)
+evaluation_ids, dependent_ids = dp.split_sample(ids=dependent_ids, fraction=0.1)
 
 '''
 ---------------------------------------------
@@ -392,12 +392,12 @@ lemmas = dp.get_lemmas()
 
 indep_lexicons = []
 
-# filepath = "./indeplex/indeplex_by_senti_qtf_top150.json"
-# if os.path.exists(filepath):
-#     li = load(filepath)    
-# else:
-#     li = by_senti_qtf( pos, neg, lemmas, filter_tags=USEFUL_TAGS, limit=150, tofile='./indeplex' )
-# indep_lexicons.append( (li,"qtf") )
+filepath = "./indeplex/indeplex_by_senti_qtf_top150.json"
+if os.path.exists(filepath):
+    li = load(filepath)    
+else:
+    li = by_senti_qtf( pos, neg, lemmas, filter_tags=USEFUL_TAGS, limit=150, tofile='./indeplex' )
+indep_lexicons.append( (li,"qtf") )
 
 filepath = "./indeplex/indeplex_by_senti_tfidf_top150.json"
 if os.path.exists(filepath):
@@ -414,29 +414,39 @@ end_time(start_time)
       Dependent Lexicon stage
 ---------------------------------------------
 '''
-start_time = time.time()
 
 from cldas.deplex import by_influence, by_bfs
 from cldas.utils.graph import MultiGraph
 
-dependent_lexicons = []
+dep_lexicons = []
 for corpus in dp.get_sources():
     
     opinions = dp.get_opinions(ids=dependent_ids, source=corpus )
     
+    start_time = time.time()
     graph = MultiGraph( opinions, corpus, filter_tags=USEFUL_TAGS )
+    end_time(start_time)    
     
     for (li,name) in indep_lexicons:
         
-#         ld = by_bfs( graph, li, seed_name=name, filter_seeds=False, limit=300, confidence=3, tofile='./deplex')
-        dependent_lexicons.append({
-            'propagation': 'influence',
-            'lexicon'    : by_influence( graph, li, seed_name=name, filter_seeds=False, limit=300, confidence=1, tofile='./deplex'),
+        start_time = time.time()
+        ld = by_bfs( graph, li, seed_name=name, filter_seeds=False, limit=300, confidence=3, tofile='./deplex')
+        dep_lexicons.append({
+            'propagation': 'bfs',
+            'lexicon'    : ld,
             'source'     : corpus,
-            'li'         :name,
+            'li'         : name,
         })
-
-end_time(start_time)
+        
+        start_time = time.time()
+        ld = by_influence( graph, li, seed_name=name, filter_seeds=False, limit=300, confidence=1, tofile='./deplex')
+        dep_lexicons.append({
+            'propagation': 'influence',
+            'lexicon'    : ld,
+            'source'     : corpus,
+            'li'         : name,
+        })
+        end_time(start_time)   
 
 
 '''
@@ -446,15 +456,15 @@ end_time(start_time)
 '''
 start_time = time.time()
 
-for dep in dependent_lexicons:
-    testing_corpus = dp.get_opinions(ids=eval_ids, source=dep.get('source'))
-    score = evaluate(dep.get('lexicon'), testing_corpus)
+for ld in dep_lexicons:
+    eval_fraction = dp.get_opinions( ids=evaluation_ids, source=ld['source'] )
+    score = evaluate( ld['lexicon'], eval_fraction )
     result = {
         'type'   : 'depnedent',
-        'li'     : dep.get('li'),
-        'source' : dep.get('source'),
+        'li'     : ld['li'],
+        'source' : ld['source'],
         'score'  : score
     }
-    dp.save_result(result)
+    dp.save_evaluation(result)
 
 end_time(start_time)
