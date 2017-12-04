@@ -374,8 +374,8 @@ table_print(stats)
 ---------------------------------------------
 '''
 
-independe_ids , dependent_ids = dp.split_sample(fraction=0.2)
-evaluation_ids, dependent_ids = dp.split_sample(ids=dependent_ids, fraction=0.1)
+independe_ids , dependent_ids = dp.split_sample(fraction=0.2, seed= 121)
+evaluation_ids, dependent_ids = dp.split_sample(ids=dependent_ids, fraction=0.1, seed=121)
 
 '''
 ---------------------------------------------
