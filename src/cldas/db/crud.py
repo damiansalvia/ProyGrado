@@ -17,7 +17,7 @@ from cldas.utils.misc import EnumItems, Iterable
 
 
 log = Log("./log")
-random.seed('121')
+
 
 try:
     print "Connecting Mongo database"
@@ -219,7 +219,7 @@ def get_untagged(limit=None,seed=None):
     return Iterable( result )
 
 
-def split_sample(ids=None, fraction=0.2):
+def split_sample(ids=None, fraction=0.2, seed=1):
     query = []
     slice_1, slice_2 = [],[]
     if ids:
@@ -233,6 +233,7 @@ def split_sample(ids=None, fraction=0.2):
     ids = db.reviews.aggregate(query)
     for e in ids:
         id_list = e.get('ids')
+        random.seed(seed)
         random.shuffle(id_list)
         frac = int(len(id_list) * fraction)
         slice_1.extend(id_list[:frac])
