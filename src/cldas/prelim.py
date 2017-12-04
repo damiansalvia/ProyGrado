@@ -226,7 +226,6 @@ class _SpellCorrector(_SingletonSettings):
                 corr = word.lower()
             else:
                 corr = cand
-            import pdb;pdb.set_trace()
             err.replace( corr )
         text = self.Checker.get_text()
             
