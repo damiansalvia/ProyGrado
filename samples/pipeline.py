@@ -432,19 +432,19 @@ for corpus in dp.get_sources():
         start_time = time.time()
         ld = by_bfs( graph, li, seed_name=name, filter_seeds=False, limit=300, confidence=3, tofile='./deplex')
         dep_lexicons.append({
+            'li'         : name,
             'propagation': 'bfs',
             'lexicon'    : ld,
-            'source'     : corpus,
-            'li'         : name,
+            'source'     : corpus
         })
         
         start_time = time.time()
         ld = by_influence( graph, li, seed_name=name, filter_seeds=False, limit=300, confidence=1, tofile='./deplex')
         dep_lexicons.append({
+            'li'         : name,
             'propagation': 'influence',
             'lexicon'    : ld,
             'source'     : corpus,
-            'li'         : name,
         })
         end_time(start_time)   
 
@@ -460,10 +460,11 @@ for ld in dep_lexicons:
     eval_fraction = dp.get_opinions( ids=evaluation_ids, source=ld['source'] )
     score = evaluate( ld['lexicon'], eval_fraction )
     result = {
-        'type'   : 'depnedent',
-        'li'     : ld['li'],
-        'source' : ld['source'],
-        'score'  : score
+        'type'        : 'deplex',
+        'li'          : ld['li'],
+        'source'      : ld['source'],
+        'propagation' : ld['propagation'],
+        'score'       : score
     }
     dp.save_evaluation(result)
 
