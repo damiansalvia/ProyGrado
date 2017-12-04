@@ -50,7 +50,7 @@ def get_recall(y_true, y_pred, val):
     retrived = sum( x == val for (x,y) in zip(y_true,y_pred) )
     return true_pos / retrived if retrived > 0 else 0
 
-def get_fmesure(y_true, y_pred, val, beta = 1):
+def get_fmeasure(y_true, y_pred, val, beta = 1):
     p = get_precision (y_true,y_pred, val)
     r = get_recall(y_true,y_pred, val)
     if p > 0 or r > 0:
@@ -83,7 +83,7 @@ def evaluate(lexicon, reviews):
         map(lambda x : x == 1, y_true),
         map(lambda x : x == 1, y_pred)
     )
-    result['positive_fmesure'] = metrics.fmeasure(
+    result['positive_fmeasure'] = metrics.fmeasure(
         map(lambda x : x == 1, y_true),
         map(lambda x : x == 1, y_pred)
     )
@@ -97,7 +97,7 @@ def evaluate(lexicon, reviews):
         map(lambda x : x == 0, y_true),
         map(lambda x : x == 0, y_pred)
     )
-    result['neutral_fmesure'] = metrics.fmeasure(
+    result['neutral_fmeasure'] = metrics.fmeasure(
         map(lambda x : x == 0, y_true),
         map(lambda x : x == 0, y_pred)
     )
@@ -111,7 +111,7 @@ def evaluate(lexicon, reviews):
         map(lambda x : x == -1, y_true),
         map(lambda x : x == -1, y_pred)
     )
-    result['negative_fmesure'] = metrics.fmeasure(
+    result['negative_fmeasure'] = metrics.fmeasure(
         map(lambda x : x == -1, y_true),
         map(lambda x : x == -1, y_pred)
     )
@@ -122,8 +122,8 @@ def evaluate(lexicon, reviews):
         (result['positive_precision'] + result['neutral_precision'] + result['negative_precision']) / 3
     result['average_recall']     = \
         (result['positive_recall'] + result['neutral_recall'] + result['negative_recall']) / 3
-    result['average_fmesure']    = \
-        (result['positive_fmesure'] + result['neutral_fmesure'] + result['negative_fmesure']) / 3
+    result['average_fmeasure']    = \
+        (result['positive_fmeasure'] + result['neutral_fmeasure'] + result['negative_fmeasure']) / 3
 
     return result
 
