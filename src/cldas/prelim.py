@@ -36,7 +36,7 @@ class _SingletonSettings(object):
         return cls._instance
 
 
-    def __init__(self,data,lang,pwl):
+    def __init__(self,data, lang, pwl, vocabulary):
                 
         if not os.path.exists(pwl): 
             raise ValueError("%s cannot be found" % pwl)
@@ -55,7 +55,7 @@ class _SingletonSettings(object):
         op.ProbabilityFile  = data+lang+"/probabilitats.dat" 
         
         self.Checker      = SpellChecker( custom_dict )
-        self.Vocabulary   = Levinstein()
+        self.Vocabulary   = Levinstein( vocabulary )
         self.Tokenizer    = freeling.tokenizer( data+lang+"/tokenizer.dat" )
         self.Splitter     = freeling.splitter( data+lang+"/splitter.dat" )
         self.Morfo        = freeling.maco( op )
@@ -84,6 +84,7 @@ SUBSTITUTIONS = [
     (u"(https?:\/\/\S+)",u"LINK"),
     # Remove repetitive characters (except (ll)egar, pe(rr)o and a(cc)ion ) <-- will be corrected by aspell
     (u"([^lrc])\\1+",u"\\1"),
+    (u"([lrc])\\1\\1+",u"\\1\\1"),
     # Separate alphabetical character from non-alphabetical character by a blank space
     (u"([\d\W])",u" \\1 "),
     (u"([^0-9a-záéíóúñü_\s])",u" \\1 "),
@@ -286,7 +287,8 @@ class Preprocess(_SpellCorrector,_MorfoTokenizer):
     
     
     def __init__(self, source, opinions, data=DATA, lang=LANG, pwl=PWL, verbose=True, *args, **kwargs):
-        super(Preprocess, self).__init__(data, lang, pwl, *args, **kwargs)
+        vocabulary = Counter( word for opinion in opinions for word in re.findall(r'\w+',opinion['text'].lower()) )
+        super(Preprocess, self).__init__(data, lang, pwl, vocabulary, *args, **kwargs)
         self.source = source
         self._lang   = lang
         self._sents  = defaultdict(list)
@@ -298,9 +300,6 @@ class Preprocess(_SpellCorrector,_MorfoTokenizer):
     def _run(self, opinions, verbose):
         if not opinions:
             return
-        
-        vocabulary = Counter( word for opinion in opinions for word in re.findall(r'\w+',opinion['text'].lower()) )
-        self.Vocabulary.set_vocabulary(vocabulary)
         
         _ids = []
         total = len( opinions ) ; fails = 0 

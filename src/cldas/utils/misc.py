@@ -59,11 +59,8 @@ class EnumItems:
         
 class Levinstein:
     
-    def __init__(self):
+    def __init__(self,vocabulary):
         "Based on Norvig solution."
-        self.WORDS = Counter()
-    
-    def set_vocabulary(self,vocabulary):
         self.WORDS = vocabulary
     
     def P(self, word, N=None): 
