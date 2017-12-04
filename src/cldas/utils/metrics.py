@@ -1,6 +1,6 @@
 # -*- encoding: utf-8 -*-
 '''
-Module of evaluation by using a rustic classifier and standard metrics
+Module with a set of common metrics
 
 @author: Nicolás Mechulam, Damán Salvia
 '''

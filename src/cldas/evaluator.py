@@ -1,3 +1,10 @@
+# -*- encoding: utf-8 -*-
+'''
+Module of evaluation by using a rustic classifier and standard metrics
+
+@author: Nicolás Mechulam, Damán Salvia
+'''
+
 import utils.metrics as metrics
 
 
