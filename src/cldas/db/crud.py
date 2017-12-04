@@ -221,6 +221,7 @@ def get_untagged(limit=None,seed=None):
 
 def split_sample(ids=None, fraction=0.2, seed=1):
     query = []
+    random.seed(seed)
     slice_1, slice_2 = [],[]
     if ids:
         query.append({"$match": {"_id": {"$in": ids } } })
@@ -233,7 +234,6 @@ def split_sample(ids=None, fraction=0.2, seed=1):
     ids = db.reviews.aggregate(query)
     for e in ids:
         id_list = e.get('ids')
-        random.seed(seed)
         random.shuffle(id_list)
         frac = int(len(id_list) * fraction)
         slice_1.extend(id_list[:frac])
