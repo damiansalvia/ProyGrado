@@ -2,7 +2,7 @@
 '''
 Module of evaluation by using a rustic classifier and standard metrics
 
-@author: Nicolás Mechulam, Damán Salvia
+@author: Nicolás Mechulam, Damián Salvia
 '''
 
 import utils.metrics as metrics
