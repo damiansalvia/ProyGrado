@@ -6,7 +6,6 @@ Module with miscellaneous methods
 '''
 
 from itertools import tee, chain
-import re
 from collections import Counter
 
 
@@ -61,6 +60,7 @@ class EnumItems:
 class Levinstein:
     
     def __init__(self):
+        "Based on Norvig solution."
         self.WORDS = Counter()
     
     def set_vocabulary(self,vocabulary):
@@ -85,7 +85,7 @@ class Levinstein:
     
     def edits1(self, word):
         "All edits that are one edit away from `word`."
-        letters    = 'abcdefghijklmnopqrstuvwxyz'
+        letters    = u'abcdefghijklmnopqrstuvwxyzáéóúñü'
         splits     = [(word[:i], word[i:])    for i in range(len(word) + 1)]
         deletes    = [L + R[1:]               for L, R in splits if R]
         transposes = [L + R[1] + R[0] + R[2:] for L, R in splits if len(R)>1]
