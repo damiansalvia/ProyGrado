@@ -229,30 +229,6 @@ class _SpellCorrector(_SingletonSettings):
             import pdb;pdb.set_trace()
             err.replace( corr )
         text = self.Checker.get_text()
-                           
-#         words = text.split(' ')
-#         for i in range( len( words ) ):
-#             word = words[i]
-#             if not word: 
-#                 continue
-#             if (word in ack) or self.Checker.check( word ):
-#                 word = word.lower()
-#             else:
-#                 word_na = self._no_accent( word )
-#                 sugg = { self._no_accent(s):s for s in self.Checker.suggest( word_na ) if ('-' not in s) }
-#                 alts = get_close_matches( word_na , sugg.keys() , 5 , 0.75   )
-#                 if   alts : corr = sugg[ alts[0] ].lower()
-#                 elif sugg : corr = sugg.keys()[0].lower() if (word not in nouns) else word
-#                 else : 
-#                     self.Checker.set_text( word )
-#                     for err in self.Checker:
-#                         corr = self.Checker.suggest( err.word ) 
-#                         err.replace( corr[0] if corr else err.word )
-#                     word = self.Checker.get_text()
-#                     corr = word.lower() if (word not in nouns) else word
-#                 word = corr
-#             words[i] = word
-#         text = ' '.join(words)
             
         return text
 
