@@ -7,7 +7,7 @@ Module with miscellaneous methods
 
 from itertools import tee, chain
 from collections import Counter
-
+from enchant.utils import levenshtein
 
 def OpinionType(opinion):
     if not opinion.has_key('category'):
@@ -93,4 +93,10 @@ class Levinstein:
     def edits2(self, word): 
         "All edits that are two edits away from `word`."
         return (e2 for e1 in self.edits1(word) for e2 in self.edits1(e1))
+ 
+ 
+def levinstein_no_accent(s1,s2):
+    s1 = s1.replace(u'á',u'a').replace(u'é',u'e').replace(u'í',u'i').replace(u'ó',u'o').replace(u'ú',u'u')
+    s2 = s2.replace(u'á',u'a').replace(u'é',u'e').replace(u'í',u'i').replace(u'ó',u'o').replace(u'ú',u'u')
+    return levenshtein(s1,s2)
         
