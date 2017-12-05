@@ -208,7 +208,7 @@ class _SpellCorrector(_SingletonSettings):
                 word = token.get_form()
                 if token.found_in_dict():
                     nouns += [ wd for wd in word.split('_') if wd not in ack ]
-        nouns = {wd.lower():wd for wd in nouns}        
+        nouns = { wd.lower():wd for wd in nouns }        
         
         text = unicode( text.lower() )
         self.Checker.set_text( text )
