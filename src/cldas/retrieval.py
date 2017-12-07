@@ -115,35 +115,32 @@ class CorpusReader(object):
             
             if self._scope_pattern is not None: # TODO Please improve me !!
                 for idx,rev in enumerate(revs):
-                    neg_scope = re.findall(self._scope_pattern, rev, re.DOTALL)
+                    
                     toks = [ word for word in re.findall(self._wd_pattern, rev) ]
+                     
                     scopes = [] ; negs = []
-                    for scope in neg_scope:
-                        scope_toks = [ word for word in re.findall(self._wd_pattern, scope) ]
-                        scopes.append( scope_toks )
+                    for scope in re.findall(self._scope_pattern, rev, re.DOTALL):
+                        scopes.append( [ word for word in re.findall(self._wd_pattern, scope) ] )
                         if self._negexp_pattern is not None:
-                            expr  = re.findall(self._negexp_pattern, scope, re.DOTALL)
-                            neg_toks = [ word for e in expr for word in re.findall(self._wd_pattern, e, re.DOTALL) ] 
-                            if neg_toks: 
-                                negs.append( neg_toks )
-                            else: 
-                                scopes.pop(-1)
+                            negexps  = re.findall(self._negexp_pattern, scope, re.DOTALL)
+                            negs += [ neg for negexp in negexps for neg in re.findall(self._wd_pattern, negexp, re.DOTALL) ]
+                    
                     bio = [] ; tag = "O"
                     for i in range( len(toks) ):
-                        if not scopes: 
-                            continue
-                        size = len(scopes[0])
-                        if toks[i:i+size] == scopes[0][:size]:
-                            scopes[0].pop(0)
-                            if not scopes[0]: scopes.pop(0)
-                            if negs and toks[i] == negs[0][0]:
-                                negs[0].pop(0)
-                                if not negs[0]: negs.pop(0)
-                                tag = "B-NEG"
-                            else:
-                                tag = "B-INV" if tag in ["O","B-NEG"] else "I-INV"
+                        if not scopes:
+                            tag = "O" 
                         else:
-                            tag = "O"
+                            size = len(scopes[0])
+                            if toks[i:i+size] == scopes[0][:size]:
+                                scopes[0].pop(0)
+                                if not scopes[0]: scopes.pop(0)
+                                if negs and toks[i] == negs[0]:
+                                    negs.pop(0)
+                                    tag = "B-NEG"
+                                else:
+                                    tag = "B-INV" if tag in ["O","B-NEG"] else "I-INV"
+                            else:
+                                tag = "O"
                         for tok in toks[i].split("_"): 
                             bio.append(tok+"/"+tag)
                     revs[idx] = ' '.join( bio )

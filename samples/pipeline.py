@@ -185,7 +185,7 @@ for ( reader,mapping ) in corporea:
     data    = reader.data( mapping=mapping )
     preproc = Preprocess( source, data )
     print "Classes:", preproc.categories()
-    print "Success:", len( preproc.sents() ),", Fails:", len( preproc.failures() ) 
+    print "Succeed:", len( preproc.sents() ) 
       
     dp.save_opinions( preproc.data() )
   
@@ -205,23 +205,23 @@ dp.save_negations_from_files('./neg/manual/*')
 if not dp.get_opinions(source='SFU-NEG'):    
     reader = CorpusReader( '../corpus/SFU-NEG', '*/*.xml', 
         scope_pattern='<scope>(.*?)<\/scope>', 
-        negexp_pattern='<negex.*?>(.*?)<\/negexp>', 
+        negexp_pattern='<negexp(?: discid="1n")?>(.*?)<\/negexp>', 
         op_pattern='<review.*?>(.*?)<\/review>', 
-        wd_pattern='<.*?wd=\"(.*?)\".*?\/>', 
+        wd_pattern='<\w .*?wd=\"(.*?)\".*?\/>', 
         file_pattern='<review.*?polarity=\"(.*?)\">' 
     )
     print "Classes:", reader.categories()
     print "Opinions:", len( reader.opinions() )
     mapping = { 'negative':33, 'positive':66 }
-     
+    
     source  = reader.source
     data    = reader.data( mapping=mapping )
     preproc = Preprocess( source, data )
     print "Classes:", preproc.categories()
-    print "Success:", len( preproc.sents() ),", Fails:", len( preproc.failures() ) 
-     
+    print "Succeed:", len( preproc.sents() )
+      
     dp.save_opinions( preproc.data( tagged=dp.TaggedType.MANUAL ) )
-    
+     
 end_time(start_time)
  
  
@@ -288,14 +288,14 @@ path = './neg/models/'
 win = 10
 lstm = NegScopeLSTM( win, vec_size )
  
-fname = "model_NegScopeLSTM_w%i.h5" % win
-if os.path.exists(path+fname):
-    lstm.load_model(path+fname)
-else:
-    X_train, Y_train = dp.get_lstm_dataset( tagged, win )
-    lstm.fit( X_train, Y_train )
-     
-    lstm.save_model(fname, './neg/models')
+fname = "model_NegScopeLSTM_w%i.h5" % win 
+# # if os.path.exists(path+fname):
+#     lstm.load_model(path+fname)
+# else:
+X_train, Y_train = dp.get_lstm_dataset( tagged, win )
+lstm.fit( X_train, Y_train )
+ 
+lstm.save_model(fname, './neg/models')
      
 negations = {} ; total = len( untagged )
 for idx,opinion in enumerate(untagged):
@@ -337,7 +337,7 @@ def table_print(fs):
                 key = "   %s: %s" % ( key, r[key] )
                 print '%-38s | %s' % ( key, val if type(val) == int else round(val,3) )
         else:
-            print '%-38s | %s' % ( fname, res if type(res) == int else round(res,3) )
+            print '%-38s | %s' % ( fname, res if type(res) == int else round(res,3) ) if res is not None else "None"
     print 
                  
 stats = []
@@ -392,19 +392,13 @@ lemmas = dp.get_lemmas()
 
 indep_lexicons = []
 
-filepath = "./indeplex/indeplex_by_senti_qtf_top150.json"
-if os.path.exists(filepath):
-    li = load(filepath)    
-else:
-    li = by_senti_qtf( pos, neg, lemmas, filter_tags=USEFUL_TAGS, limit=150, tofile='./indeplex' )
-indep_lexicons.append( (li,"qtf") )
-
-filepath = "./indeplex/indeplex_by_senti_tfidf_top150.json"
-if os.path.exists(filepath):
-    li = load(filepath)
-else:
-    li = by_senti_tfidf( pos, neg, lemmas, filter_tags=USEFUL_TAGS, limit=150, tofile='./indeplex' )
-indep_lexicons.append( (li,"tfidf") )
+for limit in [50,100,150]:
+    li = by_senti_qtf( pos, neg, lemmas, filter_tags=USEFUL_TAGS, limit=limit, tofile='./indeplex' )
+    indep_lexicons.append( (li,"qtf") )
+    
+    li = by_senti_tfidf( pos, neg, lemmas, filter_tags=USEFUL_TAGS, limit=limit, tofile='./indeplex' )
+    indep_lexicons.append( (li,"tfidf") )
+    
 end_time(start_time)
 
 

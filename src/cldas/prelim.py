@@ -6,12 +6,13 @@ Module for preliminar preprocess of corporea text
 '''
 
 import freeling, os, enchant, re, md5
+from ftfy import fix_text
 from enchant.checker import SpellChecker
 from difflib import get_close_matches
 from collections import defaultdict, Counter
 
 from cldas.utils import progress, save
-from cldas.utils.misc import Iterable, Levinstein
+from cldas.utils.misc import Iterable, Levinstein, no_accent, levenshtein_no_accent
 from cldas.utils.logger import Log, Level
 
 log = Log("./log")
@@ -20,6 +21,7 @@ log = Log("./log")
 DATA = "/usr/local/share/freeling/"
 LANG = "es"
 PWL  = os.path.join( os.path.dirname(__file__) , "files/aspell-es-lat.dic" )
+
 
 
 class _SingletonSettings(object):
@@ -77,13 +79,15 @@ SUBSTITUTIONS = [
     (u'\u2026',u'...'),   
     # Replace multiple periods by one
     (u"(\.\s*)+",u"."),
-    # Replace emojis by a special tag
-    (u"<?[:;=8xX][-‑o\']?[\)\]3dDoOpP\*\}]|[\(\[cC\{][-‑o\*\']?[:;=8]>?",u"FELIZ"),
-    (u">?[:;=][-‑o\']?[\(\[cC\{\\\/\|@_]|[\)\]dD\}\\\/\|@_][-‑o\']?[:;=8xX]<?",u"TRISTE"),
-    # Remove URIs with scheme http or https
-    (u"(https?:\/\/\S+)",u"LINK"),
-    # Remove repetitive characters (except (ll)egar, pe(rr)o and a(cc)ion ) <-- will be corrected by aspell
-    (u"([^lrc])\\1+",u"\\1"),
+    # Repplace http or https URIs by tag
+    (u"([^\s]?https?:\/\/\S+)",u"ENLACE"),
+    # Replace email by tag 
+    (u"[\w\.-]+@[\w\.-]+\.[\w]+",u"CORREO"),
+    # Replace emojis by a special of emotion
+    (u"\s<?[:;=8xX][-‑o\']?[\)\]3dDoOpP\*\}]|[\(\[cC\{][-‑o\*\']?[:;=8]>?\s",u" FELIZ "),
+    (u"\s>?[:;=][-‑o\']?[\(\[cC\{\\\/\|@_]|[\)\]dD\}\\\/\|@_][-‑o\']?[:;=8xX]<?\s",u" TRISTE "),
+    # Remove repetitive characters (except (ll)egar, pe(rr)o and a(cc)ion, and numbers) <-- will be corrected by aspell
+    (u"([^lrc\d])\\1+",u"\\1"),
     (u"([lrc])\\1\\1+",u"\\1\\1"),
     # Separate alphabetical character from non-alphabetical character by a blank space
     (u"([\d\W])",u" \\1 "),
@@ -103,10 +107,14 @@ SUBSTITUTIONS = [
     (u"[^0-9a-záéíóúñü_¿\?¡!\(\),\.:;\"\$/<>]",u" "),
     # Replace multiple non-alphabetical characters by one
     (u'([^\w\d])\\1+',u'\\1 '), # Issue when nested quotes
-    # Force dot ending
-    (u"([^\w\?!\)\"])$",u""), (u"([^\.])$",u"\\1 ."),
     # Replace multiple blank spaces by one
-    (u"\s\s+",u" ")
+    (u"\s\s+",u" "),
+    # Rejoin number sequences separated by blankspace or single dot (e.g. 2.500.000)
+    (u"(\d+)\s+(?=\d)",u"\\1"),
+    (u"(\d+)\s+(\.)\s+(?=\d)",u"\\1\\2"),
+    # Force dot ending
+    (u"([^\w\?!\)\"])$",u""), 
+    (u"([^\.])$",u"\\1 ."),
 ]
     
 class _SpellCorrector(_SingletonSettings):
@@ -147,6 +155,8 @@ class _SpellCorrector(_SingletonSettings):
     def _correct(self,text):
         if not isinstance(text,unicode):
             text = unicode(text,'utf8')
+        
+        text = fix_text(text)
             
         for source,target in SUBSTITUTIONS:
             text = re.sub(source,target,text,flags=re.DOTALL|re.U|re.I)
@@ -163,7 +173,7 @@ class _SpellCorrector(_SingletonSettings):
             True,  # Dictionary Search 
             True,  # Affix Analysis
             False, # Compound Analysis
-            True,  # Retok Contractions
+            False, # Retok Contractions
             False, # Multiword Detection 
             False, # NER                    <-- REQUIRED
             False, # Quantities Detection
@@ -190,7 +200,7 @@ class _SpellCorrector(_SingletonSettings):
             True,   # Dictionary Search 
             True,   # Affix Analysis
             False,  # Compound Analysis
-            True,   # Retok Contractions
+            False,  # Retok Contractions
             False,  # Multiword Detection 
             True,   # NER 
             False,  # Quantities Detection
@@ -253,7 +263,7 @@ class _MorfoTokenizer(_SingletonSettings):
             True,   # Dictionary Search 
             True,   # Affix Analysis
             False,  # Compound Analysis
-            True,   # Retok Contractions
+            False,  # Retok Contractions
             False,  # Multiword Detection 
             True,   # NER 
             False,  # Quantities Detection
@@ -294,7 +304,6 @@ class Preprocess(_SpellCorrector,_MorfoTokenizer):
         self.source = source
         self._lang   = lang
         self._sents  = defaultdict(list)
-        self._fails  = []
          
         self._run(opinions,verbose)
         
@@ -321,95 +330,31 @@ class Preprocess(_SpellCorrector,_MorfoTokenizer):
             
             if not sent:
                 fails += 1
-                self._fails.append( "'%s'\n\n==>'%s'" % ( opinion['text'], text ) )
-                log("Empty analysis for '%s' (at %s)" % ( opinion['text'].encode('ascii','ignore') , self.source ) , level=Level.ERROR)
+                log("Empty analysis for '%s' (at %s)" % ( text.encode('ascii','ignore') , self.source ) , level=Level.ERROR)
                 continue
                 
             _ids.append(_id)
             
-            tags  = opinion.get('tags',None)
+            tags = opinion.pop('tags',None)
             if tags is None:
                 items = [{
                     'word'   : token['form'],
                     'lemma'  : token['lemma'],
                     'tag'    : token['tag'],
                 } for token in sent ]
-            else: # TO-DO Please improve me !!                
-                try: items = self.__get_items_from_tags(tags,opinion,sent)
-                except Exception as e:
-                    self._fails.append( "'%s'\n\n==>'%s'" % ( ' '.join( wd+"/"+tag for wd,tag in zip(opinion['text'],tags) ), text ) ) 
-                    log("BIO parsing fail for '%s' (at %s)" % ( opinion['text'].encode('ascii','ignore') , self.source ) , level=Level.ERROR)
-                    fails += 1 
-                    continue
+            else:
+                sent,tags = __fix_tags__( opinion['text'].split(' '), sent, tags ) # TO-DO Please improve me  
+                items = [{
+                    'word'   : token['form'],
+                    'lemma'  : token['lemma'],
+                    'tag'    : token['tag'],
+                    'negated': False if tag == 'O' else None if tag == 'B-NEG' else True,
+                } for token,tag in zip(sent,tags) ]              
             
             self._sents[ opinion['category'] ].append({
                 '_id' : _id,
                 'text': items
             })
-    
-    
-    def __get_items_from_tags(self,tags,opinion,sent): # TO-DO Please improve me !! 
-                
-            def flat(text):
-                return text.replace(u'\xe1','a').replace(u'\xe9','e').replace(u'\xed','i').replace(u'\xf3','o').replace(u'\xfa','u').replace(u'\xfc','u').replace(u'\xf1','n')
-            
-            bio = [ ( self._correct(wd)[:-1].strip(), tag ) for wd,tag in zip( opinion['text'].split(' '), tags ) ]
-            i = 0 ; j = 0
-            items = [] ; t1 = len(sent) ; t2 = len(bio)
-            while i < t1 and j < t2:
-                if sent[i]['form'] == bio[j][0]: # Are equels
-                    last = "CASE 1"
-                    items.append( ( sent[i], bio[j][1] ) )
-                    i+=1 ; j+=1
-                elif flat(sent[i]['form']) in flat(bio[j][0]): # Is substring of
-                    last = "CASE 4"
-                    while flat(sent[i]['form']) in flat(bio[j][0]):
-                        items.append( ( sent[i], bio[j][1] ) )
-                        i+=1
-                    j+=1
-                elif len(sent[i]['form'])==1 and bio[j][0]==u'':
-                    items.append( ( sent[i], bio[j][1] ) )
-                    i+=1 ; j+=1 
-                elif len(sent[i]['form'])>1 and bio[j][0]==u'':
-                    j+=1 
-                else:
-                    
-                    j1 = j+1
-                    while j1 < t2 and sent[i]['form'] != bio[j1][0]: # Look ahead if are equals
-                        j1+=1 
-                    if j1 < t2:
-                        last = "CASE 5"    
-                        j = j1
-                        continue
-                    
-                    i1 = i+1
-                    while i1 < t1 and sent[i1]['form'] != bio[j][0]: # Look ahead if are equals
-                        i1+=1
-                    if i1 < t1:
-                        last = "CASE 4"
-                        items.append( ( sent[i], bio[j][1] ) )
-                        i = i1 
-                        continue
-                    
-                    i1 = i+1 ; j1 = j+1
-                    while i1 < t1 and j1 < t2 and sent[i1]['form'] != bio[j1][0]: # Look ahead if are equals
-                        i1+=1 ; j1+=1 
-                    if i1 < t1:
-                        last = "CASE 5"    
-                        items.append( ( sent[i], bio[j][1] ) )
-                        i+=1 ; j+=1
-                        continue
-                    
-                    raise Exception()
-                
-            items = [{
-                'word'   : token['form'],
-                'lemma'  : token['lemma'],
-                'tag'    : token['tag'],
-                'negated': False if tag == 'O' else None if tag == 'B-NEG' else True
-            } for token,tag in items ]
-            
-            return items
     
        
     def __repr__(self):
@@ -433,11 +378,7 @@ class Preprocess(_SpellCorrector,_MorfoTokenizer):
             raise ValueError('Expected key argument \'category\' to be in categories.')
         else:
             return self._sents[category]
-    
-    
-    def failures(self):
-        return self._fails
-    
+            
     
     def data(self,mapping=None,**kwargs):
         def _gen(mapping):
@@ -458,4 +399,47 @@ class Preprocess(_SpellCorrector,_MorfoTokenizer):
     
     def to_json(self,dirpath='./'):
         save( self._sents , "preproc_%s.json" % self.source , dirpath )
+   
+        
+        
+'''
+-----------------------
+      AUXILIARIES
+-----------------------
+'''        
+
+def __equals__(item1,item2):
+    item1 = re.sub(u"(\w)\\1+",u"\\1",item1)
+    item2 = re.sub(u"(\w)\\1+",u"\\1",item2)
+    item1 = no_accent(item1)
+    item2 = no_accent(item2)
+    return item1==item2 \
+        or item1 in item2 \
+        or item2 in item1 \
+        or levenshtein_no_accent(item1,item2) < 3 \
+        or (re.search("([^\s]?https?:\/\/\S+)", item1) is not None and item2 == 'enlace') \
+        or (re.search("[\w\.-]+@[\w\.-]+\.[\w]+", item1) is not None and item2 == 'correo') \
+                
+
+def __fix_tags__(original,generated,tags):  
+    
+    i = j = 0 ; newsent = [] ; newtags = []
+    try:
+        while i < len(original) and j < len(generated):
+            if __equals__( original[i].lower(), generated[j]['form'].lower() ) or i+1 == len(original):
+                newsent.append( generated[j] ) ; newtags.append( tags[i] )
+                i+=1 ; j+=1
+            elif __equals__( original[i+1].lower(), generated[j]['form'].lower() ):    
+                i += 1
+            elif i > 0 and tags[i] == 'B-NEG': # Do not repeat negator -- assign previous tag
+                newsent.append( generated[j] ) ; newtags.append( tags[i-1] )
+                j += 1
+            else: # __equals__( original[i].lower(), generated[j+1]['form'].lower() ):
+                newsent.append( generated[j] ) ; newtags.append( tags[i] )
+                j += 1
+    except Exception as e:
+        raw_input("\nSHIT")
+        import pdb; pdb.set_trace()
+        
+    return newsent,newtags        
     

@@ -9,6 +9,7 @@ from itertools import tee, chain
 from collections import Counter
 from enchant.utils import levenshtein
 
+
 def OpinionType(opinion):
     if not opinion.has_key('category'):
         return 1 # unpreprocessed opinion
@@ -66,7 +67,7 @@ class Levinstein:
     def P(self, word, N=None): 
         "Probability of `word`."
         N = sum(self.WORDS.values()) if N is None else N
-        return self.WORDS[word] / N
+        return 1.0 * self.WORDS[word] / N
     
     def correction(self, word): 
         "Most probable spelling correction for word."
@@ -95,8 +96,12 @@ class Levinstein:
         return (e2 for e1 in self.edits1(word) for e2 in self.edits1(e1))
  
  
-def levinstein_no_accent(s1,s2):
-    s1 = s1.replace(u'á',u'a').replace(u'é',u'e').replace(u'í',u'i').replace(u'ó',u'o').replace(u'ú',u'u')
-    s2 = s2.replace(u'á',u'a').replace(u'é',u'e').replace(u'í',u'i').replace(u'ó',u'o').replace(u'ú',u'u')
+def no_accent(s):
+     return s.replace(u'á',u'a').replace(u'é',u'e').replace(u'í',u'i').replace(u'ó',u'o').replace(u'ú',u'u').replace(u'"u',u'u').replace(u'ñ',u'n')
+ 
+ 
+def levenshtein_no_accent(s1,s2):
+    s1 = no_accent(s1)
+    s2 = no_accent(s2)
     return levenshtein(s1,s2)
         

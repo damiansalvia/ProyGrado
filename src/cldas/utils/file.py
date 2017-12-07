@@ -128,6 +128,7 @@ def save_word_cloud(lexicon,name,path,neu_treshold=0.0):
     
     fig.subplots_adjust(wspace=0, hspace=0)    
     fig.savefig(path, facecolor='k', bbox_inches='tight', dpi=1200, figsize=(20,20), transparent=True, frameon=False, pad_inches=0)
+    plt.clf() # Avoid 'RuntimeWarning: More than 20 figures have been opened. Figures created through the pyplot interface'
     print "\rWord cloud saved at",path        
     
     

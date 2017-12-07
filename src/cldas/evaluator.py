@@ -61,7 +61,7 @@ def get_fmeasure(y_true, y_pred, val, beta = 1):
 def get_accuracy(y_true, y_pred):
     length = len(y_true)
     if length > 0:
-        return sum(y_true[idx] == y_pred[idx] for idx in range(length) ) / length
+        return 1.0 * sum(y_true[idx] == y_pred[idx] for idx in range(length) ) / length
     else:
         return 0
 

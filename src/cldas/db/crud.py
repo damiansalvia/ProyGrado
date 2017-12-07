@@ -415,14 +415,14 @@ def _format_embeddings(formatter, opinions, **kwargs):
     yield np.array(Y)
 
 
-def get_ffn_dataset(opinions, wleft, wright, null_as='.', neg_as=False, verbose=True):
+def get_ffn_dataset(opinions, wleft, wright, null_as='.', neg_as=True, verbose=True):
     '''
     Given an opinion set and windows left/right returns the correct dataset format for FFN model
     '''
     return _format_embeddings( _format_ffn, opinions, wleft=wleft, wright=wright, null_as=null_as, neg_as=neg_as,  verbose=verbose )
 
 
-def get_lstm_dataset(opinions, win, null_as='.', neg_as=False, verbose=True):
+def get_lstm_dataset(opinions, win, null_as='.', neg_as=True, verbose=True):
     '''
     Given an opinion set and windows left/right returns the correct dataset format for LSTM model
     '''
