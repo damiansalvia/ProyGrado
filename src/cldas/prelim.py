@@ -422,21 +422,22 @@ def __equals__(item1,item2):
                 
 
 def __fix_tags__(original,generated,tags):  
-    
+    genwords = [ tok['form'] for tok in generated ]
     i = j = 0 ; newsent = [] ; newtags = []
     try:
         while i < len(original) and j < len(generated):
-            if __equals__( original[i].lower(), generated[j]['form'].lower() ) or i+1 == len(original):
+            if __equals__( original[i].lower(), genwords[j].lower() ) or i+1 == len(original):
                 newsent.append( generated[j] ) ; newtags.append( tags[i] )
                 i+=1 ; j+=1
-            elif __equals__( original[i+1].lower(), generated[j]['form'].lower() ):    
-                i += 1
-            elif i > 0 and tags[i] == 'B-NEG': # Do not repeat negator -- assign previous tag
-                newsent.append( generated[j] ) ; newtags.append( tags[i-1] )
-                j += 1
-            else: # __equals__( original[i].lower(), generated[j+1]['form'].lower() ):
-                newsent.append( generated[j] ) ; newtags.append( tags[i] )
-                j += 1
+            else:
+                if __equals__( original[i+1].lower(), generated[j]['form'].lower() ):    
+                    i += 1
+                elif i > 0 and tags[i] == 'B-NEG': # Do not repeat negator -- assign previous tag
+                    newsent.append( generated[j] ) ; newtags.append( tags[i-1] )
+                    j += 1
+                else: # __equals__( original[i].lower(), genwords[j].lower() ):
+                    newsent.append( generated[j] ) ; newtags.append( tags[i] )
+                    j += 1
     except Exception as e:
         raw_input("\nSHIT")
         import pdb; pdb.set_trace()
