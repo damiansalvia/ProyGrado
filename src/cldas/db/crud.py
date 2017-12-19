@@ -200,7 +200,7 @@ def get_tagged(tag_as,source=None):
     query = { "tagged" : tag_as  }
     if source:
         query.update({ "source" : source })
-    result = db.reviews.find(query)
+    result = db.reviews.find(query).batch_size(10)
     return Iterable( result )
 
 
@@ -210,7 +210,7 @@ def get_untagged(limit=None,seed=None):
     @param limit: Quantity of opinions retrieved.
     @param seed : For setting the seed of random selection. 
     '''
-    result = db.reviews.find({ "tagged" : { "$exists" : False } }) 
+    result = db.reviews.find({ "tagged" : { "$exists" : False } }).batch_size(10) 
     if limit:
         random.seed( seed )  
         rand = int( random.random() * db.reviews.find({}).count() ) 
@@ -476,6 +476,13 @@ def _do_correction(opinion,negation):
 # ----------------------------------------------------------------------------------------------------------------------
 
 
-def save_evaluation(result):
-    if result: db.evaluation.insert(result)
+def save_evaluation(results):
+    tosave = []
+    for idx,result in enumerate(results):
+        tosave.append(result)
+        if tosave and idx % 10 == 0:
+            db.evaluation.insert_many( tosave )
+            tosave = []
+    if tosave:
+        db.evaluation.insert_many(tosave)
 

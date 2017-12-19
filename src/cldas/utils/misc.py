@@ -8,6 +8,7 @@ Module with miscellaneous methods
 from itertools import tee, chain
 from collections import Counter
 from enchant.utils import levenshtein
+import re
 
 
 def OpinionType(opinion):
@@ -97,11 +98,28 @@ class Levinstein:
  
  
 def no_accent(s):
-     return s.replace(u'á',u'a').replace(u'é',u'e').replace(u'í',u'i').replace(u'ó',u'o').replace(u'ú',u'u').replace(u'"u',u'u').replace(u'ñ',u'n')
+    return s.replace(u'á',u'a').replace(u'é',u'e').replace(u'í',u'i').replace(u'ó',u'o').replace(u'ú',u'u').replace(u'"u',u'u').replace(u'ñ',u'n')
+
  
- 
-def levenshtein_no_accent(s1,s2):
-    s1 = no_accent(s1)
-    s2 = no_accent(s2)
-    return levenshtein(s1,s2)
-        
+def levenshtein_no_accent(s1, s2):
+    return levenshtein( no_accent(s1) , no_accent(s2) )
+
+
+def get_score(s1,s2):
+    res = 0
+    res += levenshtein( s1 , s2 )
+    res += levenshtein( no_accent(s1) , no_accent(s2) )
+    res += 3 if re.search('[\s-]', s2) is not None else 0
+    return res
+
+
+def get_close_dist(word, wordlist, cutoff=0.7, n=None):
+    if not wordlist:
+        return []
+    res = { wd:get_score(word,wd) for wd in wordlist }
+    max_score  = max(res.values()) 
+    mean_score = (max_score - min(res.values())) / 2
+    res = [ wd for wd,score in sorted( res.items(), key=lambda item:item[1] ) if 1.0*(max_score-score) > cutoff * mean_score ]
+    res = res[:n]
+    return res
+

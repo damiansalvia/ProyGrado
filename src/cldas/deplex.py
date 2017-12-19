@@ -139,7 +139,7 @@ def by_bfs(graph, seeds,
     
     visited_dir = [] ; visited_inv = []
     
-    queue = seeds.items() ; top = 0
+    queue = sorted( seeds.items(), key= lambda x: x[1] ) ; top = 0
     
     while queue:
         

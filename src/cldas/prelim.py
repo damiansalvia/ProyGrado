@@ -12,7 +12,8 @@ from difflib import get_close_matches
 from collections import defaultdict, Counter
 
 from cldas.utils import progress, save
-from cldas.utils.misc import Iterable, Levinstein, no_accent, levenshtein_no_accent
+from cldas.utils.misc import Iterable, Levinstein
+from cldas.utils.misc import no_accent, levenshtein_no_accent, get_close_dist
 from cldas.utils.logger import Log, Level
 
 log = Log("./log")
@@ -218,18 +219,24 @@ class _SpellCorrector(_SingletonSettings):
                 word = token.get_form()
                 if token.found_in_dict():
                     nouns += [ wd for wd in word.split('_') if wd not in ack ]
-        nouns = { wd.lower():wd for wd in nouns }        
+        nouns = { wd.lower():wd for wd in nouns }
         
         text = unicode( text.lower() )
         self.Checker.set_text( text )
         for err in self.Checker:
             word = err.word
+            
             cand = self.Vocabulary.correction( word )
+            
             sugg = self.Checker.suggest( word )
-            alts = [ alt for alt in get_close_matches( word, sugg, 5, 0.90 ) if '-' not in alt ]
-            if alts and not re.search('[\s-]',alts[0]) and len(alts) <= 2:
+            sugg = get_close_dist( word, sugg, 0.9 )
+            
+            alts = get_close_matches( word, sugg, 5, 0.90 )
+            alts = [ wd for wd in get_close_matches( word, sugg, 5, 0.90 ) if levenshtein_no_accent(word,wd) < 2 ]
+            
+            if alts and len(alts) <= 2:
                 corr = alts[0]
-            elif sugg and ( re.search('[\xe1\xe9\xed\xf3\xfa\xfc]',sugg[0].lower()) or len(sugg) <= 5 ):
+            elif sugg and (word not in nouns):
                 corr = sugg[0]
             elif (word in ack) and (word not in nouns):
                 corr = word
@@ -238,8 +245,8 @@ class _SpellCorrector(_SingletonSettings):
             else:
                 corr = cand
             err.replace( corr )
-        text = self.Checker.get_text()
             
+        text = self.Checker.get_text()   
         return text, nouns.keys()
 
 

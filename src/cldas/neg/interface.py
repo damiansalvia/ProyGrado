@@ -11,7 +11,7 @@ from colorama import init, Fore, Style, Back
 init(autoreset=True) 
 
 from cldas.utils import progress, save, title, Log, load
-from clcldas.prelimmport Preprocess
+from cldas import Preprocess
 
 log = Log("../log") 
 

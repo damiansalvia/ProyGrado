@@ -289,11 +289,11 @@ win = 10
 lstm = NegScopeLSTM( win, vec_size )
  
 fname = "model_NegScopeLSTM_w%i.h5" % win 
-# # if os.path.exists(path+fname):
-#     lstm.load_model(path+fname)
-# else:
-X_train, Y_train = dp.get_lstm_dataset( tagged, win )
-lstm.fit( X_train, Y_train )
+if os.path.exists(path+fname):
+    lstm.load_model(path+fname)
+else:
+    X_train, Y_train = dp.get_lstm_dataset( tagged, win )
+    lstm.fit( X_train, Y_train )
  
 lstm.save_model(fname, './neg/models')
      
@@ -425,42 +425,65 @@ for corpus in dp.get_sources():
         
         start_time = time.time()
         ld = by_bfs( graph, li, seed_name=name, filter_seeds=False, limit=300, confidence=3, tofile='./deplex')
-        dep_lexicons.append({
-            'li'         : name,
-            'propagation': 'bfs',
-            'lexicon'    : ld,
-            'source'     : corpus
-        })
-        end_time(start_time)   
+#         dep_lexicons.append({
+#             'li'         : name,
+#             'propagation': 'bfs',
+#             'lexicon'    : ld,
+#             'source'     : corpus
+#         })
+        end_time(start_time) 
+        
+        eval_fraction = dp.get_opinions( ids=evaluation_ids, source=corpus )
+        score = evaluate( ld, eval_fraction )
+        dp.save_evaluation([{
+            'type'        : 'deplex',
+            'li'          : name,
+            'source'      : corpus,
+            'propagation' : 'bfs',
+            'score'       : score
+        }])  
+        
+        
         
         start_time = time.time()
         ld = by_influence( graph, li, seed_name=name, filter_seeds=False, limit=300, confidence=1, tofile='./deplex')
-        dep_lexicons.append({
-            'li'         : name,
-            'propagation': 'influence',
-            'lexicon'    : ld,
-            'source'     : corpus,
-        })
-        end_time(start_time)   
+#         dep_lexicons.append({
+#             'li'         : name,
+#             'propagation': 'influence',
+#             'lexicon'    : ld,
+#             'source'     : corpus,
+#         })
+        end_time(start_time)  
+        
+        eval_fraction = dp.get_opinions( ids=evaluation_ids, source=corpus )
+        score = evaluate( ld, eval_fraction )
+        dp.save_evaluation([{
+            'type'        : 'deplex',
+            'li'          : name,
+            'source'      : corpus,
+            'propagation' : 'influence',
+            'score'       : score
+        }]) 
 
 
-'''
----------------------------------------------
-              Evaluation stage              
----------------------------------------------
-'''
-start_time = time.time()
-
-for ld in dep_lexicons:
-    eval_fraction = dp.get_opinions( ids=evaluation_ids, source=ld['source'] )
-    score = evaluate( ld['lexicon'], eval_fraction )
-    result = {
-        'type'        : 'deplex',
-        'li'          : ld['li'],
-        'source'      : ld['source'],
-        'propagation' : ld['propagation'],
-        'score'       : score
-    }
-    dp.save_evaluation(result)
-
-end_time(start_time)
+# '''
+# ---------------------------------------------
+#               Evaluation stage              
+# ---------------------------------------------
+# '''
+# start_time = time.time()
+# 
+# results = []
+# for ld in dep_lexicons:
+#     eval_fraction = dp.get_opinions( ids=evaluation_ids, source=ld['source'] )
+#     score = evaluate( ld['lexicon'], eval_fraction )
+#     results.append({
+#         'type'        : 'deplex',
+#         'li'          : ld['li'],
+#         'source'      : ld['source'],
+#         'propagation' : ld['propagation'],
+#         'score'       : score
+#     })
+# dp.save_evaluation(results)
+# 
+# end_time(start_time)
