@@ -164,7 +164,7 @@ def by_bfs(graph, seeds,
                 queue.append( (ady,_val) )
                 
             _val = -val * edge['inv'] 
-            if (lem,ady) in visited_inv and abs(_val) > threshold: 
+            if (lem,ady) not in visited_inv and abs(_val) > threshold: 
                 visited_inv.append( (lem,ady) )
                 queue.append( (ady,_val) )
     
