@@ -26,6 +26,7 @@ def _postprocess(lexicon, graph, method, neu_treshold, filter_seeds, seeds, seed
         lexicon = dict( sorted( lexicon.items() , key=lambda item: abs( item[1]['val'] ) , reverse=True )[:limit] )
         
     lexicon = { lem:{'val':round(item['val'],5),'inf':item['inf']} for lem,item in lexicon.items() }
+    lexicon = dict( sorted( lexicon.items(), key=lambda x:x[0] ) )
     
     if tofile:
         name  = "_%s" % graph.source
@@ -111,6 +112,7 @@ def by_influence(graph, seeds,
 
 def by_bfs(graph, seeds,
         threshold       = 0.005,
+        penalty         = 0.8,
         neu_treshold    = None,
         filter_seeds    = False,
         confidence      = 1, 
@@ -125,6 +127,7 @@ def by_bfs(graph, seeds,
     @param graph                : A non-empty MultiGraph instance.
     @param seeds                : A set of words seeds with its polarity.
     @param threshold            : When stop sparsing valencies.
+    @param penalty              : Penalty applied in case of cycle detection on edge.
     @param neu_treshold         : Treshold where valency is considered neutral.
     @param filter_seeds         : Output without seeds. 
     @param confidence:          : Minimum frequency nodes admitted in output.
@@ -137,9 +140,9 @@ def by_bfs(graph, seeds,
     
     lexicon = { lem:{'val':0,'inf':0} for lem in graph.nodes() }
     
-    visited_dir = [] ; visited_inv = []
+    visited = defaultdict(lambda:0)
     
-    queue = sorted( seeds.items(), key= lambda x: x[1] ) ; top = 0
+    queue = sorted( seeds.items(), key=lambda x:x[1], reverse=True ) ; top = 0
     
     while queue:
         
@@ -157,15 +160,12 @@ def by_bfs(graph, seeds,
         lexicon[lem]['inf'] += 1
         
         for ady,edge in graph[lem].items():
-            
-            _val = val * edge['dir'] 
-            if (lem,ady) not in visited_dir and abs(_val) > threshold: 
-                visited_dir.append( (lem,ady) )
-                queue.append( (ady,_val) )
-                
-            _val = -val * edge['inv'] 
-            if (lem,ady) not in visited_inv and abs(_val) > threshold: 
-                visited_inv.append( (lem,ady) )
+
+            frac = 1 if (lem,ady) not in visited else penalty #/ visited[lem,ady]
+            visited[lem,ady] += 1
+
+            _val = val * ( edge['dir'] - edge['inv'] ) * frac
+            if abs(_val) > threshold: 
                 queue.append( (ady,_val) )
     
     lexicon = _postprocess(lexicon, graph, "deplex_by_bfs", neu_treshold, filter_seeds, seeds, seed_name, limit, confidence, tofile, wc_neu)

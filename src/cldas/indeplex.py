@@ -15,6 +15,8 @@ def _postprocess(method, lemmas, ld, limit, tofile):
     if limit:
         lexicon = dict( sorted(lexicon.items(), key=lambda elem : abs(elem[1]), reverse=True)[:limit] )
     
+    lexicon = dict( sorted( lexicon.items(), key=lambda x:x[0] ) )
+    
     if tofile:
         name = "_top%i" % limit if limit else "" 
         name = method + name
