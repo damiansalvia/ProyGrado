@@ -140,9 +140,10 @@ def by_bfs(graph, seeds,
     
     lexicon = { lem:{'val':0,'inf':0} for lem in graph.nodes() }
     
-    visited = defaultdict(lambda:0)
+    visited = [] ; top = 0
     
-    queue = sorted( seeds.items(), key=lambda x:x[1], reverse=True ) ; top = 0
+    queue = sorted( seeds.items(), key=lambda x:x[1], reverse=True )
+    queue = [ (seed,seed,val) for seed,val in queue ]
     
     while queue:
         
@@ -151,7 +152,7 @@ def by_bfs(graph, seeds,
         
         if verbose : progress("Building lexicon by bfs for %s" % graph.source,top,top-size)
         
-        (lem,val) = queue.pop(0)
+        (seed,lem,val) = queue.pop(0)
         
         if lem not in graph or abs(val) < threshold:
             continue
@@ -161,12 +162,13 @@ def by_bfs(graph, seeds,
         
         for ady,edge in graph[lem].items():
 
-            frac = 1 if (lem,ady) not in visited else penalty #/ visited[lem,ady]
-            visited[lem,ady] += 1
+            if (seed,lem,ady) in visited:
+                continue 
+            visited.append( (seed,lem,ady) )
 
-            _val = val * ( edge['dir'] - edge['inv'] ) * frac
+            _val = val * ( edge['dir'] - edge['inv'] )
             if abs(_val) > threshold: 
-                queue.append( (ady,_val) )
+                queue.append( (seed,ady,_val) )
     
     lexicon = _postprocess(lexicon, graph, "deplex_by_bfs", neu_treshold, filter_seeds, seeds, seed_name, limit, confidence, tofile, wc_neu)
         
