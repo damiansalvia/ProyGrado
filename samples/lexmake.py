@@ -79,12 +79,12 @@ while True:
     j = display_options("Sources",corporea)
     corpus   = corporea[j]
     opinions = dp.get_opinions( source=corpus )
-    graph = MultiGraph( opinions, corpus, filter_tags=USEFUL_TAGS )
+    graph = ContextGraph( opinions, corpus, filter_tags=USEFUL_TAGS )
     
     
     os.system(clean)
     
-    deplex = [ by_bfs, by_influence ]
+    deplex = [ by_distance, by_influence ]
     k = display_options("Dependent Lexicon",deplex)
     ld = deplex[k]( graph, li, seed_name=seed_name, limit=300, tofile='./deplex', wc_neu=0.2)
     

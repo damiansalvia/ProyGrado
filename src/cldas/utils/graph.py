@@ -20,7 +20,7 @@ def _valid_tag(tag, tagset):
 
 
 
-class MultiGraph(object):
+class ContextGraph(object):
     '''
     Multigraph of words abstract data type 
     '''

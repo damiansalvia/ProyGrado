@@ -6,7 +6,7 @@ Module for generating a context dependent lexicon corpus from a set of seeds
 '''
 
 from cldas.utils import progress, save, save_word_cloud
-from cldas.utils.graph import MultiGraph, _search_influences
+from cldas.utils.graph import ContextGraph, _search_influences
 from collections import defaultdict
 
 
@@ -54,7 +54,7 @@ def by_influence(graph, seeds,
     ):
     '''
     Generates a lexicon from an opinion set and seeds words by Influence Search like model.
-    @param graph                : A non-empty MultiGraph instance.
+    @param graph                : A non-empty ContextGraph instance.
     @param seeds                : A set of words seeds with its valencies.
     @param threshold            : Minimum admitted influence for sparcing between nodes.
     @param neutral_resistance   : Adds neutral adyacency nodes. 
@@ -68,8 +68,8 @@ def by_influence(graph, seeds,
     @param wc_neu               : Threshold consider for wordcloud when neu_treshold is None. 
     '''
     
-    if not isinstance(graph, MultiGraph):
-        raise ValueError('Expected argument \'graph\' to be a MultiGraph instance.')
+    if not isinstance(graph, ContextGraph):
+        raise ValueError('Expected argument \'graph\' to be a ContextGraph instance.')
     
     if not seeds:
         raise ValueError('Expected argiment \'seeds\' not null.')
@@ -110,8 +110,8 @@ def by_influence(graph, seeds,
 
 
 
-def by_bfs(graph, seeds,
-        threshold       = 0.005,
+def by_distance(graph, seeds,
+        threshold       = 0.001,
         penalty         = 0.8,
         neu_treshold    = None,
         filter_seeds    = False,
@@ -124,7 +124,7 @@ def by_bfs(graph, seeds,
     ):
     '''
     Generates a lexicon from an opinion set and seeds words by Breath First Search model
-    @param graph                : A non-empty MultiGraph instance.
+    @param graph                : A non-empty ContextGraph instance.
     @param seeds                : A set of words seeds with its polarity.
     @param threshold            : When stop sparsing valencies.
     @param penalty              : Penalty applied in case of cycle detection on edge.
@@ -138,11 +138,15 @@ def by_bfs(graph, seeds,
     @param wc_neu               : Threshold consider for wordcloud when neu_treshold is None.
     '''
     
-    lexicon = { lem:{'val':0,'inf':0} for lem in graph.nodes() }
+    lexicon = { 
+        lem:{
+            'val': seeds.get(lem,0),
+            'inf': 1 if lem in seeds else 0
+        } for lem in graph.nodes() }
     
-    visited = [] ; top = 0
+    visited = { sem:[(sem,sem)] for sem in seeds.keys() } ; top = 0
     
-    queue = sorted( seeds.items(), key=lambda x:x[1], reverse=True )
+    queue = sorted( seeds.items(), key=lambda x:x[1], reverse=True ) # max val first
     queue = [ (seed,seed,val) for seed,val in queue ]
     
     while queue:
@@ -156,19 +160,18 @@ def by_bfs(graph, seeds,
         
         if lem not in graph or abs(val) < threshold:
             continue
-        
-        lexicon[lem]['val'] += val
-        lexicon[lem]['inf'] += 1
-        
-        for ady,edge in graph[lem].items():
 
-            if (seed,lem,ady) in visited:
-                continue 
-            visited.append( (seed,lem,ady) )
+        for ady,w in graph[lem].items():
 
-            _val = val * ( edge['dir'] - edge['inv'] )
-            if abs(_val) > threshold: 
-                queue.append( (seed,ady,_val) )
+            if (lem,ady) not in visited[seed]:
+                visited[seed].append( (lem,ady) )
+
+                _val = val * ( w['dir'] - w['inv'] )
+
+                if abs(_val) > threshold: 
+                    lexicon[ady]['val'] += val
+                    lexicon[ady]['inf'] += 1
+                    queue.append( (seed,ady,_val) )
     
     lexicon = _postprocess(lexicon, graph, "deplex_by_bfs", neu_treshold, filter_seeds, seeds, seed_name, limit, confidence, tofile, wc_neu)
         

@@ -320,53 +320,53 @@ end_time(start_time)
       Statistics over dataset
 ---------------------------------------------
 '''
-from cldas.db.stats import *
+# from cldas.db.stats import *
  
-def table_print(fs):
-    print '%-38s | %s' % ("Metric","Value")
-    print '%-38s-+-%s' % ("-"*38,"-"*20)
-    for f in fs:
-        fname = f.__name__.replace('_',' ')
-        fname = fname[0].upper()+fname[1:]
-        res = f()
-        if type(res) == list:
-            print '%-38s | %s' % ( fname, "")
-            for r in res:
-                val = r.pop('count')
-                key = r.keys()[0]
-                key = "   %s: %s" % ( key, r[key] )
-                print '%-38s | %s' % ( key, val if type(val) == int else round(val,3) )
-        else:
-            print '%-38s | %s' % ( fname, res if type(res) == int else round(res,3) ) if res is not None else "None"
-    print 
+# def table_print(fs):
+#     print '%-38s | %s' % ("Metric","Value")
+#     print '%-38s-+-%s' % ("-"*38,"-"*20)
+#     for f in fs:
+#         fname = f.__name__.replace('_',' ')
+#         fname = fname[0].upper()+fname[1:]
+#         res = f()
+#         if type(res) == list:
+#             print '%-38s | %s' % ( fname, "")
+#             for r in res:
+#                 val = r.pop('count')
+#                 key = r.keys()[0]
+#                 key = "   %s: %s" % ( key, r[key] )
+#                 print '%-38s | %s' % ( key, val if type(val) == int else round(val,3) )
+#         else:
+#             print '%-38s | %s' % ( fname, res if type(res) == int else round(res,3) ) if res is not None else "None"
+#     print 
                  
-stats = []
-stats.append( size_vocabulary             )
-stats.append( size_vocabulary_by_word     )
-stats.append( size_vocabulary_by_lemma    )
-stats.append( size_corporea               )
-stats.append( size_corporea_by_source     )
-stats.append( avg_tokens_by_source        )
-stats.append( size_reviews_category       )
-stats.append( size_embeddings             ) 
-stats.append( size_near_match             )
-stats.append( size_null_match             )
-stats.append( size_exact_match            )
-stats.append( size_manually_tagged        )
-stats.append( size_manually_tagged_by_cat )
-stats.append( size_nagated_words          )
-stats.append( size_negators               )
-stats.append( size_positive_reviews       ) 
-stats.append( size_positive_words         )
-stats.append( size_neutral_reviews        )
-stats.append( size_neutral_words          )
-stats.append( size_negative_words         )
-stats.append( size_negative_reviews       )
-stats.append( get_balance                 )
-stats.append( get_balance_by_source       )
+# stats = []
+# stats.append( size_vocabulary             )
+# stats.append( size_vocabulary_by_word     )
+# stats.append( size_vocabulary_by_lemma    )
+# stats.append( size_corporea               )
+# stats.append( size_corporea_by_source     )
+# stats.append( avg_tokens_by_source        )
+# stats.append( size_reviews_category       )
+# stats.append( size_embeddings             ) 
+# stats.append( size_near_match             )
+# stats.append( size_null_match             )
+# stats.append( size_exact_match            )
+# stats.append( size_manually_tagged        )
+# stats.append( size_manually_tagged_by_cat )
+# stats.append( size_nagated_words          )
+# stats.append( size_negators               )
+# stats.append( size_positive_reviews       ) 
+# stats.append( size_positive_words         )
+# stats.append( size_neutral_reviews        )
+# stats.append( size_neutral_words          )
+# stats.append( size_negative_words         )
+# stats.append( size_negative_reviews       )
+# stats.append( get_balance                 )
+# stats.append( get_balance_by_source       )
   
   
-table_print(stats)
+# table_print(stats)
  
 '''
 ---------------------------------------------
@@ -374,7 +374,7 @@ table_print(stats)
 ---------------------------------------------
 '''
 
-independe_ids , dependent_ids = dp.split_sample(fraction=0.2, seed= 121)
+independe_ids , dependent_ids = dp.split_sample(fraction=0.2, seed=121)
 evaluation_ids, dependent_ids = dp.split_sample(ids=dependent_ids, fraction=0.1, seed=121)
 
 '''
@@ -393,8 +393,6 @@ lemmas = dp.get_lemmas()
 indep_lexicons = []
 
 for limit in [50,100,150]:
-    li = by_senti_qtf( pos, neg, lemmas, filter_tags=USEFUL_TAGS, limit=limit, tofile='./indeplex' )
-    indep_lexicons.append( (li,"qtf") )
     
     li = by_senti_tfidf( pos, neg, lemmas, filter_tags=USEFUL_TAGS, limit=limit, tofile='./indeplex' )
     indep_lexicons.append( (li,"tfidf") )
@@ -409,8 +407,8 @@ end_time(start_time)
 ---------------------------------------------
 '''
 
-from cldas.deplex import by_influence, by_bfs
-from cldas.utils.graph import MultiGraph
+from cldas.deplex import by_influence, by_distance
+from cldas.utils.graph import ContextGraph
 
 dep_lexicons = []
 for corpus in dp.get_sources():
@@ -418,19 +416,13 @@ for corpus in dp.get_sources():
     opinions = dp.get_opinions(ids=dependent_ids, source=corpus )
     
     start_time = time.time()
-    graph = MultiGraph( opinions, corpus, filter_tags=USEFUL_TAGS )
+    graph = ContextGraph( opinions, corpus, filter_tags=USEFUL_TAGS )
     end_time(start_time)    
     
     for (li,name) in indep_lexicons:
         
         start_time = time.time()
-        ld = by_bfs( graph, li, seed_name=name, filter_seeds=False, limit=300, confidence=3, tofile='./deplex')
-#         dep_lexicons.append({
-#             'li'         : name,
-#             'propagation': 'bfs',
-#             'lexicon'    : ld,
-#             'source'     : corpus
-#         })
+        ld = by_distance( graph, li, seed_name=name, filter_seeds=False, limit=300, confidence=3, tofile='./deplex')
         end_time(start_time) 
         
         eval_fraction = dp.get_opinions( ids=evaluation_ids, source=corpus )
@@ -439,20 +431,13 @@ for corpus in dp.get_sources():
             'type'        : 'deplex',
             'li'          : name,
             'source'      : corpus,
-            'propagation' : 'bfs',
+            'propagation' : 'distance',
             'score'       : score
         }])  
         
         
-        
         start_time = time.time()
         ld = by_influence( graph, li, seed_name=name, filter_seeds=False, limit=300, confidence=1, tofile='./deplex')
-#         dep_lexicons.append({
-#             'li'         : name,
-#             'propagation': 'influence',
-#             'lexicon'    : ld,
-#             'source'     : corpus,
-#         })
         end_time(start_time)  
         
         eval_fraction = dp.get_opinions( ids=evaluation_ids, source=corpus )
@@ -464,26 +449,3 @@ for corpus in dp.get_sources():
             'propagation' : 'influence',
             'score'       : score
         }]) 
-
-
-# '''
-# ---------------------------------------------
-#               Evaluation stage              
-# ---------------------------------------------
-# '''
-# start_time = time.time()
-# 
-# results = []
-# for ld in dep_lexicons:
-#     eval_fraction = dp.get_opinions( ids=evaluation_ids, source=ld['source'] )
-#     score = evaluate( ld['lexicon'], eval_fraction )
-#     results.append({
-#         'type'        : 'deplex',
-#         'li'          : ld['li'],
-#         'source'      : ld['source'],
-#         'propagation' : ld['propagation'],
-#         'score'       : score
-#     })
-# dp.save_evaluation(results)
-# 
-# end_time(start_time)
