@@ -5,27 +5,26 @@ Module with a set of models for determining the scope negation
 @author: Nicolás Mechulam, Damián Salvia
 '''
 
+import os
+import numpy as np
+
+np.random.seed(666)
+os.environ['TF_CPP_MIN_VLOG_LEVEL'] = '3'
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+
 from cldas.utils import Log, Level
 from cldas.utils.metrics import *
+from cldas.utils.visual import title
 
 from keras.models import Sequential,load_model
 from keras.layers import Dense,LSTM
 from keras.layers.core import Dropout
 from keras.callbacks import EarlyStopping
 
-import os
-import numpy as np
-from cldas.utils.visual import title
-
 
 _DEFAULT_LAYER_SIZE = 750
 _DEFAULT_DROPOUT    = 0.0
 _DEFAULT_ACTIVATION = 'relu'
-
-
-np.random.seed(666)
-os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
-
 
 log = Log("./log")
 
@@ -95,15 +94,54 @@ class _NegScopeModel(object):
         
         log( self.get_scores(X, Y, verbose) , level=Level.INFO)
 
+
+    def fit2(self, gen_XY, gen_XY_test=None, batch_size=512, early_monitor='val_binary_accuracy', verbose=1):
+        
+        callbacks = []
+        if early_monitor:
+            callbacks.append( EarlyStopping( monitor=early_monitor, min_delta=0, patience=2, mode='auto', verbose=0 ) )
+                  
+        self._model.fit_generator( gen_XY.get_iterator(), 
+            callbacks=callbacks , 
+            epochs=100 , 
+            steps_per_epoch=len(gen_XY)/batch_size,
+            validation_data=gen_XY_test.get_iterator(), 
+            validation_steps=len(gen_XY_test)/batch_size,
+            max_queue_size=5,
+            verbose=verbose 
+        )
+        
+        log( self.get_scores2(gen_XY, verbose) , level=Level.INFO )
+
     
-    def predict(self,X):
+    def predict(self, X):
         Y = self._model.predict( X )
+        Y = np.array(Y).round() == 1 
+        return Y
+
+
+    def predict2(self, gen_X, verbose=2):
+        Y = self._model.predict_generator( 
+            gen_X.get_iterator(), 
+            steps=1,
+            max_queue_size=10,
+            verbose=verbose
+        )
         Y = np.array(Y).round() == 1 
         return Y
     
     
     def get_scores(self, X, Y, verbose=2):
-        scores = self._model.evaluate(X,Y,batch_size=10,verbose=verbose)
+        scores = self._model.evaluate( X, Y, batch_size=10, verbose=verbose )
+        return zip( self._model.metrics_names , [ round(score*100,1) for score in scores ] )
+
+
+    def get_scores2(self, gen_XY, verbose=2):
+        scores = self._model.evaluate_generator( 
+            gen_XY.get_iterator(), 
+            steps=5,
+            max_queue_size=5 
+        )
         return zip( self._model.metrics_names , [ round(score*100,1) for score in scores ] )         
 
     

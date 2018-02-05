@@ -5,6 +5,7 @@ Module with a set of models for determining the scope negation
 @author: Nicolás Mechulam, Damián Salvia
 '''
 
+import re
 import numpy as np
 import random, glob
 from difflib import get_close_matches
@@ -13,7 +14,7 @@ init(autoreset=True)
 
 from cldas.utils import progress, load
 from cldas.utils.logger import Log, Level 
-from cldas.utils.misc import EnumItems, Iterable
+from cldas.utils.misc import EnumItems, Iterable, get_levinstein_pattern
 
 
 log = Log("./log")
@@ -200,7 +201,7 @@ def get_tagged(tag_as,source=None):
     query = { "tagged" : tag_as  }
     if source:
         query.update({ "source" : source })
-    result = db.reviews.find(query).batch_size(10)
+    result = db.reviews.find(query)#.batch_size(50)
     return Iterable( result )
 
 
@@ -210,12 +211,12 @@ def get_untagged(limit=None,seed=None):
     @param limit: Quantity of opinions retrieved.
     @param seed : For setting the seed of random selection. 
     '''
-    result = db.reviews.find({ "tagged" : { "$exists" : False } }).batch_size(10) 
+    result = db.reviews.find({ "tagged" : { "$exists" : False } })#.batch_size(10) 
     if limit:
         random.seed( seed )  
         rand = int( random.random() * db.reviews.find({}).count() ) 
         result = result.skip( rand ).limit( limit )
-    result = result.batch_size(10)
+    result = result#.batch_size(50)
     return Iterable( result )
 
 
@@ -278,14 +279,31 @@ def get_aprox_embedding(word):
     Priors the embedding for such word.
     @param word: Word which approximated embedding will be retrieved
     '''
-    item = get_embedding(word)
-    if not item:
-        vocabulary = db.embeddings.distinct("_id")
-        match = get_close_matches( word , vocabulary , 1 , 0.75 )
-        if match: item = db.embeddings.find_one({ "_id" : match[0] })
-        else    : item = db.embeddings.find_one({ "_id" : "." })
-    result = item['embedding']
-    return result
+    item = db.embeddings.find_one({ "_id" : word })
+    if item is not None:
+        return item['embedding']
+
+    item = db.embeddings.find_one({ "similar":{ "$elemMatch":{ "$eq":word } } })
+    if item is not None:
+        return item['embedding']
+
+    regex = get_levinstein_pattern(word)
+    candidates = list( 
+        db.embeddings.aggregate([
+            { "$match": { "_id" : regex } },
+            { "$group": { "_id" : None, 'words' : {'$push':'$_id' } } }
+        ]) 
+    )
+    if candidates:
+        candidates = candidates[0]['words']
+        match = get_close_matches(word,candidates,1,0.75)
+        if match:
+            item = db.embeddings.find_one({ "_id" : match[0] })
+            db.embeddings.update({ '_id': item['_id'] } , { '$addToSet': { "similar": word } })
+            return item['embedding']
+            
+    item = db.embeddings.find_one({ "_id" : "." })
+    return item['embedding']
 
 
 def update_embeddings(femb='../embeddings/emb39-word2vec.npy', ftok='../embeddings/emb39-word2vec.txt', verbose=True):
@@ -355,7 +373,8 @@ def update_embeddings(femb='../embeddings/emb39-word2vec.npy', ftok='../embeddin
             result.append({ 
                 '_id'      :word,
                 'embedding':vector.tolist(),
-                'nearestOf':nearest 
+                'nearestOf':nearest,
+                'similar':[] 
             })
         if idx % 500 == 0 and result:
             save_embeddings(result)
@@ -375,13 +394,25 @@ def update_embeddings(femb='../embeddings/emb39-word2vec.npy', ftok='../embeddin
 
 
 def _format_ffn(text, wleft, wright, null, neg_as, is_train):
-    X,Y = [],[]
-    for idx, token in enumerate(text):       
-        x_curr = [ get_aprox_embedding( token['word'] ) if 0 <= idx < len(text) else null for idx in range(wleft + wright + 1) ]
+    total = len(text)
+    X,Y = [],[]    
+    x_prev = [ null for _ in range(wleft) ]
+    x_post = [ [ get_aprox_embedding( text[idx]['word'] ) ] for idx in range(0,wright+1) ] # includes current - range(0,...)
+    x_curr = np.array(x_prev).flatten().tolist() + np.array(x_post).flatten().tolist()
+    x_curr = np.array( x_curr ).flatten()
+    y_curr = None if not is_train else text[0]['negated'] if text[0]['negated'] is not None else neg_as
+    X.append( x_curr )
+    Y.append( y_curr )
+    for idx in range(1,total):   
+        x_next = [ get_aprox_embedding( text[idx+wright]['word'] ) ] if idx+wright < total else [ null ]
+        x_curr = np.array(x_prev[1:]).flatten().tolist() + np.array(x_post).flatten().tolist() + x_next[0]
         x_curr = np.array( x_curr ).flatten()
-        y_curr = None if not is_train else token['negated'] if token['negated'] is not None else neg_as
+        is_neg = text[idx]['negated']
+        y_curr = None if not is_train else is_neg if is_neg is not None else neg_as
         X.append( x_curr )
         Y.append( y_curr )
+        x_prev = x_prev[1:] + x_post[0]
+        x_post = x_post[1:] + [ x_next ]
     return X,Y
 
 
@@ -404,21 +435,22 @@ def _format_embeddings(formatter, opinions, **kwargs):
     null     = get_null_embedding(null_as)
     total    = len( opinions )
     X , Y = [] , []
-    for idx,opinion in enumerate(opinions):
+    for idx,opinion in enumerate(opinions): 
         is_train = opinion.has_key('tagged') and opinion['tagged'] == TaggedType.MANUAL
         msg = "training" if is_train else "predicting"
         if verbose: progress("Loading %s data (%*i words)"  % ( msg, 4, len(opinion['text']) ), total ,idx)
         x_curr, y_curr = formatter( opinion['text'], null=null, is_train=is_train, **kwargs )
         X += x_curr
-        Y += y_curr if is_train else []    
-    yield np.array(X)
-    yield np.array(Y)
+        Y += y_curr if is_train else []   
+        # yield x_curr, y_curr if is_train else []
+    return np.array(X), np.array(Y)
 
 
 def get_ffn_dataset(opinions, wleft, wright, null_as='.', neg_as=True, verbose=True):
     '''
     Given an opinion set and windows left/right returns the correct dataset format for FFN model
     '''
+    # opinions,_ = opinions.split(0.01)  # BORRAR
     return _format_embeddings( _format_ffn, opinions, wleft=wleft, wright=wright, null_as=null_as, neg_as=neg_as,  verbose=verbose )
 
 
@@ -427,6 +459,91 @@ def get_lstm_dataset(opinions, win, null_as='.', neg_as=True, verbose=True):
     Given an opinion set and windows left/right returns the correct dataset format for LSTM model
     '''
     return _format_embeddings( _format_lstm, opinions, win=win, null_as=null_as, neg_as=neg_as,  verbose=verbose )
+
+
+# ----------------------------------------------------------------------------------------------------------------------
+
+def _format_ffn2(opinions, wleft, wright, null_as, neg_as, verbose):
+    top = len(opinions)
+    null = get_null_embedding( null_as )
+    for idx,opinion in enumerate(opinions):
+        X,Y = [], []
+        is_train = opinion.has_key('tagged') and opinion['tagged'] == TaggedType.MANUAL 
+        text = opinion['text']
+        total = len(text) ; jdx=0
+        # if verbose: progress("Training FFN (word %4i of %4i)" % (jdx+1,total), top, idx, width=70)
+        x_prev = [ null for _ in range(wleft) ]
+        x_post = [ [ get_aprox_embedding( text[jdx]['word'] ) ] for idx in range(0,wright+1) ] # includes current - range(0,...)
+        x_curr = np.array(x_prev).flatten().tolist() + np.array(x_post).flatten().tolist()
+        x_curr = np.array( x_curr ).flatten()
+        y_curr = None if not is_train else text[jdx]['negated'] if text[jdx]['negated'] is not None else neg_as
+        X.append( x_curr ) ; Y.append( y_curr )
+        del x_curr; del y_curr
+        for jdx in range(1,total):   
+            if len(X) % 32 == 0:
+                yield np.asarray(X), np.asarray(Y)
+            # if verbose: progress("Training FFN (word %4i of %4i)" % (jdx+1,total), top, idx, width=70)
+            x_next = [ get_aprox_embedding( text[jdx+wright]['word'] ) ] if jdx+wright < total else [ null ]
+            x_curr = np.array(x_prev[1:]).flatten().tolist() + np.array(x_post).flatten().tolist() + x_next[0]
+            x_curr = np.array( x_curr ).flatten()
+            y_curr = None if not is_train else text[jdx]['negated'] if text[jdx]['negated'] is not None else neg_as
+            X.append( x_curr ) ; Y.append( y_curr )
+            del x_curr; del y_curr
+            x_prev = x_prev[1:] + x_post[0]
+            x_post = x_post[1:] + [ x_next ]
+        if len(X) % 32 == 0:
+            yield np.asarray(X), np.asarray(Y)
+
+
+def _format_lstm2(opinions, win, null_as, neg_as, verbose):
+    top = len(opinions)
+    null = get_null_embedding( null_as )
+    for idx,opinion in enumerate(opinions):
+        X,Y = [], []
+        is_train = opinion.has_key('tagged') and opinion['tagged'] == TaggedType.MANUAL 
+        text = opinion['text']
+        total = len(text) ; jdx=0
+        # if verbose: progress("Training LSTM (word %4i of %4i)" % (jdx+1,total), top, idx, width=70)
+        x_curr = [ get_aprox_embedding( text[jdx+i]['word'] ) if jdx+i < total else null for i in range(0,win) ]
+        y_curr = [ None if not is_train else False if jdx+i >= total else text[jdx+i]['negated'] if text[jdx+i]['negated'] is not None else neg_as for i in range(0,win) ]
+        X.append( np.asarray(x_curr) ) ; Y.append( np.asarray(y_curr) )
+        del x_curr; del y_curr
+        rest = (win - total) % win 
+        for jdx in range(win,total+rest,win):
+            if len(X) % 32 == 0:
+                yield np.asarray(X), np.asarray(Y)
+            # if verbose: progress("Training LSTM (word %4i of %4i)" % (jdx+1,total), top, idx, width=70)
+            x_curr = [ get_aprox_embedding( text[jdx+i]['word'] ) if jdx+i < total else null for i in range(0,win) ]
+            y_curr = [ None if not is_train else False if jdx+i >= total else text[jdx+i]['negated'] if text[jdx+i]['negated'] is not None else neg_as for i in range(0,win) ]
+            X.append( np.asarray(x_curr) ) ; Y.append( np.asarray(y_curr) )
+            del x_curr; del y_curr
+        if len(X) % 32 == 0:
+            yield np.asarray(X), np.asarray(Y)
+
+
+def _generate_date(formatter, *args, **kwargs):
+    while True:
+        try: yield next(gen)
+        except (StopIteration, UnboundLocalError):
+            gen = formatter(*args,**kwargs)
+
+
+def get_ffn_dataset2(opinions, wleft, wright, test_frac=0.2, null_as='.', neg_as=True, verbose=True):
+    test_data, train_data = opinions.split_sample(test_frac) 
+    train_gen = _generate_date( _format_ffn2, train_data, wleft=wleft, wright=wright, null_as=null_as, neg_as=neg_as,  verbose=verbose )
+    test_gen  = _generate_date( _format_ffn2, test_data , wleft=wleft, wright=wright, null_as=null_as, neg_as=neg_as,  verbose=verbose )
+    train_gen = Iterable( train_gen, sum(1 for op in train_data for _ in op['text'] ) )
+    test_gen  = Iterable( test_gen , sum(1 for op in test_data  for _ in op['text'] ) )
+    return train_gen, test_gen
+
+
+def get_lstm_dataset2(opinions, win, test_frac=0.2, null_as='.', neg_as=True, verbose=True):
+    test_data,  train_data = opinions.split_sample(test_frac)
+    train_gen = _generate_date( _format_lstm2, train_data, win=win, null_as=null_as, neg_as=neg_as,  verbose=verbose )
+    test_gen  = _generate_date( _format_lstm2, test_data , win=win, null_as=null_as, neg_as=neg_as,  verbose=verbose )
+    train_gen = Iterable( train_gen, sum(1 for op in train_data for _ in op['text'] ) )
+    test_gen  = Iterable( test_gen , sum(1 for op in test_data  for _ in op['text'] ) )
+    return train_gen, test_gen
 
 
 # ----------------------------------------------------------------------------------------------------------------------

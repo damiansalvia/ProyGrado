@@ -111,7 +111,7 @@ def by_influence(graph, seeds,
 
 
 def by_distance(graph, seeds,
-        threshold       = 0.001,
+        threshold       = 0.01,
         penalty         = 0.8,
         neu_treshold    = None,
         filter_seeds    = False,
@@ -173,7 +173,7 @@ def by_distance(graph, seeds,
                     lexicon[ady]['inf'] += 1
                     queue.append( (seed,ady,_val) )
     
-    lexicon = _postprocess(lexicon, graph, "deplex_by_bfs", neu_treshold, filter_seeds, seeds, seed_name, limit, confidence, tofile, wc_neu)
+    lexicon = _postprocess(lexicon, graph, "deplex_by_distance", neu_treshold, filter_seeds, seeds, seed_name, limit, confidence, tofile, wc_neu)
         
     return lexicon
 

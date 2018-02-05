@@ -12,10 +12,10 @@ import matplotlib.pyplot as plt
 from wordcloud import WordCloud, ImageColorGenerator
 from time import gmtime, strftime
 import os, io, json, re
+from colour import Color
+from cldas.utils.misc import _search_influences
 
-PATH  = os.path.join( os.path.abspath( os.path.dirname(__file__) ) , "../files/visjs" )
-TEMP  = os.path.join( os.path.dirname(__file__) , "../files/graph_template.html" )
-
+PATH  = os.path.join( os.path.abspath( os.path.dirname(__file__) ) , "../files/" )
 
 
 def save(data,name,path,overwrite=True):
@@ -129,31 +129,78 @@ def save_word_cloud(lexicon,name,path,neu_treshold=0.0):
     fig.subplots_adjust(wspace=0, hspace=0)    
     fig.savefig(path, facecolor='k', bbox_inches='tight', dpi=1200, figsize=(20,20), transparent=True, frameon=False, pad_inches=0)
     plt.clf() # Avoid 'RuntimeWarning: More than 20 figures have been opened. Figures created through the pyplot interface'
-    print "\rWord cloud saved at",path        
+    print "\rWord cloud saved at",path            
     
-    
-    
-def save_graph(source, nodes, edges, name, path):
-    
-    nodes = json.dumps(nodes,indent=4,ensure_ascii=False)
-    edges = json.dumps(edges,indent=4,ensure_ascii=False)
-    
-    path = path.replace("\\", "/")
-    path = path if path[-1] != "/" else path[:-1]
-    path = "%s/%s.html" % (path,name)
-    
-    with  open( TEMP, 'r' ) as fp:
-        vis = fp.read()
+
+
+def save_sub_graph(graph, lexicon, 
+            color_pos = "green", 
+            color_neg = "red",
+            matices   = 50, 
+            name      = "", 
+            path      = None
+        ):
+
+        COLOR = [ c.hex_l for c in Color( color_neg ).range_to( Color( color_pos ), matices+2 ) ]
         
-    vis = re.sub( '#path#'  , PATH   , vis )
-    vis = re.sub( '#source#', source , vis )
-    vis = re.sub( '#nodes#' , nodes  , vis )
-    vis = re.sub( '#edges#' , edges  , vis )
-    
-    with io.open( path, "w", encoding='utf8' ) as fp: 
-        if not isinstance(vis, unicode):
-            vis = unicode(vis,'utf8')
-        fp.write(vis)
-    print "\rGraph saved at",path
-    
+        lemmas  = lexicon.keys()    
+
+        vals = [ x['val'] for x in lexicon.values() ]
+        min_val = min(vals)
+        max_val = max(vals)
+
+        print "Saving...",
+        
+        vis_nodes = [] ; vis_edges = []    
+        for node, edges in graph._graph.items():
+            
+            if node in lemmas:
+                
+                inf = lexicon.get(node,{}).get('inf',0.001)
+                val = lexicon.get(node,{}).get('val',0)
+                vis_nodes.append({
+                    'id': node,
+                    'label': node,
+                    'value':  inf * 1.0,
+                    'title' : u'Valence: {val:1.05f}<br>\Relevance: {inf:1.02f}<br>Neighbours: {ady}'.format(word=node,val=val,inf=inf,ady=len(edges)),
+                    'color': COLOR[ int( (val - min_val) / (max_val - min_val) * matices ) + 1 ]
+                })
+
+                for ady, weights in edges.items():
+                      
+                    if ady in lemmas:
+                          
+                        vis_edges.append({
+                            'from'  : node,
+                            'to'    : ady,
+                            'value' : weights['dir'] * 10.0,
+                            'color' :{ "color":color_pos },
+                            'arrows': "to",
+                        })
+                        
+                        vis_edges.append({
+                            'from'  : node,
+                            'to'    : ady,
+                            'value' : weights['inv'] * 10.0,
+                            'color' :{ "color":color_neg },
+                            'arrows': "to",
+                        })
+                    
+        vis_graph = {"nodes": vis_nodes, "edges":vis_edges}
+        
+        if path:        
+            name  = "_%s_ld%i_%s" % (graph.source,len(lemmas),name)
+            name = "graph" + name
+            save( vis_graph , name , path )
+
+        return vis_graph    
+
+
+
+def save_result(lexicon,graph,scores,name,path):
+    result = save_sub_graph(graph,lexicon)
+    result.update({ "scores":scores })
+    name  = "_%s_ld%i_%s" % (graph.source,len(lemmas),name)
+    name = "result" + name
+    save( result , name , path )
     

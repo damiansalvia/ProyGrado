@@ -5,10 +5,11 @@ Module with miscellaneous methods
 @author: Nicolás Mechulam, Damán Salvia
 '''
 
+from collections import defaultdict
 from itertools import tee, chain
 from collections import Counter
 from enchant.utils import levenshtein
-import re
+import re, random, types
 
 
 def OpinionType(opinion):
@@ -21,9 +22,9 @@ def OpinionType(opinion):
 
 class Iterable(object):
     
-    def __init__(self,iterable):
+    def __init__(self,iterable,count=None):
         for_real , for_sum = tee(iterable) 
-        self.__count    = sum( 1 for _ in for_sum ) 
+        self.__count    = count if count is not None else sum( 1 for _ in for_sum ) 
         self.__iterable = for_real
         
     def __iter__(self):
@@ -51,6 +52,24 @@ class Iterable(object):
         self.__iterable = for_real
         for pos,val in enumerate(for_iter):
             if pos==i: return val
+
+    def get_iterator(self):
+        for_real , for_iter = tee(self.__iterable)
+        self.__iterable = for_real
+        return for_iter
+
+    def split_sample(self,frac,seed=1):
+        for_iter1 , for_iter2 = tee(self.__iterable)
+        for_real  , for_iter2 = tee(for_iter2)
+        self.__iterable = for_real
+        random.seed(seed)
+        idxs = [ idx for idx in range(self.__count) ] ; random.shuffle(idxs)
+        top = int( round( self.__count * frac ) )
+        idxs1, idxs2 = idxs[:top], idxs[top:]
+        iter1 = Iterable( val for pos,val in enumerate(for_iter1) if pos in idxs1 )
+        iter2 = Iterable( val for pos,val in enumerate(for_iter2) if pos in idxs2 )
+        return iter1, iter2
+
     
     
 class EnumItems:
@@ -123,3 +142,78 @@ def get_close_dist(word, wordlist, cutoff=0.7, n=None):
     res = res[:n]
     return res
 
+
+def get_levinstein_pattern(word):
+    return re.compile(
+        '|'.join([
+            '|'.join([ # Make Levistein regex from word
+                ''.join([ "^", word[:i]  , '.',                      word[i:]   , "$" ]),  # INS
+                ''.join([ "^", word[:i]  ,                           word[i:]   , "$" ]),  # DEL
+                ''.join([ "^", word[:i-1], '.',                      word[i:]   , "$" ]),  # MOD
+                ''.join([ "^", word[:i-1], word[i:i+1], word[i-1:i], word[i+1:] , "$" ]),  # TRN
+             ]) for i in range(1,len(word)+1)
+        ]), re.IGNORECASE)
+
+
+def _search_influences(graph, initial, threshold):
+
+    influence = defaultdict(lambda:[0,0]) ; influence[initial] = [1, 0]    
+    visited_dir = [] ; visited_inv = []
+    nodes = graph.nodes()    
+    while nodes: 
+
+        next_dir = None ; next_inv = None
+        
+        for node in nodes: # Select best direct node and best inverse node (It can be the dame node)
+            
+            if influence[node][0] > threshold and not node in visited_dir:
+                if next_dir is None:
+                    next_dir = node
+                elif influence[node][0] > influence[next_dir][0]:
+                    next_dir = node
+            
+            if influence[node][1] > threshold and not node in visited_inv:
+                if next_inv is None:
+                    next_inv = node
+                elif influence[node][1] > influence[next_inv][1]:
+                    next_inv = node
+
+        if next_dir is None and next_inv is None:
+            break
+
+        if next_dir:
+            
+            visited_dir.append(next_dir)
+            current_dir_w = influence[next_dir][0]
+            
+            for edge in graph[next_dir]:
+                
+                if edge not in visited_dir:
+                    
+                    dir_weight = current_dir_w * graph[next_dir][edge]['dir']
+                    inv_weight = current_dir_w * graph[next_dir][edge]['inv']
+                    
+                    if dir_weight > influence[edge][0]:
+                        influence[edge][0] = dir_weight
+                        
+                    if inv_weight > influence[edge][1]:
+                        influence[edge][1] = inv_weight
+
+        if next_inv:
+            visited_inv.append(next_inv)
+            current_inv_w = influence[next_inv][1]
+            
+            for edge in graph[next_inv]:
+                
+                if edge not in visited_inv:
+                    
+                    dir_weight = current_inv_w * graph[next_inv][edge]['inv']
+                    inv_weight = current_inv_w * graph[next_inv][edge]['dir']
+                    
+                    if dir_weight > influence[edge][0]:
+                        influence[edge][0] = dir_weight
+                        
+                    if inv_weight > influence[edge][1]:
+                        influence[edge][1] = inv_weight
+
+    return dict(influence)
