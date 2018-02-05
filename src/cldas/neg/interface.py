@@ -5,6 +5,8 @@ Module with negation utilities
 '''
 
 import os
+os.environ['TF_CPP_MIN_VLOG_LEVEL'] = '0'
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '0'
 clean = 'cls' if os.name == 'nt' else 'clear'
 
 from colorama import init, Fore, Style, Back

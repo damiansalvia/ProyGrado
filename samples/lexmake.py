@@ -15,7 +15,7 @@ import cldas.db.crud as dp
 
 from cldas.indeplex import *
 from cldas.deplex import *
-from cldas.utils import load, title, USEFUL_TAGS
+from cldas.utils import load, title, USEFUL_TAGS, save_sub_graph
 
 
 def display_options(name, options, files=[]):
@@ -89,7 +89,7 @@ while True:
     ld = deplex[k]( graph, li, seed_name=seed_name, limit=300, tofile='./deplex', wc_neu=0.2)
     
     
-    graph.to_vis(ld, tofile='./graphs')
+    save_sub_graph(graph, ld, name=deplex[k].__name__,path='./graphs')
     
 
     if raw_input("Exit? [y/n] > ") == 'y': break

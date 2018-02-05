@@ -9,8 +9,8 @@ import os
 import numpy as np
 
 np.random.seed(666)
-os.environ['TF_CPP_MIN_VLOG_LEVEL'] = '3'
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+os.environ['TF_CPP_MIN_VLOG_LEVEL'] = '2'
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 from cldas.utils import Log, Level
 from cldas.utils.metrics import *

@@ -4,6 +4,11 @@ Module with a set of common metrics
 
 @author: Nicolás Mechulam, Damán Salvia
 '''
+
+import os
+os.environ['TF_CPP_MIN_VLOG_LEVEL'] = '0'
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '0'
+
 import keras.backend as K
 import sklearn.metrics as sk_metrics
 
