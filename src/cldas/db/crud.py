@@ -254,7 +254,7 @@ def save_embeddings(embeddings):
     if embeddings: db.embeddings.insert_many(embeddings)
 
 
-def get_null_embedding(null_as='.'):
+def get_null_embedding(null_as='__null__'):
     '''
     Gets a null embedding.
     @param null_as: Which word will cosider null. By default, dot word ('.').
@@ -269,8 +269,12 @@ def get_embedding(word):
     Can be None if the word has not an associated embedding. 
     @param word: Word which embedding will be retrieved
     '''
-    result = db.embeddings.find_one({ "_id" : word })
-    return result
+    item = db.embeddings.find_one({ 
+        "$or": [ 
+            { "_id" : word },
+            { "similars":{ "$elemMatch":{ "$eq":word } } }
+        ]})
+    return item
 
 
 def get_aprox_embedding(word):
@@ -279,13 +283,9 @@ def get_aprox_embedding(word):
     Priors the embedding for such word.
     @param word: Word which approximated embedding will be retrieved
     '''
-    item = db.embeddings.find_one({ "_id" : word })
+    item = get_embedding(word)
     if item is not None:
-        return item['embedding']
-
-    item = db.embeddings.find_one({ "similar":{ "$elemMatch":{ "$eq":word } } })
-    if item is not None:
-        return item['embedding']
+        return item
 
     regex = get_levinstein_pattern(word)
     candidates = list( 
@@ -299,11 +299,11 @@ def get_aprox_embedding(word):
         match = get_close_matches(word,candidates,1,0.75)
         if match:
             item = db.embeddings.find_one({ "_id" : match[0] })
-            db.embeddings.update({ '_id': item['_id'] } , { '$addToSet': { "similar": word } })
-            return item['embedding']
+            db.embeddings.update({ '_id': item['_id'] } , { '$addToSet': { "similars": word } })
+            return item
 
-    item = db.embeddings.find_one({ "_id" : "." })
-    return item['embedding']
+    item = db.embeddings.find_one({ "_id" : "__null__" })
+    return item
 
 
 def update_embeddings(femb='../embeddings/emb39-word2vec.npy', ftok='../embeddings/emb39-word2vec.txt', verbose=True):
@@ -313,83 +313,44 @@ def update_embeddings(femb='../embeddings/emb39-word2vec.npy', ftok='../embeddin
     @param ftok   : Word list file (.txt).
     @param verbose: Print progress. 
     '''
-      
-    stats = { "ByWord":0,"ByRepl":0,"ByClos":0,"IsNull":0 }
-    
-    # Load vectors and its words
-    vocabulary  = unicode( open(ftok).read().lower().replace("_","") ,'utf8' )    
-    index_for   = { token:index for index,token in enumerate(vocabulary.splitlines()) }
-    embeddings  = np.load(femb)
-    
-    # Get dimension and create the null vector
-    dimension  = len(embeddings[0])
-    nullvector = np.zeros(dimension)
-    
-    # Get vocabulary
-    vocabulary = get_words()  
-    
-    # Get difference of vector-words and vocabulary-words for improving get_close_matches performance 
-    # PROBLEM: 'pizería' is excluded although 'pizerías' is in the vocabulary (i.e. won't have a closest match)
-    dif_keys = set(index_for.keys()) - set(vocabulary)
-    for key in list(dif_keys): index_for.pop(key,None)
-    
-    replaces = {u'a':u'á',u'e':u'é',u'i':u'í',u'o':u'ó',u'u':u'ú'}
-    
-    def get_nearest_vector( # Get the associated vector of a word and its match (null if it is the same or null vector)
-            word
-        ):
-        
-        if index_for.has_key(word):
-            stats['ByWord'] += 1
-            return None , embeddings[ index_for[ word ] ]
-        
-        vowels = {idx:char for idx,char in enumerate(word) if char in 'aeiou'}
-        for idx,vowel in vowels.items():
-            replaced = word[:idx] + replaces[vowel] + word[idx+1:]
-            if index_for.has_key(replaced):
-                stats['ByRepl'] += 1
-                return replaced , embeddings[ index_for[ replaced ] ]
 
-        size = len(word)
-        if size > 1 and size < 20 and ('_' not in word): # Prevents unnecessary calculation
-            possibilities = filter( lambda x: size-2 < len(x) < size+2 , index_for.keys() )
-            match = get_close_matches( word , possibilities , 1 , 0.75 )
-            if match:
-                stats['ByClos'] += 1
-                return match[0] , embeddings[ index_for[ match[0] ] ]
-        
-        stats['IsNull'] += 1
-        return None , nullvector 
-    
-    
-    # For each word in vocabulary find its embedding    
-    result = []
+    # Dump embeddings into database
+    vocabulary  = unicode( open(ftok).read().lower().replace("_","") ,'utf8' ).splitlines()    
+    embeddings  = np.load(femb)
     total = len(vocabulary)
-    
-    for idx,word in enumerate(vocabulary):
-        if verbose: progress("Updating embeddings [W:%*i|R:%*i|C:%*i|N:%*i]" % ( 6,stats['ByWord'],6,stats['ByRepl'],6,stats['ByClos'],6,stats['IsNull'] ),total,idx)
-        if not get_embedding(word):
-            nearest , vector = get_nearest_vector( word )
-            result.append({ 
+    batch = []
+    for idx, (word, vector) in enumerate( zip(vocabulary,embeddings) ):
+        if verbose: progress("Loading embeddings from file",total,idx)
+        item = get_embedding(word)
+        if item is None:
+            batch.append({
                 '_id'      :word,
                 'embedding':vector.tolist(),
-                'nearestOf':nearest,
-                'similar':[] 
+                'similars':[]
             })
-        if idx % 500 == 0 and result:
-            save_embeddings(result)
-            result = []
+            if idx % 500 == 0 and batch:
+                save_embeddings(batch)
+                batch = []     
     
-    # Save statistics results
-    log("Embeddings integration result. %s" % str(stats),level=Level.INFO)
-    if verbose:
-        total = sum(stats.values())
-        if total == 0: total = 1 
-        for case in stats: print "%-17s : %*i (%4.2f%%)" % ( case, 6, stats[case], 100.0*stats[case]/total )     
-    
-    # Save results in database
-    save_embeddings(result)
-    
+    # Makes null embedding and save
+    null = np.zeros( len(embeddings[0]) )
+    batch.append({
+        '_id'      :"__null__",
+        'embedding':null.tolist(),
+        'similars':[]
+    })
+    save_embeddings(batch)    
+    del vocabylary ; del embeddings
+
+    # For each word, find its most similar
+    vocabulary = get_words()
+    total = len(vocabulary)
+    exact, approx, null = 0, 0, 0
+    for idx, word in enumerate(vocabulary):
+        if verbose: progress("Updating embeddings from vocabulary", total, idx)
+        item = get_aprox_embedding(word)
+        db.embeddings.update({ '_id': item['_id'] } , { '$addToSet': { "similars": word } })
+
 
 # ----------------------------------------------------------------------------------------------------------------------
 
@@ -403,7 +364,7 @@ def _format_ffn(opinions, wleft, wright, null_as, neg_as, verbose):
         total = len(text) ; jdx=0
         # if verbose: progress("Training FFN (word %4i of %4i)" % (jdx+1,total), top, idx, width=70)
         x_prev = [ null for _ in range(wleft) ]
-        x_post = [ [ get_aprox_embedding( text[jdx]['word'] ) ] for idx in range(0,wright+1) ] # includes current - range(0,...)
+        x_post = [ [ get_aprox_embedding( text[jdx]['word'] )['embedding'] ] for idx in range(0,wright+1) ] # includes current - range(0,...)
         x_curr = np.array(x_prev).flatten().tolist() + np.array(x_post).flatten().tolist()
         x_curr = np.array( x_curr ).flatten()
         y_curr = None if not is_train else text[jdx]['negated'] if text[jdx]['negated'] is not None else neg_as
@@ -413,7 +374,7 @@ def _format_ffn(opinions, wleft, wright, null_as, neg_as, verbose):
             if len(X) % 32 == 0:
                 yield np.asarray(X), np.asarray(Y)
             # if verbose: progress("Training FFN (word %4i of %4i)" % (jdx+1,total), top, idx, width=70)
-            x_next = [ get_aprox_embedding( text[jdx+wright]['word'] ) ] if jdx+wright < total else [ null ]
+            x_next = [ get_aprox_embedding( text[jdx+wright]['word'] )['embedding'] ] if jdx+wright < total else [ null ]
             x_curr = np.array(x_prev[1:]).flatten().tolist() + np.array(x_post).flatten().tolist() + x_next[0]
             x_curr = np.array( x_curr ).flatten()
             y_curr = None if not is_train else text[jdx]['negated'] if text[jdx]['negated'] is not None else neg_as
@@ -434,7 +395,7 @@ def _format_lstm(opinions, win, null_as, neg_as, verbose):
         text = opinion['text']
         total = len(text) ; jdx=0
         # if verbose: progress("Training LSTM (word %4i of %4i)" % (jdx+1,total), top, idx, width=70)
-        x_curr = [ get_aprox_embedding( text[jdx+i]['word'] ) if jdx+i < total else null for i in range(0,win) ]
+        x_curr = [ get_aprox_embedding( text[jdx+i]['word'] )['embedding'] if jdx+i < total else null for i in range(0,win) ]
         y_curr = [ None if not is_train else False if jdx+i >= total else text[jdx+i]['negated'] if text[jdx+i]['negated'] is not None else neg_as for i in range(0,win) ]
         X.append( np.asarray(x_curr) ) ; Y.append( np.asarray(y_curr) )
         del x_curr; del y_curr
@@ -443,7 +404,7 @@ def _format_lstm(opinions, win, null_as, neg_as, verbose):
             if len(X) % 32 == 0:
                 yield np.asarray(X), np.asarray(Y)
             # if verbose: progress("Training LSTM (word %4i of %4i)" % (jdx+1,total), top, idx, width=70)
-            x_curr = [ get_aprox_embedding( text[jdx+i]['word'] ) if jdx+i < total else null for i in range(0,win) ]
+            x_curr = [ get_aprox_embedding( text[jdx+i]['word'] )['embedding'] if jdx+i < total else null for i in range(0,win) ]
             y_curr = [ None if not is_train else False if jdx+i >= total else text[jdx+i]['negated'] if text[jdx+i]['negated'] is not None else neg_as for i in range(0,win) ]
             X.append( np.asarray(x_curr) ) ; Y.append( np.asarray(y_curr) )
             del x_curr; del y_curr
@@ -458,9 +419,9 @@ def _generate_data(formatter, *args, **kwargs):
             gen = formatter(*args,**kwargs)
 
 
-def get_ffn_dataset(opinions, wleft, wright, test_frac=0.2, null_as='.', neg_as=True, verbose=True):
+def get_ffn_dataset(opinions, wleft, wright, test_frac=0.2, null_as='__null__', neg_as=True, verbose=True):
     '''
-    Given an opinion set and windows left/right returns the correct dataset format for FFN model
+    Given an opinion-set and windows left/right. returns the correct dataset format for FFN model
     '''
     test_data, train_data = opinions.split_sample(test_frac) 
     train_gen = _generate_data( _format_ffn, train_data, wleft=wleft, wright=wright, null_as=null_as, neg_as=neg_as,  verbose=verbose )
@@ -470,7 +431,10 @@ def get_ffn_dataset(opinions, wleft, wright, test_frac=0.2, null_as='.', neg_as=
     return train_gen, test_gen
 
 
-def get_lstm_dataset(opinions, win, test_frac=0.2, null_as='.', neg_as=True, verbose=True):
+def get_lstm_dataset(opinions, win, test_frac=0.2, null_as='__null__', neg_as=True, verbose=True):
+    '''
+    Given an opinion-set and windows, returns the correct dataset format for LSTM model
+    '''
     test_data,  train_data = opinions.split_sample(test_frac)
     train_gen = _generate_data( _format_lstm, train_data, win=win, null_as=null_as, neg_as=neg_as,  verbose=verbose )
     test_gen  = _generate_data( _format_lstm, test_data , win=win, null_as=null_as, neg_as=neg_as,  verbose=verbose )
