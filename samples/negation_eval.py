@@ -25,45 +25,42 @@ def eval_negation( fixed, arguments={}, params_lstm=None, params_ffn=None, iter=
     ######## Feed-Forward Neural Network #########  
     ## FFN
 
-    if params_ffn and (not arguments or arguments.get('ffn') != None):
-        keys_ffn = params_ffn.keys()
-        idx = 0
-        for par in itertools.product(*params_ffn.values()):
-            dict_par = dict(zip(keys_ffn,par))
-            if idx < arguments.get('ffn', 0):
-                continue
-            # try:
-            start_time = time.time()
-            
-            name = "Neg_FFN_%d" % int(start_time) 
-            ffn = NegScopeFFN( ** dict(zip(keys_ffn,par) + fixed.items()))
-            # X_train, Y_train = dp.get_ffn_dataset( tagged, dict_par['window_left'], dict_par['window_right'] )
-            # ffn.fit( X_train, Y_train )
-            gen_train, gen_test = dp.get_ffn_dataset2( tagged, dict_par['window_left'], dict_par['window_right'] )
-            ffn.fit2( gen_train, gen_XY_test=gen_test )
+    # if params_ffn and (not arguments or arguments.get('ffn') != None):
+    #     keys_ffn = params_ffn.keys()
+    #     idx = 0
+    #     for par in itertools.product(*params_ffn.values()):
+    #         dict_par = dict(zip(keys_ffn,par))
+    #         if idx < arguments.get('ffn', 0):
+    #             continue
+    #         try:
+    #             start_time = time.time()
+                
+    #             name = "Neg_FFN_%d" % int(start_time) 
+    #             ffn = NegScopeFFN( ** dict(zip(keys_ffn,par) + fixed.items()))
+    #             gen_train, gen_test = dp.get_ffn_dataset( tagged, dict_par['window_left'], dict_par['window_right'] )
+    #             ffn.fit( gen_train, gen_XY_test=gen_test )
 
-            elapsed = end_time(start_time)
+    #             elapsed = end_time(start_time)
 
-            # score = ffn.get_scores( X_train, Y_train )
-            score = ffn.get_scores2( gen_train )
-            dp.save_evaluation([dict({
-                'type'          : 'negation',
-                'ANN'           : 'FFN',
-                'name'          : name,
-                'score'         : dict(score),
-                'training_time' : elapsed,
-                'params'        : dict_par
-            })])  
+    #             score = ffn.get_scores( gen_train )
+    #             dp.save_evaluation([dict({
+    #                 'type'          : 'negation',
+    #                 'ANN'           : 'FFN',
+    #                 'name'          : name,
+    #                 'score'         : dict(score),
+    #                 'training_time' : elapsed,
+    #                 'params'        : dict_par
+    #             })])  
 
-            ffn.save_model(name, path)
+    #             ffn.save_model(name, path)
 
-            log( "Step fnn %d finished." % idx, level=Level.INFO)
-            # except Exception as e:
-            #     error = "Error while processing: %s \n Error : %s" % (str(dict_par), str(e))
-            #     print error
-            #     log( error , level=Level.ERROR)
-            #     time.sleep(2) 
-            idx += 1
+    #             log( "Step fnn %d finished." % idx, level=Level.INFO)
+    #         except Exception as e:
+    #             error = "Error while processing: %s \n Error : %s" % (str(dict_par), str(e))
+    #             print error
+    #             log( error , level=Level.ERROR)
+    #             time.sleep(2) 
+    #         idx += 1
 
     ## LSTM
     if params_lstm and (not arguments or arguments.get('lstm') != None):
@@ -77,15 +74,12 @@ def eval_negation( fixed, arguments={}, params_lstm=None, params_ffn=None, iter=
 
                 name = "Neg_LSTM_%d" % int(start_time) 
                 lstm = NegScopeLSTM( ** dict(zip(keys_lstm,par) + fixed.items()))
-                # X_train, Y_train = dp.get_lstm_dataset( tagged, dict(zip(keys_lstm,par))['window'] )
-                # lstm.fit( X_train, Y_train )
-                gen_train, gen_test = dp.get_lstm_dataset2( tagged, dict(zip(keys_lstm,par))['window'] )
-                lstm.fit2( gen_train, gen_XY_test=gen_test )
+                gen_train, gen_test = dp.get_lstm_dataset( tagged, dict(zip(keys_lstm,par))['window'] )
+                lstm.fit( gen_train, gen_XY_test=gen_test )
 
                 elapsed = end_time(start_time)
 
-                # score = lstm.get_scores( X_train, Y_train)
-                score = lstm.get_scores2( gen_train )
+                score = lstm.get_scores( gen_train )
                 dp.save_evaluation([dict({
                     'type'          : 'negation',
                     'ANN'           : 'LSTM',

@@ -11,7 +11,7 @@ import time, os
 
 from cldas.utils import USEFUL_TAGS
 from cldas.utils.misc import Iterable
-from cldas.utils.file import save, load
+from cldas.utils.file import save, load, save_result
 from cldas.utils.visual import progress
 from cldas.evaluator import evaluate
 
@@ -200,7 +200,7 @@ end_time(start_time)
 '''
 start_time = time.time()
  
-dp.save_negations_from_files('./neg/manual/*')    
+# dp.save_negations_from_files('./neg/manual/*')    
  
 if not dp.get_opinions(source='SFU-NEG'):    
     reader = CorpusReader( '../corpus/SFU-NEG', '*/*.xml', 
@@ -241,7 +241,8 @@ print "\n","Elapsed:",elapsed,"\n"
 log( "Adding embeddings- Elapsed: %s" % elapsed , level=Level.DEBUG)
  
  
- 
+sys.exit(0)
+
 '''
 ---------------------------------------------
       Negation Scope stage
@@ -256,32 +257,33 @@ untagged = dp.get_untagged()
 vec_size = len( dp.get_null_embedding() )
  
 path = './neg/models/'
+
+
  
 ######### Feed-Forward Neural Network ######### 
-# wleft, wright = 2, 2
-# ffn = NegScopeFFN( wleft, wright, vec_size )
-#  
-# fname = "model_NegScopeFFNl%i_r%i" % (wleft,wright)
-# if os.path.exists(path+fname):
-#     lstm.load_model(path+fname)
-# else:
-#     X_train, Y_train = dp.get_ffn_dataset( tagged, wleft, wright )
-#     ffn.fit( X_train, Y_train )
-#      
-#     ffn.save_model(fname, './neg/models')
-#      
-# negations = {} ; total = len( untagged )
-# for opinion in untagged:
-#     progress("Predicting on new data",total,idx)
-#     X_pred, _ = dp.get_ffn_dataset( [opinion], wleft , wright )
-#     Y_pred = ffn.predict( X_pred )
-#     Y_pred = Y_pred[0].tolist()
-#     negations[ opinion['_id'] ] = Y_pred  
-#     if idx % 500 == 0: # Optimization
-#         dp.save_negations(negations, dp.TaggedType.AUTOMATIC)
-#         negations = {}
-# if negations: 
-#     dp.save_negations(negations, dp.TaggedType.AUTOMATIC)    
+wleft, wright = 2, 2
+ffn = NegScopeFFN( wleft, wright, vec_size )
+ 
+fname = "model_NegScopeFFNl%i_r%i" % (wleft,wright)
+if os.path.exists(path+fname):
+    lstm.load_model(path+fname)
+else:
+    gen_train, gen_test = dp.get_ffn_dataset( tagged, wleft, wright )
+    ffn.fit( gen_train, gen_XY_test=gen_test )     
+    ffn.save_model(fname, './neg/models')
+     
+negations = {} ; total = len( untagged )
+for opinion in untagged:
+    progress("Predicting on new data",total,idx)
+    X_pred, _ = dp.get_ffn_dataset( [opinion], wleft , wright )
+    Y_pred = ffn.predict( X_pred )
+    Y_pred = Y_pred[0].tolist()
+    negations[ opinion['_id'] ] = Y_pred  
+    if idx % 500 == 0: # Optimization
+        dp.save_negations(negations, dp.TaggedType.AUTOMATIC)
+        negations = {}
+if negations: 
+    dp.save_negations(negations, dp.TaggedType.AUTOMATIC)    
  
  
 ####### LSTM Recurrent Neural Network ########
@@ -292,10 +294,9 @@ fname = "model_NegScopeLSTM_w%i.h5" % win
 if os.path.exists(path+fname):
     lstm.load_model(path+fname)
 else:
-    X_train, Y_train = dp.get_lstm_dataset( tagged, win )
-    lstm.fit( X_train, Y_train )
- 
-lstm.save_model(fname, './neg/models')
+    gen_train, gen_test = dp.get_lstm_dataset( tagged, win )
+    lstm.fit( gen_train, gen_XY_test=gen_test )
+    lstm.save_model(fname, './neg/models')
      
 negations = {} ; total = len( untagged )
 for idx,opinion in enumerate(untagged):
@@ -320,62 +321,65 @@ end_time(start_time)
       Statistics over dataset
 ---------------------------------------------
 '''
-# from cldas.db.stats import *
+from cldas.db.stats import *
  
-# def table_print(fs):
-#     print '%-38s | %s' % ("Metric","Value")
-#     print '%-38s-+-%s' % ("-"*38,"-"*20)
-#     for f in fs:
-#         fname = f.__name__.replace('_',' ')
-#         fname = fname[0].upper()+fname[1:]
-#         res = f()
-#         if type(res) == list:
-#             print '%-38s | %s' % ( fname, "")
-#             for r in res:
-#                 val = r.pop('count')
-#                 key = r.keys()[0]
-#                 key = "   %s: %s" % ( key, r[key] )
-#                 print '%-38s | %s' % ( key, val if type(val) == int else round(val,3) )
-#         else:
-#             print '%-38s | %s' % ( fname, res if type(res) == int else round(res,3) ) if res is not None else "None"
-#     print 
+def table_print(fs):
+    print '%-38s | %s' % ("Metric","Value")
+    print '%-38s-+-%s' % ("-"*38,"-"*20)
+    for f in fs:
+        fname = f.__name__.replace('_',' ')
+        fname = fname[0].upper()+fname[1:]
+        res = f()
+        if type(res) == list:
+            print '%-38s | %s' % ( fname, "")
+            for r in res:
+                val = r.pop('count')
+                key = r.keys()[0]
+                key = "   %s: %s" % ( key, r[key] )
+                print '%-38s | %s' % ( key, val if type(val) == int else round(val,3) )
+        else:
+            print '%-38s | %s' % ( fname, res if type(res) == int else round(res,3) ) if res is not None else "None"
+    print 
                  
-# stats = []
-# stats.append( size_vocabulary             )
-# stats.append( size_vocabulary_by_word     )
-# stats.append( size_vocabulary_by_lemma    )
-# stats.append( size_corporea               )
-# stats.append( size_corporea_by_source     )
-# stats.append( avg_tokens_by_source        )
-# stats.append( size_reviews_category       )
-# stats.append( size_embeddings             ) 
-# stats.append( size_near_match             )
-# stats.append( size_null_match             )
-# stats.append( size_exact_match            )
-# stats.append( size_manually_tagged        )
-# stats.append( size_manually_tagged_by_cat )
-# stats.append( size_nagated_words          )
-# stats.append( size_negators               )
-# stats.append( size_positive_reviews       ) 
-# stats.append( size_positive_words         )
-# stats.append( size_neutral_reviews        )
-# stats.append( size_neutral_words          )
-# stats.append( size_negative_words         )
-# stats.append( size_negative_reviews       )
-# stats.append( get_balance                 )
-# stats.append( get_balance_by_source       )
+stats = []
+stats.append( size_vocabulary             )
+stats.append( size_vocabulary_by_word     )
+stats.append( size_vocabulary_by_lemma    )
+stats.append( size_corporea               )
+stats.append( size_corporea_by_source     )
+stats.append( avg_tokens_by_source        )
+stats.append( size_reviews_category       )
+stats.append( size_embeddings             ) 
+stats.append( size_near_match             )
+stats.append( size_null_match             )
+stats.append( size_exact_match            )
+stats.append( size_manually_tagged        )
+stats.append( size_manually_tagged_by_cat )
+stats.append( size_nagated_words          )
+stats.append( size_negators               )
+stats.append( size_positive_reviews       ) 
+stats.append( size_positive_words         )
+stats.append( size_neutral_reviews        )
+stats.append( size_neutral_words          )
+stats.append( size_negative_words         )
+stats.append( size_negative_reviews       )
+stats.append( get_balance                 )
+stats.append( get_balance_by_source       )
   
   
-# table_print(stats)
+table_print(stats)
+
+
  
 '''
 ---------------------------------------------
                 Split Corpus
 ---------------------------------------------
 '''
-
 independe_ids , dependent_ids = dp.split_sample(fraction=0.2, seed=121)
 evaluation_ids, dependent_ids = dp.split_sample(ids=dependent_ids, fraction=0.1, seed=121)
+
+
 
 '''
 ---------------------------------------------
@@ -384,7 +388,7 @@ evaluation_ids, dependent_ids = dp.split_sample(ids=dependent_ids, fraction=0.1,
 '''
 start_time = time.time()
 
-from cldas.indeplex import by_senti_tfidf, by_senti_avg, by_senti_qtf, by_senti_pmi
+from cldas.indeplex import by_senti_tfidf
 
 pos = dp.get_opinions(ids=independe_ids, cat_cond={"$gt":50} )
 neg = dp.get_opinions(ids=independe_ids, cat_cond={"$lt":50} )
@@ -393,7 +397,6 @@ lemmas = dp.get_lemmas()
 indep_lexicons = []
 
 for limit in [50,100,150]:
-    
     li = by_senti_tfidf( pos, neg, lemmas, filter_tags=USEFUL_TAGS, limit=limit, tofile='./indeplex' )
     indep_lexicons.append( (li,"tfidf") )
     
@@ -420,6 +423,8 @@ for corpus in dp.get_sources():
     end_time(start_time)    
     
     for (li,name) in indep_lexicons:
+
+        #############################################################################
         
         start_time = time.time()
         ld = by_distance( graph, li, seed_name=name, filter_seeds=False, limit=300, confidence=3, tofile='./deplex')
@@ -434,7 +439,10 @@ for corpus in dp.get_sources():
             'propagation' : 'distance',
             'score'       : score
         }])  
+
+        save_result(graph, ld, score, "by_distance", './graphs')
         
+        #############################################################################
         
         start_time = time.time()
         ld = by_influence( graph, li, seed_name=name, filter_seeds=False, limit=300, confidence=1, tofile='./deplex')
@@ -449,3 +457,5 @@ for corpus in dp.get_sources():
             'propagation' : 'influence',
             'score'       : score
         }]) 
+
+        save_result(graph, ld, score, "by_influence", './graphs')

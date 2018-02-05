@@ -301,7 +301,7 @@ def get_aprox_embedding(word):
             item = db.embeddings.find_one({ "_id" : match[0] })
             db.embeddings.update({ '_id': item['_id'] } , { '$addToSet': { "similar": word } })
             return item['embedding']
-            
+
     item = db.embeddings.find_one({ "_id" : "." })
     return item['embedding']
 
@@ -389,81 +389,11 @@ def update_embeddings(femb='../embeddings/emb39-word2vec.npy', ftok='../embeddin
     
     # Save results in database
     save_embeddings(result)
+    
 
 # ----------------------------------------------------------------------------------------------------------------------
 
-
-def _format_ffn(text, wleft, wright, null, neg_as, is_train):
-    total = len(text)
-    X,Y = [],[]    
-    x_prev = [ null for _ in range(wleft) ]
-    x_post = [ [ get_aprox_embedding( text[idx]['word'] ) ] for idx in range(0,wright+1) ] # includes current - range(0,...)
-    x_curr = np.array(x_prev).flatten().tolist() + np.array(x_post).flatten().tolist()
-    x_curr = np.array( x_curr ).flatten()
-    y_curr = None if not is_train else text[0]['negated'] if text[0]['negated'] is not None else neg_as
-    X.append( x_curr )
-    Y.append( y_curr )
-    for idx in range(1,total):   
-        x_next = [ get_aprox_embedding( text[idx+wright]['word'] ) ] if idx+wright < total else [ null ]
-        x_curr = np.array(x_prev[1:]).flatten().tolist() + np.array(x_post).flatten().tolist() + x_next[0]
-        x_curr = np.array( x_curr ).flatten()
-        is_neg = text[idx]['negated']
-        y_curr = None if not is_train else is_neg if is_neg is not None else neg_as
-        X.append( x_curr )
-        Y.append( y_curr )
-        x_prev = x_prev[1:] + x_post[0]
-        x_post = x_post[1:] + [ x_next ]
-    return X,Y
-
-
-def _format_lstm(text, win, null, neg_as, is_train):
-    x_curr = [ get_aprox_embedding( token['word'] ) for token in text ]
-    y_curr = [ None if not is_train else token['negated'] if token['negated'] is not None else neg_as for token in text ]
-    rest = (win - len(x_curr)) % win 
-    if rest > 0:
-        x_curr.extend( [ null for _ in range(rest) ] )
-        y_curr.extend( [ False for _ in range(rest) ] )
-    X = [ x_curr[i*win : (i+1)*win] for i in range(len(x_curr)/win) ]
-    Y = [ y_curr[i*win : (i+1)*win] for i in range(len(y_curr)/win) ]
-    #if not is_train: Y = Y[:len(text)]
-    return X,Y
-
-
-def _format_embeddings(formatter, opinions, **kwargs):
-    verbose  = kwargs.pop('verbose')
-    null_as  = kwargs.pop('null_as')
-    null     = get_null_embedding(null_as)
-    total    = len( opinions )
-    X , Y = [] , []
-    for idx,opinion in enumerate(opinions): 
-        is_train = opinion.has_key('tagged') and opinion['tagged'] == TaggedType.MANUAL
-        msg = "training" if is_train else "predicting"
-        if verbose: progress("Loading %s data (%*i words)"  % ( msg, 4, len(opinion['text']) ), total ,idx)
-        x_curr, y_curr = formatter( opinion['text'], null=null, is_train=is_train, **kwargs )
-        X += x_curr
-        Y += y_curr if is_train else []   
-        # yield x_curr, y_curr if is_train else []
-    return np.array(X), np.array(Y)
-
-
-def get_ffn_dataset(opinions, wleft, wright, null_as='.', neg_as=True, verbose=True):
-    '''
-    Given an opinion set and windows left/right returns the correct dataset format for FFN model
-    '''
-    # opinions,_ = opinions.split(0.01)  # BORRAR
-    return _format_embeddings( _format_ffn, opinions, wleft=wleft, wright=wright, null_as=null_as, neg_as=neg_as,  verbose=verbose )
-
-
-def get_lstm_dataset(opinions, win, null_as='.', neg_as=True, verbose=True):
-    '''
-    Given an opinion set and windows left/right returns the correct dataset format for LSTM model
-    '''
-    return _format_embeddings( _format_lstm, opinions, win=win, null_as=null_as, neg_as=neg_as,  verbose=verbose )
-
-
-# ----------------------------------------------------------------------------------------------------------------------
-
-def _format_ffn2(opinions, wleft, wright, null_as, neg_as, verbose):
+def _format_ffn(opinions, wleft, wright, null_as, neg_as, verbose):
     top = len(opinions)
     null = get_null_embedding( null_as )
     for idx,opinion in enumerate(opinions):
@@ -495,7 +425,7 @@ def _format_ffn2(opinions, wleft, wright, null_as, neg_as, verbose):
             yield np.asarray(X), np.asarray(Y)
 
 
-def _format_lstm2(opinions, win, null_as, neg_as, verbose):
+def _format_lstm(opinions, win, null_as, neg_as, verbose):
     top = len(opinions)
     null = get_null_embedding( null_as )
     for idx,opinion in enumerate(opinions):
@@ -521,26 +451,29 @@ def _format_lstm2(opinions, win, null_as, neg_as, verbose):
             yield np.asarray(X), np.asarray(Y)
 
 
-def _generate_date(formatter, *args, **kwargs):
+def _generate_data(formatter, *args, **kwargs):
     while True:
         try: yield next(gen)
         except (StopIteration, UnboundLocalError):
             gen = formatter(*args,**kwargs)
 
 
-def get_ffn_dataset2(opinions, wleft, wright, test_frac=0.2, null_as='.', neg_as=True, verbose=True):
+def get_ffn_dataset(opinions, wleft, wright, test_frac=0.2, null_as='.', neg_as=True, verbose=True):
+    '''
+    Given an opinion set and windows left/right returns the correct dataset format for FFN model
+    '''
     test_data, train_data = opinions.split_sample(test_frac) 
-    train_gen = _generate_date( _format_ffn2, train_data, wleft=wleft, wright=wright, null_as=null_as, neg_as=neg_as,  verbose=verbose )
-    test_gen  = _generate_date( _format_ffn2, test_data , wleft=wleft, wright=wright, null_as=null_as, neg_as=neg_as,  verbose=verbose )
+    train_gen = _generate_data( _format_ffn, train_data, wleft=wleft, wright=wright, null_as=null_as, neg_as=neg_as,  verbose=verbose )
+    test_gen  = _generate_data( _format_ffn, test_data , wleft=wleft, wright=wright, null_as=null_as, neg_as=neg_as,  verbose=verbose )
     train_gen = Iterable( train_gen, sum(1 for op in train_data for _ in op['text'] ) )
     test_gen  = Iterable( test_gen , sum(1 for op in test_data  for _ in op['text'] ) )
     return train_gen, test_gen
 
 
-def get_lstm_dataset2(opinions, win, test_frac=0.2, null_as='.', neg_as=True, verbose=True):
+def get_lstm_dataset(opinions, win, test_frac=0.2, null_as='.', neg_as=True, verbose=True):
     test_data,  train_data = opinions.split_sample(test_frac)
-    train_gen = _generate_date( _format_lstm2, train_data, win=win, null_as=null_as, neg_as=neg_as,  verbose=verbose )
-    test_gen  = _generate_date( _format_lstm2, test_data , win=win, null_as=null_as, neg_as=neg_as,  verbose=verbose )
+    train_gen = _generate_data( _format_lstm, train_data, win=win, null_as=null_as, neg_as=neg_as,  verbose=verbose )
+    test_gen  = _generate_data( _format_lstm, test_data , win=win, null_as=null_as, neg_as=neg_as,  verbose=verbose )
     train_gen = Iterable( train_gen, sum(1 for op in train_data for _ in op['text'] ) )
     test_gen  = Iterable( test_gen , sum(1 for op in test_data  for _ in op['text'] ) )
     return train_gen, test_gen

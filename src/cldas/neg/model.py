@@ -77,25 +77,9 @@ class _NegScopeModel(object):
             'mean_squared_error':mse,
             'binary_crossentropy':bce,
         })
-        
-        
-    def fit(self, X, Y, testing_fraction=0.2, early_monitor='val_binary_accuracy', verbose=1):
-        
-        callbacks = []
-        if early_monitor:
-            callbacks.append( EarlyStopping( monitor=early_monitor, min_delta=0, patience=2, mode='auto', verbose=0 ) )
-            
-        self._model.fit( X, Y, 
-            callbacks=callbacks , 
-            batch_size=32 , epochs=100 , 
-            validation_split=testing_fraction , 
-            verbose=verbose 
-        )
-        
-        log( self.get_scores(X, Y, verbose) , level=Level.INFO)
 
 
-    def fit2(self, gen_XY, gen_XY_test=None, batch_size=512, early_monitor='val_binary_accuracy', verbose=1):
+    def fit(self, gen_XY, gen_XY_test=None, batch_size=512, early_monitor='val_binary_accuracy', verbose=1):
         
         callbacks = []
         if early_monitor:
@@ -110,17 +94,9 @@ class _NegScopeModel(object):
             max_queue_size=5,
             verbose=verbose 
         )
-        
-        log( self.get_scores2(gen_XY, verbose) , level=Level.INFO )
-
-    
-    def predict(self, X):
-        Y = self._model.predict( X )
-        Y = np.array(Y).round() == 1 
-        return Y
 
 
-    def predict2(self, gen_X, verbose=2):
+    def predict(self, gen_X, verbose=2):
         Y = self._model.predict_generator( 
             gen_X.get_iterator(), 
             steps=1,
@@ -129,14 +105,9 @@ class _NegScopeModel(object):
         )
         Y = np.array(Y).round() == 1 
         return Y
-    
-    
-    def get_scores(self, X, Y, verbose=2):
-        scores = self._model.evaluate( X, Y, batch_size=10, verbose=verbose )
-        return zip( self._model.metrics_names , [ round(score*100,1) for score in scores ] )
 
 
-    def get_scores2(self, gen_XY, verbose=2):
+    def get_scores(self, gen_XY, verbose=2):
         scores = self._model.evaluate_generator( 
             gen_XY.get_iterator(), 
             steps=5,
