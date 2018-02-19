@@ -133,13 +133,7 @@ def save_word_cloud(lexicon,name,path,neu_treshold=0.0):
     
 
 
-def save_sub_graph(graph, lexicon, 
-            color_pos = "green", 
-            color_neg = "red",
-            matices   = 50, 
-            name      = "", 
-            path      = None
-        ):
+def save_sub_graph(graph, lexicon, color_pos = "green", color_neg = "red", matices = 50, name = "", path= None):
 
         COLOR = [ c.hex_l for c in Color( color_neg ).range_to( Color( color_pos ), matices+2 ) ]
         

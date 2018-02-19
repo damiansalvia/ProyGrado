@@ -6,9 +6,40 @@ Example of how to use interactive negation by command-line interface
 import sys
 sys.path.append('../src')
 
-from cldas.neg.model import NegScopeLSTM
+import os
+clean = 'cls' if os.name == 'nt' else 'clear'
+
+from cldas.neg.model import NegScopeLSTM, NegScopeFFN
 from cldas.neg.interface import interactive_prediction, manual_tagging
 import cldas.db.crud as dp
+from cldas.utils.file import load
+import glob
+
+
+def interactive_option():
+	os.system(clean)
+	print "SELECT INTERACTIVE MODE"
+	print 0,". Exit"
+	print 1,". Manual tagging"
+	print 2,". Interative prediction"
+	return raw_input("> ")
+
+
+def network_option(path='./neg/models'):
+	os.system(clean)
+	print "SELECT PRETRAINED MODEL"
+	files = glob.glob(path+"/*.h5")
+	for i,file in enumerate(files):
+		print i+1, ".", file.replace(path+"/","")
+	while True:
+		op = raw_input("> ")
+		if op.isdigit() and 1<=int(op)<=len(files): break
+	op = int(op)
+	file = files[op-1]
+	params = load(file.replace(".h5",".json"))
+	params.update({'verbose':0})
+	return file, params
+
 
 '''
 ---------------------------------------------
@@ -16,12 +47,28 @@ import cldas.db.crud as dp
 ---------------------------------------------
 '''
 
-win = 10
-dim = 300
-
-lstm = NegScopeLSTM( win, dim )
-lstm.load_model('../sample/neg/models/model_NegScopeLSTM_w10.h5')
-
-interactive_prediction( lstm , dp.get_lstm_dataset, win=win )
+while True:
+	op = interactive_option()
+	if op == '0':
+		break
+	elif op == '1': 
+		manual_tagging(dp,tofile='./neg/manual/')
+	elif op == '2':
+		os.system(clean)
+		file, params = network_option()
+		if params.has_key('window_left') and params.has_key('window_right'):
+			ann = NegScopeFFN(**params)
+			ann.load_model(file)
+			formatter = dp.get_ffn_dataset
+		elif params.has_key('window'):
+			ann = NegScopeLSTM(**params)
+			ann.load_model(file)
+			formatter = dp.get_lstm_dataset
+		else:
+			raw_input("Cannot find appropiate parameters.\nContinue...")
+			continue
+		interactive_prediction( ann , formatter, **params )
+	else:
+		raw_input('Invalid option. Try again.\nContinue...')
 
 

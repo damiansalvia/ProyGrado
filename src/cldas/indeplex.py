@@ -63,6 +63,9 @@ def _TFIDF(Xctd, Xt, X, eps=1e-3):
 
 
 def _P(Xctd, Xt, X, eps=1e-3):
+    '''
+    Calculates the probability of a term 
+    '''
     num = _TF(Xctd, Xt) + eps
     den = X + eps
     return num/den
@@ -70,6 +73,9 @@ def _P(Xctd, Xt, X, eps=1e-3):
 
 
 def _PC(Pctd, Pt, P, Nctd, Nt, N, eps=1e-3):
+    '''
+    Calculates the conditional probability of a term
+    '''
     Ptf = _TF(Pctd, Pt)
     Ntf = _TF(Nctd, Nt)
     num = Ptf * Ntf + eps
@@ -249,10 +255,6 @@ def by_senti_pmi(pos_op, neg_op, lemmas=None, filter_tags=None, limit=None, eps=
     
     lemmas, P, Pctd, Pt, N, Nctd, Nt = _get_structures(pos_op, neg_op, 'PMI', filter_tags=filter_tags, lemmas=lemmas, verbose=verbose)
     
-#     ds_pos = _PMI(Pctd, Pt, P, Tctd, Tt, T, eps)
-#     ds_neg = _PMI(Nctd, Nt, N, Tctd, Tt, T, eps)
-#     
-#     ld = _LD(ds_pos, ds_neg, eps)
     pr_pos = _P( Pctd , Pt, P )
     pr_neg = _P( Nctd , Nt, N )
     

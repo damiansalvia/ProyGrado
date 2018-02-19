@@ -9,16 +9,19 @@ os.environ['TF_CPP_MIN_VLOG_LEVEL'] = '0'
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '0'
 clean = 'cls' if os.name == 'nt' else 'clear'
 
+from cldas.utils.visual import title
+
 from colorama import init, Fore, Style, Back
 init(autoreset=True) 
 
-from cldas.utils import progress, save, title, Log, load
+from cldas.utils import progress, save, title, Log, load, Spinner
 from cldas import Preprocess
 
 log = Log("../log") 
 
 
-def interactive_prediction(model,formatter, **kwrgs):
+
+def interactive_prediction(model, formatter, **kwrgs):
     '''
     Makes predictions interactively from console input.
     @param model      : Keras model of a Neural Network (FFN or LSTM).
@@ -26,23 +29,34 @@ def interactive_prediction(model,formatter, **kwrgs):
     ''' 
     while True:   
         os.system(clean)
-        print Fore.YELLOW + Style.BRIGHT + 'NEW TEXT'
-        print '>', ; text = raw_input()
+        title( str(model) )
+
+        print Fore.YELLOW + Style.BRIGHT + 'Input your text:'
+        text = raw_input("> ")
+        text = unicode(text,'utf-8')
+
+        t = Spinner("Processing input")
+        t.start()
         
-        preproc = Preprocess( 'Test', [{'text':text,'category':None}], verbose=False )
+        preproc = Preprocess( 'input', [{'text':text,'category':None}], verbose=False )
         data = preproc.data()
         
         X,_ = formatter( data, **kwrgs )
         Y = model.predict( X )
+
+        t.stop()
         
-        os.system(clean)
-        print Fore.YELLOW + Style.BRIGHT +'PREDICTION RESULT'
-        print ' '.join(["%s" % (
-                    Fore.MAGENTA+Style.BRIGHT+word if neg 
-                    else Fore.RESET+Style.RESET_ALL+word 
-                ) for word,neg in zip( [token['word'] for token in data[0]['text']], Y ) ])  
+        print "                                            "
+        print Fore.YELLOW + Style.BRIGHT +'Prediction made:'
+        words = [ token['word'] for token in data[0]['text'] ]
+        Y = Y.flatten() if model.__class__.__name__=='NegScopeLSTM' else Y
+        print '"',
+        for word,neg in zip(words,Y):
+            if neg: print Fore.MAGENTA+Style.BRIGHT+word,
+            else:   print Fore.RESET+Style.RESET_ALL+word,
+        print '"'
         
-        if not raw_input("\nContinue..."):
+        if raw_input("\nTry another? [y/n] > ").lower()=='n':
             os.system(clean)
             break
 
@@ -64,7 +78,7 @@ def manual_tagging(dp,tofile='./neg/manual'):
         title("MENU")
         print "0 . exit"
         for i in range( len(sources) ): 
-            qty = len( dp.get_tagged( dp.TaggedType.MANUAL , sources[i]) ) 
+            qty = len( dp.get_tagged( source=sources[i]) ) 
             print i+1,".","%-30s" % sources[i], "(%i)" % qty
         return 
     
@@ -135,109 +149,112 @@ def manual_tagging(dp,tofile='./neg/manual'):
         else:    
             result = {}        
             source = sources[op-1]
-            try:     
+            # try:     
                 
-                print '\nIdentifiers separated by \',\' or <intro> for pick up randomly'
-                op = raw_input("> ")
+            print '\nIdentifiers separated by \',\' or <intro> for pick up randomly'
+            op = raw_input("> ")
+            
+            if op: # From indexes
+                indexes = op.split(',')
+                quantity = len(indexes)
+                indexes = indexes[:quantity]
                 
-                if op: # From indexes
-                    indexes = list(set(int(i) for i in op.split(',')))
-                    quantity = len(indexes)
-                    indexes = indexes[:quantity]
-                    
-                else: # Randomly
-                    while not op.isdigit():
-                        print 'How many opinions?'
-                        op = raw_input("> ")
-                    quantity = int(op)
-                    indexes = []
+            else: # Randomly
+                while not op.isdigit():
+                    print 'How many opinions?'
+                    op = raw_input("> ")
+                quantity = int(op)
+                indexes = []
+            
+            samples = dp.get_sample(quantity,source,indexes)
+            if len(samples) == 0:
+                raw_input( "Every review in %s has been tagged. Try another." % source )
+                continue
+            
+            left = quantity
+            while left != 0:   
+                                 
+                # Retrieve relevant data from the sample
+                sample  = samples[left-1]
+                _id     = sample['_id']
+                review  = sample['text']
                 
-                samples = dp.get_sample(quantity,source,indexes)
+                # Initialization (keep current words and empty categories)
+                words = [ item['word'].encode('ascii','ignore') for item in review ]
+                total = len( words )
+                tags  = [ blank for _ in range(total) ]
                 
-                left = quantity
-                while left != 0:   
-                                     
-                    # Retrieve relevant data from the sample
-                    sample  = samples[left-1]
-                    _id     = sample['_id']
-                    review  = sample['text']
+                # For each word, annotate with (N) or (I) and give the possibility of back by pressing (B)
+                cat = "" ; idx = 0
+                
+                while True:
                     
-                    # Initialization (keep current words and empty categories)
-                    words = [ item['word'].encode('ascii','ignore') for item in review ]
-                    total = len( words )
-                    tags  = [ blank for _ in range(total) ]
+                    DisplayReview( sample['_id'], idx, total, words, tags )
                     
-                    # For each word, annotate with (N) or (I) and give the possibility of back by pressing (B)
-                    cat = "" ; idx = 0
-                    
-                    while True:
-                        
-                        DisplayReview( sample['_id'], idx, total, words, tags )
-                        
-                        # Check end condition
-                        if idx == total:
-                            op = raw_input("\nDone. Proceed with the next review (left %i)? [y/n] > " % (left-1)) if left-1 != 0 else 'y'
-                            if op == 'y':
-                                break
-                            idx = idx - 1 if idx != 0 else 0
-                            tags[idx] = blank
-                            continue
-                        
-                        # Ask for input
-                        print "\n(H)elp. Last action (%s)" % (cat.upper() if cat else "-")
-                        tag = raw_input("> ")
-                        
-                        if not tag and not cat: # Prevents parse empty cat
-                            raw_input("Input a category first")
-                            continue
-                        elif tag:
-                            cat = tag
-                        
-                        # Action from decision
-                        cat = cat.lower()
-                        if not cat or cat not in ['n','i','b','e','h','a','s','q']:
-                            raw_input("Option '%s' is not correct." % cat)
-                            continue
-                        if cat == 'h':
-                            DisplayHelp()
-                            continue
-                        elif cat == 'q'or cat == 's':
+                    # Check end condition
+                    if idx == total:
+                        op = raw_input("\nDone. Proceed with the next review (left %i)? [y/n] > " % (left-1)) if left-1 != 0 else 'y'
+                        if op == 'y':
                             break
-                        elif cat == 'b': # Back
-                            idx = idx - 1 if idx != 0 else 0
-                            tags[idx] = blank
-                        elif cat == 'a':
-                            op = raw_input("Are you sure you want to abort (left %i)? [y/n] > " % left)
-                            if op.lower() == 'y': raise Exception("Abort")
-                        else:
-                            # Associate the category
-                            if cat == 'i' and ( idx == 0 or not tags[idx-1].endswith('INV') ): bio = 'B-INV'
-                            elif cat == 'i': bio = 'I-INV'
-                            elif cat == 'e': bio = 'B-NEG'
-                            else: bio = 'O    '
-                            tags[idx] = bio
-                            idx = idx + 1
-                    
-                    if cat == 'q':
-                        break
-                    if cat == 's':
-                        left -= 1
+                        idx = idx - 1 if idx != 0 else 0
+                        tags[idx] = blank
                         continue
-                            
-                    # Once the text is tagged, add it to the result
-                    tags = [ None if tag == 'B-NEG' else False if tag =='O' else True for tag in tags ]
-                    result.update({ _id:tags })
                     
-                    # Update
-                    left -= 1
-                       
-                # View and save results
-                if op == 0: continue
-                ViewSave(result,source)
+                    # Ask for input
+                    print "\n(H)elp. Last action (%s)" % (cat.upper() if cat else "-")
+                    tag = raw_input("> ")
+                    
+                    if not tag and not cat: # Prevents parse empty cat
+                        raw_input("Input a category first")
+                        continue
+                    elif tag:
+                        cat = tag
+                    
+                    # Action from decision
+                    cat = cat.lower()
+                    if not cat or cat not in ['n','i','b','e','h','a','s','q']:
+                        raw_input("Option '%s' is not correct." % cat)
+                        continue
+                    if cat == 'h':
+                        DisplayHelp()
+                        continue
+                    elif cat == 'q'or cat == 's':
+                        break
+                    elif cat == 'b': # Back
+                        idx = idx - 1 if idx != 0 else 0
+                        tags[idx] = blank
+                    elif cat == 'a':
+                        op = raw_input("Are you sure you want to abort (left %i)? [y/n] > " % left)
+                        if op.lower() == 'y': raise Exception("Abort")
+                    else:
+                        # Associate the category
+                        if cat == 'i' and ( idx == 0 or not tags[idx-1].endswith('INV') ): bio = 'B-INV'
+                        elif cat == 'i': bio = 'I-INV'
+                        elif cat == 'e': bio = 'B-NEG'
+                        else: bio = 'O    '
+                        tags[idx] = bio
+                        idx = idx + 1
                 
-            except Exception as e:
-                content = '\n'.join([ _id+">>"+str(tags) for _id,tags in result.items() ])
-                log("Reason : %s (at %s) [%i] '%s'" % ( str(e) , source , sample['_id'] , content ))
-                raw_input("Reason: %s\nEnter to continue..." % str(e))
+                if cat == 'q':
+                    break
+                if cat == 's':
+                    left -= 1
+                    continue
+                        
+                # Once the text is tagged, add it to the result
+                tags = [ None if tag == 'B-NEG' else False if tag =='O' else True for tag in tags ]
+                result.update({ _id:tags })
+                
+                # Update
+                left -= 1
+                   
+            # View and save results
+            if op == 0: continue
+            ViewSave(result,source)
+                
+            # except Exception as e:
+            #     content = '\n'.join([ _id+">>"+str(tags) for _id,tags in result.items() ])
+            #     log("Reason : %s (at %s) [%i] '%s'" % ( str(e) , source , sample['_id'] , content ))
+            #     raw_input("Reason: %s\nEnter to continue..." % str(e))
 
 

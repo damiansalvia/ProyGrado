@@ -87,9 +87,10 @@ SUBSTITUTIONS = [
     # Replace emojis by a special of emotion
     (u"\s<?[:;=8xX][-‑o\']?[\)\]3dDoOpP\*\}]|[\(\[cC\{][-‑o\*\']?[:;=8]>?\s",u" FELIZ "),
     (u"\s>?[:;=][-‑o\']?[\(\[cC\{\\\/\|@_]|[\)\]dD\}\\\/\|@_][-‑o\']?[:;=8xX]<?\s",u" TRISTE "),
-    # Remove repetitive characters (except (ll)egar, pe(rr)o and a(cc)ion, and numbers) <-- will be corrected by aspell
+    # Remove repetitive characters and expressions (except (ll)egar, pe(rr)o and a(cc)ion, and numbers) <-- will be corrected by aspell
     (u"([^lrc\d])\\1+",u"\\1"),
     (u"([lrc])\\1\\1+",u"\\1\\1"),
+    (u'(\w\w)\\1+',u'\\1\\1'),
     # Separate alphabetical character from non-alphabetical character by a blank space
     (u"([\d\W])",u" \\1 "),
     (u"([^0-9a-záéíóúñü_\s])",u" \\1 "),

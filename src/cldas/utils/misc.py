@@ -117,7 +117,7 @@ class Levinstein:
  
  
 def no_accent(s):
-    return s.replace(u'á',u'a').replace(u'é',u'e').replace(u'í',u'i').replace(u'ó',u'o').replace(u'ú',u'u').replace(u'"u',u'u').replace(u'ñ',u'n')
+    return s.replace(u'á',u'a').replace(u'é',u'e').replace(u'í',u'i').replace(u'ó',u'o').replace(u'ú',u'u').replace(u'"u',u'u')
 
  
 def levenshtein_no_accent(s1, s2):
@@ -144,15 +144,15 @@ def get_close_dist(word, wordlist, cutoff=0.7, n=None):
 
 
 def get_levinstein_pattern(word):
-    return re.compile(
-        '|'.join([
-            '|'.join([ # Make Levistein regex from word
-                ''.join([ "^", word[:i]  , '.',                      word[i:]   , "$" ]),  # INS
-                ''.join([ "^", word[:i]  ,                           word[i:]   , "$" ]),  # DEL
-                ''.join([ "^", word[:i-1], '.',                      word[i:]   , "$" ]),  # MOD
-                ''.join([ "^", word[:i-1], word[i:i+1], word[i-1:i], word[i+1:] , "$" ]),  # TRN
-             ]) for i in range(1,len(word)+1)
-        ]), re.IGNORECASE)
+    pattern = u'|'.join([
+                    '|'.join([ # Make Levistein regex from word
+                        ''.join([ "^", word[:i]  , '.',                      word[i:]   , "$" ]),  # INS
+                        ''.join([ "^", word[:i]  ,                           word[i:]   , "$" ]),  # DEL
+                        ''.join([ "^", word[:i-1], '.',                      word[i:]   , "$" ]),  # MOD
+                        ''.join([ "^", word[:i-1], word[i:i+1], word[i-1:i], word[i+1:] , "$" ]),  # TRN
+                     ]) for i in range(1,len(word)+1)
+                ])
+    return pattern
 
 
 def _search_influences(graph, initial, threshold):

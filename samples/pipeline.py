@@ -20,10 +20,10 @@ log = Log('./log')
 
 import cldas.db.crud as dp
 
-def end_time(start_time):
+def end_time(start_time,case=''):
     elapsed = time.strftime('%H:%M:%S', time.gmtime(time.time()-start_time))
     print "\n","Elapsed:",elapsed,"\n"
-    log( "Indeplex stage - Elapsed: %s" % elapsed , level=Level.DEBUG)
+    log( "[%s] Elapsed: %s" % (case,elapsed) , level=Level.DEBUG)
 
 
 
@@ -167,7 +167,7 @@ if not dp.get_opinions(source='UTRep'):
     mapping = { 'N':25, 'NEU':50, 'NONE':50, 'P':75 }
     corporea.append( ( reader, mapping ) )
   
-end_time(start_time)
+end_time(start_time,case='RETRIEVE')
   
   
   
@@ -189,7 +189,7 @@ for ( reader,mapping ) in corporea:
       
     dp.save_opinions( preproc.data() )
   
-end_time(start_time)
+end_time(start_time,case='PREROCESS')
  
  
  
@@ -200,7 +200,7 @@ end_time(start_time)
 '''
 start_time = time.time()
  
-# dp.save_negations_from_files('./neg/manual/*')    
+dp.save_negations_from_files('./neg/manual/*')    
  
 if not dp.get_opinions(source='SFU-NEG'):    
     reader = CorpusReader( '../corpus/SFU-NEG', '*/*.xml', 
@@ -233,86 +233,84 @@ end_time(start_time)
 '''
 start_time = time.time()
 
-if not dp.get_embedding('.') or corporea:  
-    dp.update_embeddings(femb='../embeddings/emb39-word2vec.npy', ftok='../embeddings/emb39-word2vec.txt')
+dp.update_embeddings('../embeddings/emb39-word2vec.npy', '../embeddings/emb39-word2vec.txt')
  
-elapsed = time.strftime('%H:%M:%S', time.gmtime(time.time()-start_time))
-print "\n","Elapsed:",elapsed,"\n"
-log( "Adding embeddings- Elapsed: %s" % elapsed , level=Level.DEBUG)
+end_time(start_time,case='EMBEDDINGS')
  
- 
-sys.exit(0)
+
 
 '''
 ---------------------------------------------
       Negation Scope stage
 ---------------------------------------------
-'''
-start_time = time.time()
- 
+''' 
 from cldas.neg.model import NegScopeLSTM, NegScopeFFN
  
-tagged   = dp.get_tagged(dp.TaggedType.MANUAL)
+tagged   = dp.get_tagged(tag_as=dp.TaggedType.MANUAL)
 untagged = dp.get_untagged()
 vec_size = len( dp.get_null_embedding() )
  
 path = './neg/models/'
 
-
  
 ######### Feed-Forward Neural Network ######### 
-wleft, wright = 2, 2
-ffn = NegScopeFFN( wleft, wright, vec_size )
+# start_time = time.time()
+
+# wleft, wright = 2, 2
+# ffn = NegScopeFFN( wleft, wright, vec_size )
  
-fname = "model_NegScopeFFNl%i_r%i" % (wleft,wright)
-if os.path.exists(path+fname):
-    lstm.load_model(path+fname)
-else:
-    gen_train, gen_test = dp.get_ffn_dataset( tagged, wleft, wright )
-    ffn.fit( gen_train, gen_XY_test=gen_test )     
-    ffn.save_model(fname, './neg/models')
+# fname = "NegScopeFFN_l%i_r%i" % (wleft,wright)
+# if os.path.exists(path+fname):
+#     lstm.load_model(path+fname)
+# else:
+#     X,Y = dp.get_ffn_dataset( tagged, wleft, wright )
+#     ffn.fit( X,Y )     
+#     ffn.save_model(fname, './neg/models')
      
-negations = {} ; total = len( untagged )
-for opinion in untagged:
-    progress("Predicting on new data",total,idx)
-    X_pred, _ = dp.get_ffn_dataset( [opinion], wleft , wright )
-    Y_pred = ffn.predict( X_pred )
-    Y_pred = Y_pred[0].tolist()
-    negations[ opinion['_id'] ] = Y_pred  
-    if idx % 500 == 0: # Optimization
-        dp.save_negations(negations, dp.TaggedType.AUTOMATIC)
-        negations = {}
-if negations: 
-    dp.save_negations(negations, dp.TaggedType.AUTOMATIC)    
+# negations = {} ; total = len( untagged )
+# for opinion in untagged:
+#     progress("Predicting on new data",total,idx)
+#     X, _ = dp.get_ffn_dataset( [opinion], wleft , wright, test_frac=0.0 )
+#     Y = ffn.predict( X )
+#     Y = Y[0].tolist()
+#     negations[ opinion['_id'] ] = Y  
+#     if idx % 500 == 0: # Optimization
+#         dp.save_negations(negations, dp.TaggedType.AUTOMATIC)
+#         negations = {}
+# if negations: 
+#     dp.save_negations(negations, dp.TaggedType.AUTOMATIC)    
+
+# end_time(start_time,case='FFN')
  
  
 ####### LSTM Recurrent Neural Network ########
+start_time = time.time()
+
 win = 10
 lstm = NegScopeLSTM( win, vec_size )
  
-fname = "model_NegScopeLSTM_w%i.h5" % win 
+fname = "NegScopeLSTM_w%i.h5" % win 
 if os.path.exists(path+fname):
     lstm.load_model(path+fname)
 else:
-    gen_train, gen_test = dp.get_lstm_dataset( tagged, win )
-    lstm.fit( gen_train, gen_XY_test=gen_test )
+    X,Y = dp.get_lstm_dataset( tagged, win )
+    lstm.fit( X,Y )
     lstm.save_model(fname, './neg/models')
      
 negations = {} ; total = len( untagged )
 for idx,opinion in enumerate(untagged):
     progress("Predicting on new data",total,idx)
-    X_pred ,_ = dp.get_lstm_dataset( [opinion], win , verbose=False)
-    Y_pred = lstm.predict( X_pred )
-    Y_pred = Y_pred.flatten().tolist()[: len( opinion['text'] ) ] # Only necessary with LSTM
-    negations[ opinion['_id'] ] = Y_pred 
+    X ,_ = dp.get_lstm_dataset( [opinion], win , verbose=False, test_frac=0.0 )
+    Y = lstm.predict( X )
+    Y = Y.flatten().tolist()[: len( opinion['text'] ) ] # Only necessary with LSTM
+    negations[ opinion['_id'] ] = Y 
     if idx % 500 == 0: # Optimization
         dp.save_negations(negations, dp.TaggedType.AUTOMATIC)
         negations = {}   
 if negations:
     dp.save_negations(negations, dp.TaggedType.AUTOMATIC)    
  
- 
-end_time(start_time)
+end_time(start_time,case='LSTM')
  
  
  
@@ -345,31 +343,41 @@ stats = []
 stats.append( size_vocabulary             )
 stats.append( size_vocabulary_by_word     )
 stats.append( size_vocabulary_by_lemma    )
+
 stats.append( size_corporea               )
 stats.append( size_corporea_by_source     )
+
 stats.append( avg_tokens_by_source        )
+
 stats.append( size_reviews_category       )
+
 stats.append( size_embeddings             ) 
-stats.append( size_near_match             )
-stats.append( size_null_match             )
-stats.append( size_exact_match            )
+stats.append( size_embeddings_unused      )
+stats.append( size_embeddings_used        ) 
+stats.append( size_embeddings_exact_match )
+stats.append( size_embeddings_near_match  )
+stats.append( size_embeddings_null_match  )
+
 stats.append( size_manually_tagged        )
 stats.append( size_manually_tagged_by_cat )
+
 stats.append( size_nagated_words          )
 stats.append( size_negators               )
-stats.append( size_positive_reviews       ) 
-stats.append( size_positive_words         )
+
+stats.append( size_positive_reviews       )
 stats.append( size_neutral_reviews        )
+stats.append( size_negative_reviews       ) 
+
+stats.append( size_positive_words         )
 stats.append( size_neutral_words          )
 stats.append( size_negative_words         )
-stats.append( size_negative_reviews       )
+
 stats.append( get_balance                 )
 stats.append( get_balance_by_source       )
   
   
 table_print(stats)
-
-
+sys.exit(0)
  
 '''
 ---------------------------------------------
@@ -400,7 +408,7 @@ for limit in [50,100,150]:
     li = by_senti_tfidf( pos, neg, lemmas, filter_tags=USEFUL_TAGS, limit=limit, tofile='./indeplex' )
     indep_lexicons.append( (li,"tfidf") )
     
-end_time(start_time)
+end_time(start_time,case='LI')
 
 
 
@@ -424,11 +432,11 @@ for corpus in dp.get_sources():
     
     for (li,name) in indep_lexicons:
 
-        #############################################################################
+        #-----------------------------------------------------------------------------------------------------------
         
         start_time = time.time()
         ld = by_distance( graph, li, seed_name=name, filter_seeds=False, limit=300, confidence=3, tofile='./deplex')
-        end_time(start_time) 
+        end_time(start_time,case='LD|DIS')
         
         eval_fraction = dp.get_opinions( ids=evaluation_ids, source=corpus )
         score = evaluate( ld, eval_fraction )
@@ -442,11 +450,11 @@ for corpus in dp.get_sources():
 
         save_result(graph, ld, score, "by_distance", './graphs')
         
-        #############################################################################
+        #-----------------------------------------------------------------------------------------------------------
         
         start_time = time.time()
         ld = by_influence( graph, li, seed_name=name, filter_seeds=False, limit=300, confidence=1, tofile='./deplex')
-        end_time(start_time)  
+        end_time(start_time,case='LD|INF') 
         
         eval_fraction = dp.get_opinions( ids=evaluation_ids, source=corpus )
         score = evaluate( ld, eval_fraction )

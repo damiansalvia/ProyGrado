@@ -6,11 +6,11 @@ Module with a set of models for determining the scope negation
 '''
 
 import os
-import numpy as np
+os.environ['TF_CPP_MIN_VLOG_LEVEL'] = '0'
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '0'
 
+import numpy as np
 np.random.seed(666)
-os.environ['TF_CPP_MIN_VLOG_LEVEL'] = '2'
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 from cldas.utils import Log, Level
 from cldas.utils.metrics import *
@@ -19,7 +19,7 @@ from cldas.utils.visual import title
 from keras.models import Sequential,load_model
 from keras.layers import Dense,LSTM
 from keras.layers.core import Dropout
-from keras.callbacks import EarlyStopping
+from keras.callbacks import EarlyStopping, Callback
 
 
 _DEFAULT_LAYER_SIZE = 750
@@ -49,23 +49,30 @@ class _NegScopeModel(object):
         self._optimizer = optimizer
         self._verbose   = verbose
         
-        print title("%s (%i)" % (self.__class__.__name__, self._dimension), width=61)
+        print title( self.__str__(), width=61 )
     
        
     def __repr__(self):
-        return "< %s.%s - dim(%i) >" % (self.__class__.__module__, self.__class__.__name__, self._dimension)
+        return "< %s.%s >" % ( self.__class__.__module__, self.__str__() )
     
     
     def __str__(self):
-        return "%s" % self.__class__.__name__ 
+        return "%s (%s,%s,%i,%s)" % (
+            self.__class__.__name__.replace("NegScope",""), 
+            ','.join( str(x) for x in self._parms.values() ),
+            str(self._dimension), 
+            len(self._layers), 
+            self._optimizer
+        )
     
     
     def save_model(self, filename, dirpath= './'):
-        dirpath = dirpath if dirpath [-1] != "/" else dirpath[:-1]
+        dirpath = dirpath if dirpath [-1] == "/" else dirpath+'/'
         if not os.path.isdir(dirpath): 
             os.makedirs(dirpath)
         filename = filename+'.h5' if not filename.endswith('.h5') else filename
         self._model.save( dirpath+filename )
+        print "Model saved at",dirpath+filename
        
         
     def load_model(self, source):
@@ -76,44 +83,32 @@ class _NegScopeModel(object):
             'fmeasure':fmeasure,
             'mean_squared_error':mse,
             'binary_crossentropy':bce,
-        })
+        })        
+        self._dimension = None
 
 
-    def fit(self, gen_XY, gen_XY_test=None, batch_size=512, early_monitor='val_binary_accuracy', verbose=1):
-        
+    def fit(self, X, Y, testing_fraction=0.2, early_monitor='val_binary_accuracy', verbose=1):        
         callbacks = []
         if early_monitor:
-            callbacks.append( EarlyStopping( monitor=early_monitor, min_delta=0, patience=2, mode='auto', verbose=0 ) )
-                  
-        self._model.fit_generator( gen_XY.get_iterator(), 
-            callbacks=callbacks , 
-            epochs=100 , 
-            steps_per_epoch=len(gen_XY)/batch_size,
-            validation_data=gen_XY_test.get_iterator(), 
-            validation_steps=len(gen_XY_test)/batch_size,
-            max_queue_size=5,
+            callbacks.append( EarlyStopping( monitor=early_monitor, min_delta=0, patience=2, mode='auto', verbose=0 ) )            
+        history = self._model.fit( X, Y, 
+            callbacks=callbacks, 
+            batch_size=32 , epochs=100, 
+            validation_split=testing_fraction, 
             verbose=verbose 
         )
+        return history
 
-
-    def predict(self, gen_X, verbose=2):
-        Y = self._model.predict_generator( 
-            gen_X.get_iterator(), 
-            steps=1,
-            max_queue_size=10,
-            verbose=verbose
-        )
+    
+    def predict(self,X):
+        Y = self._model.predict( X )
         Y = np.array(Y).round() == 1 
         return Y
-
-
-    def get_scores(self, gen_XY, verbose=2):
-        scores = self._model.evaluate_generator( 
-            gen_XY.get_iterator(), 
-            steps=5,
-            max_queue_size=5 
-        )
-        return zip( self._model.metrics_names , [ round(score*100,1) for score in scores ] )         
+    
+    
+    def get_scores(self, X, Y, verbose=2):
+        scores = self._model.evaluate(X,Y,batch_size=32,verbose=verbose)
+        return zip( self._model.metrics_names , [ round(score*100,1) for score in scores ] )
 
     
 
@@ -123,6 +118,7 @@ class NegScopeFFN(_NegScopeModel):
     '''
     
     def __init__(self, window_left, window_right, dimension, **kwargs):
+        self._parms = { 'wleft':window_left,'wright':window_right }
         super(NegScopeFFN,self).__init__(dimension,**kwargs)
     
         # Model definition     
@@ -164,6 +160,7 @@ class NegScopeLSTM(_NegScopeModel):
     '''
     
     def __init__(self, window, dimension, **kwargs):
+        self._parms = { 'win':window }
         super(NegScopeLSTM,self).__init__(dimension,**kwargs)
         
         # Model definition     

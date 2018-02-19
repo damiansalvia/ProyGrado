@@ -1,6 +1,6 @@
 from cldas.utils.logger import Log, Level
 from cldas.utils.file import save, load, save_word_cloud, save_sub_graph
-from cldas.utils.visual import progress, title
+from cldas.utils.visual import progress, title, Spinner
 from cldas.utils import metrics
 from cldas.utils.graph import ContextGraph
 

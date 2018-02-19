@@ -6,6 +6,9 @@ Module for command-line visualization
 '''
 
 import os
+import threading
+import time
+import sys
 
 
 
@@ -17,7 +20,7 @@ width = int(tmp[1])-15 if tmp else 100
 def progress(prompt, total, current, width=width, end=True):
     current += 1
     total_size = len( str(total) )
-    size_status = 2*total_size + 3 
+    size_status = 2*total_size + 4 
     bar_length = width-len(prompt)-size_status
     percent = float(current) / total
     hashes = '=' * int( round(percent * bar_length) )
@@ -25,6 +28,37 @@ def progress(prompt, total, current, width=width, end=True):
     status = "(%*i/%i)" % ( total_size, current , total )
     print "\r{0} {1} [{2}] {3:{4}}%".format( status , prompt , hashes + '>' + spaces , round(percent * 100,2), 5 ),
     if current==total and end: print
+
+
+
+class Spinner(threading.Thread):
+    _busy = False
+
+    @staticmethod
+    def spinning_cursor():
+        while True: 
+            for cursor in ['|','/','―','\\']: yield cursor
+
+    def __init__(self,message='Processing',delay=0.1):
+        super(Spinner, self).__init__()
+        self._message = message
+        self._delay   = delay
+        self._spinner = self.spinning_cursor()
+        # self.daemon   = True
+
+    def start(self):
+        self._busy = True
+        super(Spinner, self).start()
+
+    def run(self):
+        while self._busy:
+            print "\r [%s] " % next(self._spinner), self._message,
+            time.sleep(self._delay)  
+
+    def stop(self):
+        self._busy = False
+        self.join()
+        print '\r',' '*(len(self._message)+5)
 
 
 
