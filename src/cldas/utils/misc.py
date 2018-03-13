@@ -137,8 +137,10 @@ def get_close_dist(word, wordlist, cutoff=0.7, n=None):
         return []
     res = { wd:get_score(word,wd) for wd in wordlist }
     max_score  = max(res.values()) 
-    mean_score = (max_score - min(res.values())) / 2
-    res = [ wd for wd,score in sorted( res.items(), key=lambda item:item[1] ) if 1.0*(max_score-score) > cutoff * mean_score ]
+    min_score  = min(res.values()) 
+    mean_score = (max_score - min_score) / 2
+    res = sorted( res.items(), key=lambda item:item[1] )
+    res = [ wd for wd,score in res if len(wd)>1 and 1.0*(max_score-score) > cutoff * mean_score ]
     res = res[:n]
     return res
 

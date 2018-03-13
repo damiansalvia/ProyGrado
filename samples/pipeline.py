@@ -1,4 +1,4 @@
-# -*- encoding: utf-8 -*-
+x
 '''
 Example of a complete execution
 @author: Nicolás Mechulam, Damián Salvia
@@ -319,7 +319,7 @@ end_time(start_time,case='LSTM')
       Statistics over dataset
 ---------------------------------------------
 '''
-from cldas.db.stats import *
+# from cldas.db.stats import *
  
 def table_print(fs):
     print '%-38s | %s' % ("Metric","Value")
@@ -377,7 +377,7 @@ stats.append( get_balance_by_source       )
   
   
 table_print(stats)
-sys.exit(0)
+
  
 '''
 ---------------------------------------------

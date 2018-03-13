@@ -9,8 +9,8 @@ os.environ['TF_CPP_MIN_VLOG_LEVEL'] = '0'
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '0'
 clean = 'cls' if os.name == 'nt' else 'clear'
 
-from cldas.utils.visual import title
-
+import re
+from ftfy import fix_text
 from colorama import init, Fore, Style, Back
 init(autoreset=True) 
 
@@ -19,6 +19,44 @@ from cldas import Preprocess
 
 log = Log("../log") 
 
+
+def interactive_correction():
+    while True:
+        os.system(clean)
+        title( "TEXT CORRECTION" )
+
+        print Fore.YELLOW + Style.BRIGHT + 'Input your text:'
+        text = raw_input("> ")
+        text = unicode(text,'utf-8')
+        text = fix_text(text)
+
+        t = Spinner("Correcting input...")
+        t.start()
+
+        preproc = Preprocess( 'input', [{'text':text,'category':None}], verbose=False )
+        corrections = preproc.corrections()
+
+        t.stop()
+
+        print "                                            "
+        print Fore.YELLOW + Style.BRIGHT +'Correction made:'
+        for corr in corrections:        
+            
+            for (a,b) in corr['syn']:
+                text = re.sub(a,"BEG_" + b + "_END",text,re.DOTALL|re.U|re.I)
+                if b==' .': text += "BEG_._END"
+            text = text.replace("BEG_",Fore.MAGENTA+Style.BRIGHT)
+            text = text.replace("_END",Fore.RESET+Style.RESET_ALL)
+
+            text = text.lower()
+            for (a,b,c) in corr['sem']:
+                text = text.replace(a,Fore.RED+Style.BRIGHT + b + " [%s]"%c + Fore.RESET+Style.RESET_ALL)
+
+        print text
+
+        if raw_input("\nTry another? [y/n] > ").lower()=='n':
+            os.system(clean)
+            break
 
 
 def interactive_prediction(model, formatter, **kwrgs):

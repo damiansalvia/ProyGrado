@@ -39,12 +39,11 @@ class Spinner(threading.Thread):
         while True: 
             for cursor in ['|','/','―','\\']: yield cursor
 
-    def __init__(self,message='Processing',delay=0.1):
+    def __init__(self,message='Processing',delay=0.3):
         super(Spinner, self).__init__()
         self._message = message
         self._delay   = delay
         self._spinner = self.spinning_cursor()
-        # self.daemon   = True
 
     def start(self):
         self._busy = True
@@ -52,13 +51,13 @@ class Spinner(threading.Thread):
 
     def run(self):
         while self._busy:
-            print "\r [%s] " % next(self._spinner), self._message,
+            print "\r[ %s ]" % next(self._spinner), self._message,
             time.sleep(self._delay)  
 
     def stop(self):
         self._busy = False
         self.join()
-        print '\r',' '*(len(self._message)+5)
+        print '\r',' '*(len(self._message)+7)
 
 
 

@@ -191,10 +191,10 @@ def save_sub_graph(graph, lexicon, color_pos = "green", color_neg = "red", matic
 
 
 
-def save_result(lexicon,graph,scores,name,path):
+def save_result(graph,lexicon,scores,name,path):
     result = save_sub_graph(graph,lexicon)
     result.update({ "scores":scores })
-    name  = "_%s_ld%i_%s" % (graph.source,len(lemmas),name)
+    name  = "_%s_ld%i_%s" % (graph.source,len(lexicon),name)
     name = "result" + name
     save( result , name , path )
     

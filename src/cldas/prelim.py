@@ -73,27 +73,30 @@ class _SingletonSettings(object):
     
 
 SUBSTITUTIONS = [
+    # Trim string
+    (u"^\s+|\s+(\s|$)",u"\\1"),
+    # Replace accent variants
+    (u"à",u"á"),(u"è",u"é"),(u"ì",u"í"),(u"ò",u"ó"),(u"ù'",u"ú"),
     # Eliminate contractions
     (u"(\w)'(\w)",u"\\1\\2"), (u"q'",u"q"),
     # Replace quotes variants by double quotes
     (u"[`´'\u201c\u201d]",u"\""),
     (u'\u2026',u'...'),   
-    # Replace multiple periods by one
-    (u"(\.\s*)+",u"."),
     # Repplace http or https URIs by tag
     (u"([^\s]?https?:\/\/\S+)",u"ENLACE"),
     # Replace email by tag 
     (u"[\w\.-]+@[\w\.-]+\.[\w]+",u"CORREO"),
     # Replace emojis by a special of emotion
-    (u"\s<?[:;=8xX][-‑o\']?[\)\]3dDoOpP\*\}]|[\(\[cC\{][-‑o\*\']?[:;=8]>?\s",u" FELIZ "),
-    (u"\s>?[:;=][-‑o\']?[\(\[cC\{\\\/\|@_]|[\)\]dD\}\\\/\|@_][-‑o\']?[:;=8xX]<?\s",u" TRISTE "),
-    # Remove repetitive characters and expressions (except (ll)egar, pe(rr)o and a(cc)ion, and numbers) <-- will be corrected by aspell
-    (u"([^lrc\d])\\1+",u"\\1"),
+    (u"\s?(<?[:;=8xX][-‑o\']?[\)\]3dDoOpP\*\}]|[\(\[cC\{][-‑o\*\']?[:;=8]>?)\s?",u" FELIZ "),
+    (u"\s?(>?[:;=][-‑o\']?[\(\[cC\{\\\/\|@_]|[\)\]dD\}\\\/\|@_][-‑o\']?[:;=8xX]<?)\s?",u" TRISTE "),
+    # Remove repetitive characters (except (ll)egar, pe(rr)o and a(cc)ion, cr(ee)r, c(oo)peración and numbers) 
+    # and expressions (e.g. jajaja)
+    (u"([^lrcoe\d_])\\1+",u"\\1"),
     (u"([lrc])\\1\\1+",u"\\1\\1"),
-    (u'(\w\w)\\1+',u'\\1\\1'),
+    (u'([a-záéíóúñüA-ZÁÉÍÓÚÑ][a-záéíóúñüA-ZÁÉÍÓÚÑÜ])\\1+',u'\\1\\1'),
     # Separate alphabetical character from non-alphabetical character by a blank space
-    (u"([\d\W])",u" \\1 "),
-    (u"([^0-9a-záéíóúñü_\s])",u" \\1 "),
+    (u"\s?(\d|[^a-záéíóúñüA-ZÁÉÍÓÚÑÜ_\s])\s?",u" \\1 "), #(u"([\d\W])",u" \\1 "),
+    (u"\s?([^0-9a-záéíóúñüA-ZÁÉÍÓÚÑÜ_\s])\s?",u" \\1 "),
     # Separate alphabetical from numerical 
     (u"(\d+)",u"  \\1 "),
     # Remove redundant quote marks  -- replace, delete, undo
@@ -105,18 +108,17 @@ SUBSTITUTIONS = [
     (u"(\()([^\(]*?)(?(1)\))",u"&lquo;\\2&rquo;"),
     (u"[\(\)]",u""),
     (u"&lquo;",u"("),(u"&rquo;",u")"), 
-    # Replace all non-alphabetical or special symbols by a whitespace
-    (u"[^0-9a-záéíóúñü_¿\?¡!\(\),\.:;\"\$/<>]",u" "),
+    # Remove all non-alphabetical or special symbols
+    (u"[^0-9a-záéíóúñüA-ZÁÉÍÓÚÑÜ_\s¿\?¡!\(\),\.:;\"\$/<>]",u""),
     # Replace multiple non-alphabetical characters by one
-    (u'([^\w\d])\\1+',u'\\1 '), # Issue when nested quotes
+    (u'([^\w\d\s_])\\1+',u'\\1 '), # Issue when nested quotes
     # Replace multiple blank spaces by one
     (u"\s\s+",u" "),
     # Rejoin number sequences separated by blankspace or single dot (e.g. 2.500.000)
     (u"(\d+)\s+(?=\d)",u"\\1"),
     (u"(\d+)\s+(\.)\s+(?=\d)",u"\\1\\2"),
     # Force dot ending
-    (u"([^\w\?!\)\"])$",u""), 
-    (u"([^\.])$",u"\\1 ."),
+    (u"[^0-9a-záéíóúñüA-ZÁÉÍÓÚÑÜ_\?!\)\"]+$",u" ."), 
 ]
     
 class _SpellCorrector(_SingletonSettings):
@@ -158,11 +160,13 @@ class _SpellCorrector(_SingletonSettings):
         if not isinstance(text,unicode):
             text = unicode(text,'utf8')
         
+        status = { 'syn':[], 'sem':[] }
+
         text = fix_text(text)
             
         for source,target in SUBSTITUTIONS:
-            text = re.sub(source,target,text,flags=re.DOTALL|re.U|re.I)
-            text = text.strip()
+            text1 = re.sub(source,target,text,flags=re.DOTALL|re.U|re.I)
+            if text != text1: status['syn'].append( (source,target) )
             
         text = self._clean_tags(text)
         text = self._clean_unbalanced(text)
@@ -235,20 +239,22 @@ class _SpellCorrector(_SingletonSettings):
             alts = get_close_matches( word, sugg, 5, 0.90 )
             alts = [ wd for wd in get_close_matches( word, sugg, 5, 0.90 ) if levenshtein_no_accent(word,wd) < 2 ]
             
-            if alts and len(alts) <= 2:
-                corr = alts[0]
+            if 1 <= len(alts) <= 2:
+                corr = (alts[0],'ALTS')
             elif sugg and (word not in nouns):
-                corr = sugg[0]
+                corr = (sugg[0],'SUGG')
             elif (word in ack) and (word not in nouns):
-                corr = word
+                corr = (word,'ACK')
             elif word in nouns:
-                corr = nouns[word]
+                corr = (nouns[word],'NOUN')
             else:
-                corr = cand
-            err.replace( corr )
+                corr = (cand,'UNK')
+            err.replace( corr[0] )
+
+            status['sem'].append( (word,corr[0],corr[1]) ) # pairs (from,to,case)
             
         text = self.Checker.get_text()   
-        return text, nouns.keys()
+        return text, nouns.keys(), status
 
 
 
@@ -312,6 +318,7 @@ class Preprocess(_SpellCorrector,_MorfoTokenizer):
         self.source = source
         self._lang   = lang
         self._sents  = defaultdict(list)
+        self._corrections = defaultdict(list)
          
         self._run(opinions,verbose)
         
@@ -333,8 +340,10 @@ class Preprocess(_SpellCorrector,_MorfoTokenizer):
                 continue
             
             text = opinion['text']
-            text,nouns = self._correct(text)
-            sent = self._analyze(text,nouns)
+            corr,nouns,status = self._correct(text)
+            self._corrections[ opinion['category'] ].append( status )
+            
+            sent = self._analyze(corr,nouns)
             
             if not sent:
                 fails += 1
@@ -386,6 +395,15 @@ class Preprocess(_SpellCorrector,_MorfoTokenizer):
             raise ValueError('Expected key argument \'category\' to be in categories.')
         else:
             return self._sents[category]
+
+    
+    def corrections(self,category=None):
+        if category is None:
+            return sum( self._corrections.values() , [] )
+        elif category not in self.categories():
+            raise ValueError('Expected key argument \'category\' to be in categories.')
+        else:
+            return self._corrections[category] 
             
     
     def data(self,mapping=None,**kwargs):
@@ -403,7 +421,6 @@ class Preprocess(_SpellCorrector,_MorfoTokenizer):
                         item.update(kwargs)
                     yield item
         return Iterable( _gen(mapping) )
-            
     
     def to_json(self,dirpath='./'):
         save( self._sents , "preproc_%s.json" % self.source , dirpath )
@@ -450,5 +467,5 @@ def __fix_tags__(original,generated,tags):
         raw_input("\nSHIT")
         import pdb; pdb.set_trace()
         
-    return newsent,newtags        
+    return newsent,newtags            
     

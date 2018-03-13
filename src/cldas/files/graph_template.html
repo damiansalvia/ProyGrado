@@ -20,9 +20,10 @@
                         scaling: {
                             label:{
                                 min:100,
-                                max:1000
+                                max:300
                             }
                         }
+                        shadow: true
                     },
                     edges:{
                         color:{
@@ -31,35 +32,19 @@
                     },
                     interaction: { 
                         hideEdgesOnDrag: true, 
-                        tooltipDelay: 100
-                    },
-                    //physics: {
-                    //    enabled: false
-                    //},
+                        tooltipDelay: 50
+                    },                    
                     physics: {
                         barnesHut: {
                             gravitationalConstant: -80000,
+                            centralGravity: 0.005,
                             springConstant: 0.001,
                             springLength: 200
                         },
-                        stabilization: false
+                        maxVelocity: 146,
+                        timestep: 0.35,
+                        stabilization: {iterations: 10}
                     },
-                    // physics: {
-                    //     forceAtlas2Based: {
-                    //         gravitationalConstant: -26,
-                    //         centralGravity: 0.005,
-                    //         springLength: 230,
-                    //         springConstant: 0.18
-                    //     },
-                    //     maxVelocity: 146,
-                    //     solver: 'forceAtlas2Based',
-                    //     timestep: 0.35,
-                    //     stabilization: {
-                    //         enabled:true,
-                    //         iterations:2000,
-                    //         updateInterval:25
-                    //     }
-                    // }
                     layout:{
                         improvedLayout: false,
                         randomSeed: 34

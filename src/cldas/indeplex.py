@@ -5,11 +5,15 @@ Module for generating an minimal context independent lexicon from positive and n
 '''
 
 import numpy as np
-from cldas.utils import progress, save, save_word_cloud
-from collections import defaultdict
+from cldas.utils import progress, save, save_word_cloud, Spinner
+from collections import defaultdict   
     
-    
+
+
 def _postprocess(method, lemmas, ld, limit, tofile):
+    bar = Spinner(message='Postprocessing result')
+    bar.start()
+
     lexicon = { lemmas[idx]:round(val,3) for idx,val in enumerate(ld) }
     
     if limit:
@@ -17,6 +21,8 @@ def _postprocess(method, lemmas, ld, limit, tofile):
     
     lexicon = dict( sorted( lexicon.items(), key=lambda x:x[0] ) )
     
+    bar.stop()
+
     if tofile:
         name = "_top%i" % limit if limit else "" 
         name = method + name
@@ -227,7 +233,7 @@ def by_senti_tfidf(pos_op, neg_op, lemmas=None, filter_tags=None, limit=None, ep
     '''
     
     lemmas, P, Pctd, Pt, N, Nctd, Nt = _get_structures(pos_op, neg_op, 'TFIDF', filter_tags=filter_tags, lemmas=lemmas, verbose=verbose)
-    
+
     ds_pos = _TFIDF(Pctd, Pt, P, eps) 
     ds_neg = _TFIDF(Nctd, Nt, N, eps)
     
@@ -254,7 +260,7 @@ def by_senti_pmi(pos_op, neg_op, lemmas=None, filter_tags=None, limit=None, eps=
     '''
     
     lemmas, P, Pctd, Pt, N, Nctd, Nt = _get_structures(pos_op, neg_op, 'PMI', filter_tags=filter_tags, lemmas=lemmas, verbose=verbose)
-    
+
     pr_pos = _P( Pctd , Pt, P )
     pr_neg = _P( Nctd , Nt, N )
     

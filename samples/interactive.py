@@ -10,7 +10,7 @@ import os
 clean = 'cls' if os.name == 'nt' else 'clear'
 
 from cldas.neg.model import NegScopeLSTM, NegScopeFFN
-from cldas.neg.interface import interactive_prediction, manual_tagging
+from cldas.utils.interactive import interactive_prediction, manual_tagging, interactive_correction
 import cldas.db.crud as dp
 from cldas.utils.file import load
 import glob
@@ -20,8 +20,9 @@ def interactive_option():
 	os.system(clean)
 	print "SELECT INTERACTIVE MODE"
 	print 0,". Exit"
-	print 1,". Manual tagging"
-	print 2,". Interative prediction"
+	print 1,". Interactive text correction"
+	print 2,". Manual negation tagging"
+	print 3,". Interative negation prediction"
 	return raw_input("> ")
 
 
@@ -43,7 +44,7 @@ def network_option(path='./neg/models'):
 
 '''
 ---------------------------------------------
-    Use interactive negation prediction
+    Use interactive correction/negation
 ---------------------------------------------
 '''
 
@@ -52,8 +53,10 @@ while True:
 	if op == '0':
 		break
 	elif op == '1': 
+		interactive_correction()
+	elif op == '2': 
 		manual_tagging(dp,tofile='./neg/manual/')
-	elif op == '2':
+	elif op == '3':
 		os.system(clean)
 		file, params = network_option()
 		if params.has_key('window_left') and params.has_key('window_right'):

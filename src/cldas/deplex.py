@@ -5,13 +5,16 @@ Module for generating a context dependent lexicon corpus from a set of seeds
 @author: Nicolás Mechulam, Damián Salvia
 '''
 
-from cldas.utils import progress, save, save_word_cloud
-from cldas.utils.graph import ContextGraph, _search_influences
+from cldas.utils import progress, save, save_word_cloud, Spinner
+from cldas.graph import ContextGraph, _search_influences
 from collections import defaultdict
 
 
 def _postprocess(lexicon, graph, method, neu_treshold, filter_seeds, seeds, seed_name, limit, confidence, tofile, wc_neu):
-    
+
+    bar = Spinner(message='Postprocessing result')
+    bar.start()
+
     lexicon = dict( filter( lambda item: item[0] in graph.nodes() , lexicon.items() ) ) 
     
     if neu_treshold is not None:
@@ -28,9 +31,11 @@ def _postprocess(lexicon, graph, method, neu_treshold, filter_seeds, seeds, seed
     lexicon = { lem:{'val':round(item['val'],5),'inf':item['inf']} for lem,item in lexicon.items() }
     lexicon = dict( sorted( lexicon.items(), key=lambda x:x[0] ) )
     
+    bar.stop()
+
     if tofile:
         name  = "_%s" % graph.source
-        name += "_top%03i" % limit if limit else ""
+        name += "_top%03i" % len(lexicon)
         name += "_%s%03i" % (seed_name,len(seeds))
         name = method + name
         save( lexicon , name , tofile )
